@@ -1,7 +1,12 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useCart } from "components/cart/cart-context";
+import { addItem } from "components/cart/actions";
+import type { Product, ProductVariant } from "lib/shopify/types";
 
 const SUGGESTIONS = [
   "Recommend gifts under $100",
@@ -10,12 +15,127 @@ const SUGGESTIONS = [
   "Show me eco-friendly products",
 ];
 
+type CatalogProduct = Pick<
+  Product,
+  | "id"
+  | "handle"
+  | "title"
+  | "description"
+  | "availableForSale"
+  | "featuredImage"
+  | "priceRange"
+  | "tags"
+> & {
+  variants: Pick<
+    ProductVariant,
+    "id" | "title" | "availableForSale" | "price" | "selectedOptions"
+  >[];
+};
+
+function ProductCard({
+  product,
+  onAddToCart,
+  adding,
+}: {
+  product: CatalogProduct;
+  onAddToCart: (product: CatalogProduct) => void;
+  adding: boolean;
+}) {
+  return (
+    <div className="my-2 overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-800">
+      <Link
+        href={`/product/${product.handle}`}
+        className="relative block aspect-[16/9] w-full overflow-hidden bg-neutral-100 dark:bg-neutral-700"
+      >
+        {product.featuredImage?.url && (
+          <Image
+            src={product.featuredImage.url}
+            alt={product.featuredImage.altText || product.title}
+            fill
+            className="object-cover transition-transform hover:scale-105"
+            sizes="320px"
+          />
+        )}
+      </Link>
+      <div className="p-3">
+        <div className="flex items-start justify-between gap-2">
+          <Link
+            href={`/product/${product.handle}`}
+            className="text-sm font-semibold leading-tight text-neutral-900 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+          >
+            {product.title}
+          </Link>
+          <span className="shrink-0 text-sm font-bold text-blue-600 dark:text-blue-400">
+            ${parseFloat(product.priceRange.minVariantPrice.amount).toFixed(2)}
+          </span>
+        </div>
+        <div className="mt-1 flex items-center gap-0.5">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <svg
+              key={star}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className={`h-3.5 w-3.5 ${star <= 4 ? "text-amber-400" : "text-neutral-300 dark:text-neutral-600"}`}
+            >
+              <path
+                fillRule="evenodd"
+                d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z"
+                clipRule="evenodd"
+              />
+            </svg>
+          ))}
+          <span className="ml-1 text-[10px] text-neutral-500 dark:text-neutral-400">
+            4.0
+          </span>
+        </div>
+        <button
+          onClick={() => onAddToCart(product)}
+          disabled={adding || !product.availableForSale}
+          className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-blue-500 disabled:opacity-50"
+        >
+          {adding ? (
+            <span className="flex gap-1">
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white [animation-delay:0ms]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white [animation-delay:150ms]" />
+              <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-white [animation-delay:300ms]" />
+            </span>
+          ) : (
+            <>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-3.5 w-3.5"
+              >
+                <path d="M10 5a.75.75 0 0 1 .75.75v3.5h3.5a.75.75 0 0 1 0 1.5h-3.5v3.5a.75.75 0 0 1-1.5 0v-3.5h-3.5a.75.75 0 0 1 0-1.5h3.5v-3.5A.75.75 0 0 1 10 5Z" />
+              </svg>
+              {product.availableForSale ? "Add to Cart" : "Out of Stock"}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function extractProductHandles(text: string): string[] {
+  const matches = text.matchAll(/\[([^\]]+)\]\(\/product\/([^)]+)\)/g);
+  return [...matches].map((m) => m[2]!);
+}
+
 function ChatMessage({
   role,
   parts,
+  catalog,
+  onAddToCart,
+  addingHandle,
 }: {
   role: string;
   parts: Array<{ type: string; text?: string; [key: string]: unknown }>;
+  catalog: Map<string, CatalogProduct>;
+  onAddToCart: (product: CatalogProduct) => void;
+  addingHandle: string | null;
 }) {
   const text = parts
     .filter((p) => p.type === "text" && p.text)
@@ -23,6 +143,11 @@ function ChatMessage({
     .join("");
 
   if (!text) return null;
+
+  const handles = role === "assistant" ? extractProductHandles(text) : [];
+  const recommendedProducts = handles
+    .map((h) => catalog.get(h))
+    .filter(Boolean) as CatalogProduct[];
 
   const formatted = text.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
@@ -33,29 +158,43 @@ function ChatMessage({
   );
 
   return (
-    <div
-      className={`flex ${role === "user" ? "justify-end" : "justify-start"} mb-3`}
-    >
-      {role !== "user" && (
-        <div className="mr-2 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            className="h-3.5 w-3.5 text-white"
-          >
-            <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-          </svg>
+    <div className="mb-3">
+      <div
+        className={`flex ${role === "user" ? "justify-end" : "justify-start"}`}
+      >
+        {role !== "user" && (
+          <div className="mr-2 mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-3.5 w-3.5 text-white"
+            >
+              <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+            </svg>
+          </div>
+        )}
+        <div
+          className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+            role === "user"
+              ? "bg-blue-600 text-white"
+              : "bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
+          }`}
+          dangerouslySetInnerHTML={{ __html: formatted }}
+        />
+      </div>
+      {recommendedProducts.length > 0 && (
+        <div className="ml-8 mt-1 grid gap-2">
+          {recommendedProducts.map((product) => (
+            <ProductCard
+              key={product.handle}
+              product={product}
+              onAddToCart={onAddToCart}
+              adding={addingHandle === product.handle}
+            />
+          ))}
         </div>
       )}
-      <div
-        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-          role === "user"
-            ? "bg-blue-600 text-white"
-            : "bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100"
-        }`}
-        dangerouslySetInnerHTML={{ __html: formatted }}
-      />
     </div>
   );
 }
@@ -86,10 +225,32 @@ export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [pending, setPending] = useState(false);
+  const [addingHandle, setAddingHandle] = useState<string | null>(null);
+  const [catalog, setCatalog] = useState<Map<string, CatalogProduct>>(
+    new Map(),
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const catalogFetched = useRef(false);
+  const [, startTransition] = useTransition();
 
+  const { addCartItem } = useCart();
   const { messages, sendMessage, error } = useChat();
+
+  useEffect(() => {
+    if (catalogFetched.current) return;
+    catalogFetched.current = true;
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((products: CatalogProduct[]) => {
+        const map = new Map<string, CatalogProduct>();
+        for (const p of products) {
+          map.set(p.handle, p);
+        }
+        setCatalog(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -124,6 +285,37 @@ export function Chatbot() {
     document.addEventListener("click", handleTrigger);
     return () => document.removeEventListener("click", handleTrigger);
   }, []);
+
+  const handleAddToCart = useCallback(
+    (product: CatalogProduct) => {
+      const variant = product.variants[0];
+      if (!variant) return;
+
+      setAddingHandle(product.handle);
+
+      const fullProduct = {
+        ...product,
+        descriptionHtml: "",
+        options: [],
+        images: product.featuredImage ? [product.featuredImage] : [],
+        seo: { title: product.title, description: product.description },
+        updatedAt: new Date().toISOString(),
+        variants: product.variants.map((v) => ({
+          ...v,
+          availableForSale: v.availableForSale ?? true,
+        })),
+      } as Product;
+
+      startTransition(() => {
+        addCartItem(variant as ProductVariant, fullProduct);
+      });
+
+      addItem(null, variant.id).finally(() => {
+        setAddingHandle(null);
+      });
+    },
+    [addCartItem, startTransition],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,12 +374,12 @@ export function Chatbot() {
 
       {!isOpen && (
         <div className="fixed right-20 bottom-8 z-50 hidden animate-pulse rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-md sm:block dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
-          Ask our AI stylist
+          Ask our AI shopping assistant
         </div>
       )}
 
       {isOpen && (
-        <div className="fixed right-3 bottom-24 z-50 flex h-[min(550px,calc(100vh-120px))] w-[min(400px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
+        <div className="fixed right-3 bottom-24 z-50 flex h-[min(580px,calc(100vh-120px))] w-[min(400px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
           {/* Header */}
           <div className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
@@ -205,7 +397,7 @@ export function Chatbot() {
                 AI Shopping Assistant
               </p>
               <p className="text-xs text-blue-100">
-                Powered by OpenAI · Ask me anything
+                Powered by OpenAI &middot; Ask me anything
               </p>
             </div>
             <button
@@ -244,8 +436,8 @@ export function Chatbot() {
                   Hi! I&apos;m your AI shopping assistant.
                 </p>
                 <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                  I can recommend products, compare options, and help you find
-                  exactly what you need.
+                  I can recommend products, compare options, and add items
+                  directly to your cart.
                 </p>
 
                 <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -274,6 +466,9 @@ export function Chatbot() {
                     [key: string]: unknown;
                   }>
                 }
+                catalog={catalog}
+                onAddToCart={handleAddToCart}
+                addingHandle={addingHandle}
               />
             ))}
 

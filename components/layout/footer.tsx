@@ -75,7 +75,7 @@ export default async function Footer() {
             <span className="text-neutral-400">·</span>
             Full-Stack AI Engineer
             <span className="text-neutral-400">·</span>
-            March 2026
+            April 2026
           </p>
           <p className="md:ml-auto">
             <span className="text-neutral-400">

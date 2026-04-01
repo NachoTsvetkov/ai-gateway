@@ -42,16 +42,16 @@ export function Hero() {
           </div>
 
           <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
-            AI-Powered
+            AI-Powered Shopify Store
             <span className="mt-2 block bg-gradient-to-r from-blue-400 via-violet-400 to-purple-400 bg-clip-text text-transparent">
-              Shopify Store
+              Built with Next.js + OpenAI
             </span>
           </h1>
 
           <p className="mt-6 text-lg leading-8 text-neutral-300 sm:text-xl">
-            Headless Next.js storefront with real-time AI product
-            recommendations, intelligent chatbot, and seamless Shopify
-            integration. Built in under 4 hours.
+            Real-time AI recommendations &amp; chatbot. Headless Next.js
+            storefront with seamless Shopify integration and intelligent
+            shopping assistance.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -95,7 +95,7 @@ export function Hero() {
             <div>
               <p className="text-3xl font-bold text-white sm:text-4xl">35%</p>
               <p className="mt-1 text-sm text-neutral-400">
-                Higher conversions
+                Higher conversions in just 4 hours
               </p>
             </div>
             <div>
