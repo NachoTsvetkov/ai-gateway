@@ -23,6 +23,17 @@ export function TechStack() {
             </div>
           ))}
         </div>
+        <hr className="mx-auto mt-10 max-w-md border-neutral-800" />
+        <p className="mt-6 text-center text-xs text-neutral-500">
+          Fiverr Portfolio Demo &ndash; April 2026 | Built by Full-Stack AI
+          Engineer | Live at{" "}
+          <a
+            href="https://ai-gateway-nine-nu.vercel.app"
+            className="text-neutral-400 underline decoration-neutral-700 underline-offset-2 transition-colors hover:text-blue-400"
+          >
+            ai-gateway-nine-nu.vercel.app
+          </a>
+        </p>
       </div>
     </section>
   );
