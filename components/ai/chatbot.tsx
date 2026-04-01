@@ -19,7 +19,10 @@ function ChatMessage({
 
   const formatted = text.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" class="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300">$1</a>'
+    (_, label, url) => {
+      const cleanUrl = url.replace(/^https?:\/\/[^/]+/, "");
+      return `<a href="${cleanUrl}" class="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300">${label}</a>`;
+    }
   );
 
   return (
