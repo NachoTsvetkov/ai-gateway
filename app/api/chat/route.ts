@@ -1,5 +1,5 @@
-import { openai } from "@ai-sdk/openai";
 import {
+  gateway,
   streamText,
   UIMessage,
   convertToModelMessages,
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   }
 
   const result = streamText({
-    model: openai("gpt-4o-mini"),
+    model: gateway("openai/gpt-4o-mini"),
     system: `You are a friendly, knowledgeable shopping assistant for an online store.
 You help customers find products, compare options, and make purchase decisions.
 
