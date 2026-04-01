@@ -27,9 +27,13 @@ export function Hero() {
         </svg>
       </div>
 
-      <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:py-40">
+      <div className="absolute right-4 top-4 z-10 hidden rounded-full border border-neutral-700 bg-neutral-800/80 px-3 py-1 text-[10px] font-medium tracking-wide text-neutral-400 backdrop-blur-sm sm:block">
+        Demo for Fiverr
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:py-36">
         <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-sm text-blue-300">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-sm text-blue-300">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -91,22 +95,26 @@ export function Hero() {
             </button>
           </div>
 
-          <div className="mt-16 grid grid-cols-3 gap-8 border-t border-neutral-700/50 pt-10">
+          <div className="mt-14 grid grid-cols-3 gap-4 border-t border-neutral-700/50 pt-8 sm:gap-8 sm:pt-10">
             <div>
-              <p className="text-3xl font-bold text-white sm:text-4xl">35%</p>
-              <p className="mt-1 text-sm text-neutral-400">
-                Higher conversions in just 4 hours
+              <p className="text-2xl font-bold text-white sm:text-4xl">35%</p>
+              <p className="mt-1 text-xs text-neutral-400 sm:text-sm">
+                Higher conversions
               </p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-white sm:text-4xl">
+              <p className="text-2xl font-bold text-white sm:text-4xl">
                 &lt;2s
               </p>
-              <p className="mt-1 text-sm text-neutral-400">AI response time</p>
+              <p className="mt-1 text-xs text-neutral-400 sm:text-sm">
+                AI response time
+              </p>
             </div>
             <div>
-              <p className="text-3xl font-bold text-white sm:text-4xl">98</p>
-              <p className="mt-1 text-sm text-neutral-400">Lighthouse score</p>
+              <p className="text-2xl font-bold text-white sm:text-4xl">98</p>
+              <p className="mt-1 text-xs text-neutral-400 sm:text-sm">
+                Lighthouse score
+              </p>
             </div>
           </div>
         </div>
