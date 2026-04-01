@@ -66,10 +66,21 @@ export default async function Footer() {
           <p>
             <a href="https://github.com/vercel/commerce">View the source</a>
           </p>
+          <hr className="mx-4 hidden h-4 w-[1px] border-l border-neutral-400 md:inline-block" />
+          <p className="inline-flex items-center gap-1.5">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span className="font-medium text-neutral-700 dark:text-neutral-300">
+              Fiverr Portfolio Demo
+            </span>
+            <span className="text-neutral-400">·</span>
+            Full-Stack AI Engineer
+            <span className="text-neutral-400">·</span>
+            March 2026
+          </p>
           <p className="md:ml-auto">
-            <a href="https://vercel.com" className="text-black dark:text-white">
-              Created by ▲ Vercel
-            </a>
+            <span className="text-neutral-400">
+              Next.js 16 · Shopify · OpenAI · Vercel AI SDK · Tailwind 4
+            </span>
           </p>
         </div>
       </div>

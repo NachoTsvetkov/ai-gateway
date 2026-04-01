@@ -17,6 +17,8 @@ export const metadata = {
     default: SITE_NAME!,
     template: `%s | ${SITE_NAME}`,
   },
+  description:
+    "AI-powered headless Shopify storefront with OpenAI product recommendations and real-time chatbot. Built with Next.js 16, Vercel AI SDK, and Tailwind CSS 4.",
   robots: {
     follow: true,
     index: true,
