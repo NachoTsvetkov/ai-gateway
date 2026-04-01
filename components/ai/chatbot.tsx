@@ -354,6 +354,8 @@ export function Chatbot() {
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
             className="h-6 w-6"
           >
             <path d="M18 6 6 18M6 6l12 12" />
@@ -365,9 +367,11 @@ export function Chatbot() {
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
             className="h-6 w-6"
           >
-            <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
         )}
       </button>
