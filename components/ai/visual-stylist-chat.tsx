@@ -247,6 +247,7 @@ export function VisualStylistChat() {
     Map<string, VisualStylistCatalogProduct>
   >(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const catalogFetched = useRef(false);
   const [, startTransition] = useTransition();
@@ -260,6 +261,10 @@ export function VisualStylistChat() {
   });
 
   const busy = status === "submitted" || status === "streaming";
+
+  useEffect(() => {
+    wrapperRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, []);
 
   useEffect(() => {
     if (catalogFetched.current) return;
@@ -391,7 +396,7 @@ export function VisualStylistChat() {
   };
 
   return (
-    <div className="flex h-[min(720px,calc(100vh-220px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
+    <div ref={wrapperRef} className="flex h-[min(720px,calc(100vh-220px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
       <div className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
           <svg

@@ -290,6 +290,7 @@ export function VoiceShoppingChat() {
   const [catalog, setCatalog] = useState<Map<string, VisualStylistCatalogProduct>>(new Map());
   const [voiceMessageIds, setVoiceMessageIds] = useState<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const catalogFetched = useRef(false);
   const lastSpokenRef = useRef<string | null>(null);
   const [, startTransition] = useTransition();
@@ -305,6 +306,10 @@ export function VoiceShoppingChat() {
   });
 
   const busy = status === "submitted" || status === "streaming";
+
+  useEffect(() => {
+    wrapperRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, []);
 
   useEffect(() => {
     if (catalogFetched.current) return;
@@ -414,7 +419,7 @@ export function VoiceShoppingChat() {
   };
 
   return (
-    <div className="flex h-[min(720px,calc(100vh-220px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
+    <div ref={wrapperRef} className="flex h-[min(720px,calc(100vh-220px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
       <div className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5 text-white">

@@ -190,6 +190,7 @@ function KpiCard({ label, value }: { label: string; value: string }) {
 export function AnalyticsInsightsChat() {
   const [inputValue, setInputValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, error, status } = useChat({
     transport: new DefaultChatTransport({
@@ -198,6 +199,10 @@ export function AnalyticsInsightsChat() {
   });
 
   const busy = status === "submitted" || status === "streaming";
+
+  useEffect(() => {
+    wrapperRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     const el = scrollRef.current;
@@ -222,7 +227,7 @@ export function AnalyticsInsightsChat() {
   };
 
   return (
-    <div className="flex h-[min(780px,calc(100vh-220px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
+    <div ref={wrapperRef} className="flex h-[min(780px,calc(100vh-220px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
       <div className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
           <svg
