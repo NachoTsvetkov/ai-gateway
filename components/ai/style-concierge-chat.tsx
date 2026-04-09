@@ -305,7 +305,14 @@ export function StyleConciergeChat() {
   const busy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
-    wrapperRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    requestAnimationFrame(() => {
+      const el = wrapperRef.current;
+      if (!el) return;
+      const bottom = el.getBoundingClientRect().bottom + (window.scrollY || window.pageYOffset);
+      const target = Math.max(0, bottom - window.innerHeight + 20);
+      try { window.scrollTo({ top: target, behavior: "smooth" }); }
+      catch { window.scrollTo(0, target); }
+    });
   }, []);
 
   useEffect(() => {
