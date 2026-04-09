@@ -387,7 +387,7 @@ export function Chatbot() {
         <div
           className={
             isExpanded
-              ? "fixed inset-x-0 bottom-0 top-[57px] z-30 flex flex-col overflow-hidden border-t border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
+              ? "fixed inset-x-0 bottom-0 top-[73px] z-30 flex flex-col overflow-hidden border-t border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
               : "fixed right-3 bottom-24 z-50 flex h-[min(580px,calc(100vh-120px))] w-[min(400px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
           }
         >
