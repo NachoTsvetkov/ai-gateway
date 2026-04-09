@@ -223,6 +223,7 @@ function TypingIndicator() {
 
 export function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [pending, setPending] = useState(false);
   const [addingHandle, setAddingHandle] = useState<string | null>(null);
@@ -344,7 +345,7 @@ export function Chatbot() {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed right-5 bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/25 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95"
+        className={`fixed right-5 bottom-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/25 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 ${isExpanded ? "hidden" : ""}`}
         aria-label={isOpen ? "Close chat" : "Open AI assistant"}
       >
         {isOpen ? (
@@ -376,14 +377,20 @@ export function Chatbot() {
         )}
       </button>
 
-      {!isOpen && (
+      {!isOpen && !isExpanded && (
         <div className="fixed right-20 bottom-8 z-50 hidden animate-pulse rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 shadow-md sm:block dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
           Ask our AI shopping assistant
         </div>
       )}
 
       {isOpen && (
-        <div className="fixed right-3 bottom-24 z-50 flex h-[min(580px,calc(100vh-120px))] w-[min(400px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
+        <div
+          className={
+            isExpanded
+              ? "fixed inset-x-0 bottom-0 top-[57px] z-30 flex flex-col overflow-hidden border-t border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
+              : "fixed right-3 bottom-24 z-50 flex h-[min(580px,calc(100vh-120px))] w-[min(400px,calc(100vw-24px))] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl dark:border-neutral-700 dark:bg-neutral-900"
+          }
+        >
           {/* Header */}
           <div className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-violet-600 px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
@@ -405,7 +412,43 @@ export function Chatbot() {
               </p>
             </div>
             <button
-              onClick={() => setIsOpen(false)}
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="hidden rounded-full p-1 text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:block"
+              aria-label={isExpanded ? "Collapse chat" : "Expand chat"}
+            >
+              {isExpanded ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3a1 1 0 0 0-1 1v4a1 1 0 0 0 2 0V6.414l3.293 3.293a1 1 0 0 0 1.414-1.414L6.414 5H8a1 1 0 0 0 0-2H4Zm12 14a1 1 0 0 0 1-1v-4a1 1 0 1 0-2 0v1.586l-3.293-3.293a1 1 0 0 0-1.414 1.414L13.586 15H12a1 1 0 1 0 0 2h4Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M13 3a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h4a1 1 0 1 0 0-2h-1.586l3.293-3.293a1 1 0 0 0-1.414-1.414L14 5.586V4a1 1 0 0 0-1-1ZM3 13a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 1 1-2 0v-1.586l-3.293 3.293a1 1 0 0 1-1.414-1.414L5.586 14H4a1 1 0 0 1-1-1Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setIsExpanded(false);
+              }}
               className="rounded-full p-1 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
               aria-label="Close chat"
             >
@@ -422,6 +465,9 @@ export function Chatbot() {
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div
+              className={isExpanded ? "mx-auto max-w-2xl" : undefined}
+            >
             {messages.length === 0 && (
               <div className="flex h-full flex-col items-center justify-center text-center">
                 <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-violet-100 dark:from-blue-900/30 dark:to-violet-900/30">
@@ -485,13 +531,17 @@ export function Chatbot() {
             )}
 
             <div ref={messagesEndRef} />
+            </div>
           </div>
 
           {/* Input */}
           <form
             onSubmit={handleSubmit}
-            className="flex gap-2 border-t border-neutral-200 bg-neutral-50/80 px-4 py-3 backdrop-blur-sm dark:border-neutral-700 dark:bg-neutral-800/50"
+            className="border-t border-neutral-200 bg-neutral-50/80 px-4 py-3 backdrop-blur-sm dark:border-neutral-700 dark:bg-neutral-800/50"
           >
+            <div
+              className={`flex gap-2 ${isExpanded ? "mx-auto max-w-2xl" : ""}`}
+            >
             <input
               ref={inputRef}
               value={inputValue}
@@ -503,7 +553,7 @@ export function Chatbot() {
             <button
               type="submit"
               disabled={pending || !inputValue.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 text-white transition-all hover:from-blue-500 hover:to-violet-500 disabled:opacity-50"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 text-white transition-all hover:from-blue-500 hover:to-violet-500 disabled:opacity-50"
               aria-label="Send message"
             >
               <svg
@@ -515,6 +565,7 @@ export function Chatbot() {
                 <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
               </svg>
             </button>
+            </div>
           </form>
         </div>
       )}
