@@ -9,16 +9,14 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { baseUrl } from "lib/utils";
 
-const { SITE_NAME } = process.env;
-
 export const metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: SITE_NAME!,
-    template: `%s | ${SITE_NAME}`,
+    default: "Nacho Tsvetkov – Full-Stack AI Engineer",
+    template: "%s | Nacho Tsvetkov",
   },
   description:
-    "AI-powered headless Shopify storefront with OpenAI product recommendations and real-time chatbot. Built with Next.js 16, Vercel AI SDK, and Tailwind CSS 4.",
+    "Portfolio of Nacho Tsvetkov – Full-Stack AI Engineer with 10+ years of experience in C#, React, Next.js, and AI-powered applications.",
   robots: {
     follow: true,
     index: true,
