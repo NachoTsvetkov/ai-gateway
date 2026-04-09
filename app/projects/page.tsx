@@ -14,6 +14,54 @@ const projects = [
     href: "/projects/ai-shopify-store",
     status: "Live",
   },
+  {
+    title: "Multi-Modal Visual Stylist",
+    description:
+      "Upload any photo — GPT-4o vision analyzes the scene, RAG pulls similar and complementary products from a Shopify catalog, with an in-chat grid and one-tap add to cart.",
+    tech: ["GPT-4o", "Vercel AI SDK", "Vision", "RAG", "Next.js"],
+    href: "/projects/multi-modal-visual-stylist",
+    status: "Live",
+  },
+  {
+    title: "Autonomous Agentic Commerce Bot",
+    description:
+      "The chatbot that doesn't just talk — it acts. Tool-calling AI that searches, compares, adds to cart, and checks out autonomously via OpenAI function calling.",
+    tech: ["OpenAI Tools", "Vercel AI SDK", "Shopify", "Agentic AI"],
+    href: "/projects/autonomous-agentic-commerce-bot",
+    status: "Live",
+  },
+  {
+    title: "AI Store Analytics & Insights",
+    description:
+      "Merchant-facing BI copilot — ask plain-English questions about sales, orders, and customers. RAG over 30 days of store data with inline charts.",
+    tech: ["GPT-4o", "RAG", "Analytics", "Vercel AI SDK", "Charts"],
+    href: "/projects/ai-store-analytics-insights",
+    status: "Live",
+  },
+  {
+    title: "Smart Cart Recovery Agent",
+    description:
+      "Proactive AI that automatically recovers abandoned carts with personalized offers, urgency, and style-based incentives — no user action needed to start.",
+    tech: ["GPT-4o", "Proactive AI", "Vercel AI SDK", "Recovery"],
+    href: "/projects/smart-cart-recovery-agent",
+    status: "Live",
+  },
+  {
+    title: "Personalized Style Concierge",
+    description:
+      "AI personal stylist that profiles your taste via a multi-turn quiz, then builds complete outfits with product cards, save-this-look, and one-tap add to cart.",
+    tech: ["GPT-4o", "Multi-turn", "Vercel AI SDK", "Outfit Builder"],
+    href: "/projects/personalized-style-concierge",
+    status: "Live",
+  },
+  {
+    title: "Voice-Enabled Shopping Assistant",
+    description:
+      "Hands-free AI shopping — speak your query, hear the response. Web Speech API for STT, browser SpeechSynthesis for TTS, with full product cards and cart.",
+    tech: ["Web Speech API", "TTS", "GPT-4o", "Vercel AI SDK", "A11y"],
+    href: "/projects/voice-enabled-shopping-assistant",
+    status: "Live",
+  },
 ];
 
 export default function ProjectsPage() {
@@ -44,9 +92,9 @@ export default function ProjectsPage() {
             <Link
               key={project.title}
               href={project.href}
-              className="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-600/10 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
+              className="group relative flex overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:border-blue-300 hover:shadow-xl hover:shadow-blue-600/10 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
             >
-              <div className="p-6">
+              <div className="flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -67,7 +115,7 @@ export default function ProjectsPage() {
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
                   {project.description}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-auto flex flex-wrap gap-2 pt-4">
                   {project.tech.map((t) => (
                     <span
                       key={t}
@@ -81,12 +129,6 @@ export default function ProjectsPage() {
             </Link>
           ))}
 
-          {/* Placeholder for future projects */}
-          <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-neutral-300 p-6 dark:border-neutral-700">
-            <p className="text-center text-sm text-neutral-400">
-              More projects coming soon...
-            </p>
-          </div>
         </div>
       </section>
     </>

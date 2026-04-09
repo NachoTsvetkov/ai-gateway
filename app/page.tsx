@@ -99,6 +99,17 @@ export default function PortfolioHome() {
                   </svg>
                 </Link>
                 <a
+                  href="https://www.fiverr.com/users/nachotsvetkov/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-full bg-green-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-green-600/25 transition-all hover:bg-green-500"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13.74 4.76c-.72 0-1.34.46-1.57 1.1H9.15c-1.7 0-3.08 1.38-3.08 3.08v.63H4.54v3.07h1.53v6.6h3.26v-6.6h2.71v6.6h3.26V12.64h.95v-3.07h-.95V9.1c0-.21.17-.38.38-.38h.57V5.38h-.95c-.02-.4-.12-.62-.56-.62zm-5.2 4.18c.33 0 .6.27.6.6s-.27.6-.6.6-.6-.27-.6-.6.27-.6.6-.6z" />
+                  </svg>
+                  Hire Me on Fiverr
+                </a>
+                <a
                   href="mailto:nacho.tsvetkov@gmail.com"
                   className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-8 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-500 hover:text-white"
                 >
@@ -153,6 +164,17 @@ export default function PortfolioHome() {
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                </a>
+                <a
+                  href="https://www.fiverr.com/users/nachotsvetkov/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-neutral-700 p-2.5 text-neutral-400 transition-colors hover:border-green-500/50 hover:text-green-400"
+                  aria-label="Fiverr"
+                >
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13.74 4.76c-.72 0-1.34.46-1.57 1.1H9.15c-1.7 0-3.08 1.38-3.08 3.08v.63H4.54v3.07h1.53v6.6h3.26v-6.6h2.71v6.6h3.26V12.64h.95v-3.07h-.95V9.1c0-.21.17-.38.38-.38h.57V5.38h-.95c-.02-.4-.12-.62-.56-.62zm-5.2 4.18c.33 0 .6.27.6.6s-.27.6-.6.6-.6-.27-.6-.6.27-.6.6-.6z" />
                   </svg>
                 </a>
               </div>
@@ -274,6 +296,9 @@ export default function PortfolioHome() {
             </a>
             <a href="https://x.com/nachotsvetkov" target="_blank" rel="noopener noreferrer" className="text-neutral-500 transition-colors hover:text-white" aria-label="X">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+            </a>
+            <a href="https://www.fiverr.com/users/nachotsvetkov/" target="_blank" rel="noopener noreferrer" className="text-neutral-500 transition-colors hover:text-green-400" aria-label="Fiverr">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13.74 4.76c-.72 0-1.34.46-1.57 1.1H9.15c-1.7 0-3.08 1.38-3.08 3.08v.63H4.54v3.07h1.53v6.6h3.26v-6.6h2.71v6.6h3.26V12.64h.95v-3.07h-.95V9.1c0-.21.17-.38.38-.38h.57V5.38h-.95c-.02-.4-.12-.62-.56-.62zm-5.2 4.18c.33 0 .6.27.6.6s-.27.6-.6.6-.6-.27-.6-.6.27-.6.6-.6z" /></svg>
             </a>
           </div>
           <p>
