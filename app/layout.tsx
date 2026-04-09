@@ -1,4 +1,3 @@
-import { Chatbot } from "components/ai/chatbot";
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar } from "components/layout/navbar";
 import { WelcomeToast } from "components/welcome-toast";
@@ -40,7 +39,6 @@ export default async function RootLayout({
             {children}
             <Toaster closeButton />
             <WelcomeToast />
-            <Chatbot />
           </main>
         </CartProvider>
       </body>
