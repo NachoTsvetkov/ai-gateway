@@ -1,96 +1,42 @@
 import Link from "next/link";
+import { detectLocale } from "lib/i18n/locale.server";
+import { createT } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
+import { getLocalizedProjects } from "lib/projects-data";
 
-export const metadata = {
-  title: "Projects",
-  description:
-    "Portfolio projects by Nacho Tsvetkov – Full-Stack Software Engineer.",
-};
+// Locale-aware metadata. Static `export const metadata` would always
+// render in English even for BG visitors, leaking "Projects" into the
+// <title> and og tags on a fully-translated page. `generateMetadata`
+// runs at request time so the head matches the body.
+export async function generateMetadata() {
+  const locale = await detectLocale();
+  const t = createT(locale);
+  return {
+    title: t(DICT.projects.metaTitle),
+    description: t(DICT.projects.metaDescription),
+  };
+}
 
 /**
- * Project listing data. Each individual project page owns its own
- * colour palette (KORE warm orange, ROZÉ cream + blush, Curated. blue,
- * etc.) — but the listing here intentionally stays uniform. Mixing
- * nine different brand colours on one grid reads as "templated card
- * collection" rather than "nine distinct sites", which is the opposite
- * of the effect we want; the visual identity each project carries lives
- * behind its own click.
+ * Project listing page. Each project card links out to its own
+ * standalone demo (KORE warm orange, ROZÉ cream + blush, Curated.
+ * blue, etc.) — but the listing here intentionally stays uniform.
+ * Mixing nine different brand colours on one grid reads as "templated
+ * card collection" rather than "nine distinct sites", which is the
+ * opposite of the effect we want; the visual identity each project
+ * carries lives behind its own click.
+ *
+ * Locale model: server component pulls `detectLocale()` and feeds it
+ * into `getLocalizedProjects()` (overlays BG copy from
+ * `lib/projects-data.bg.ts`) + `createT()` for page chrome strings.
+ * Tech-stack chips stay in English on every locale — they're product
+ * names that read identically in any language.
  */
-const projects = [
-  {
-    title: "AI-Powered Shopify Store",
-    description:
-      "Headless Next.js storefront with real-time AI product recommendations, intelligent chatbot with Add to Cart, and seamless Shopify integration. Fullscreen chat mode, streaming responses, product cards inside chat.",
-    tech: ["Next.js 16", "Shopify", "OpenAI", "Vercel AI SDK", "Tailwind 4"],
-    href: "/projects/ai-shopify-store",
-    status: "Live",
-  },
-  {
-    title: "Local Fitness Studio · KORE",
-    description:
-      "Standalone studio site (warm orange + cream palette) with an after-hours AI receptionist that books classes, answers schedule questions, and hands off to a coach when needed.",
-    tech: ["Next.js 16", "GPT-4o", "Stripe", "Calendar API", "Tailwind 4"],
-    href: "/projects/local-fitness-studio",
-    status: "Live",
-  },
-  {
-    title: "Boutique Fashion Brand · ROZÉ",
-    description:
-      "Bulgarian-language luxury boutique (cream + blush + serif) with an AI personal stylist and abandoned-cart recovery emails that read like a human wrote them — never spam.",
-    tech: ["Bulgarian", "GPT-4o", "Shopify", "Klaviyo", "AI personalization"],
-    href: "/projects/boutique-fashion-brand",
-    status: "Live",
-  },
-  {
-    title: "Multi-Modal Visual Stylist",
-    description:
-      "Upload any photo — GPT-4o vision analyzes the scene, RAG pulls similar and complementary products from a Shopify catalog, with an in-chat grid and one-tap add to cart.",
-    tech: ["GPT-4o", "Vercel AI SDK", "Vision", "RAG", "Next.js"],
-    href: "/projects/multi-modal-visual-stylist",
-    status: "Live",
-  },
-  {
-    title: "Autonomous Agentic Commerce Bot",
-    description:
-      "The chatbot that doesn't just talk — it acts. Tool-calling AI that searches, compares, adds to cart, and checks out autonomously via OpenAI function calling.",
-    tech: ["OpenAI Tools", "Vercel AI SDK", "Shopify", "Agentic AI"],
-    href: "/projects/autonomous-agentic-commerce-bot",
-    status: "Live",
-  },
-  {
-    title: "AI Store Analytics & Insights",
-    description:
-      "Merchant-facing BI copilot — ask plain-English questions about sales, orders, and customers. RAG over 30 days of store data with inline charts.",
-    tech: ["GPT-4o", "RAG", "Analytics", "Vercel AI SDK", "Charts"],
-    href: "/projects/ai-store-analytics-insights",
-    status: "Live",
-  },
-  {
-    title: "Smart Cart Recovery Agent",
-    description:
-      "Proactive AI that automatically recovers abandoned carts with personalized offers, urgency, and style-based incentives — no user action needed to start.",
-    tech: ["GPT-4o", "Proactive AI", "Vercel AI SDK", "Recovery"],
-    href: "/projects/smart-cart-recovery-agent",
-    status: "Live",
-  },
-  {
-    title: "Personalized Style Concierge",
-    description:
-      "AI personal stylist that profiles your taste via a multi-turn quiz, then builds complete outfits with product cards, save-this-look, and one-tap add to cart.",
-    tech: ["GPT-4o", "Multi-turn", "Vercel AI SDK", "Outfit Builder"],
-    href: "/projects/personalized-style-concierge",
-    status: "Live",
-  },
-  {
-    title: "Voice-Enabled Shopping Assistant",
-    description:
-      "Hands-free AI shopping — speak your query, hear the response. Web Speech API for STT, browser SpeechSynthesis for TTS, with full product cards and cart.",
-    tech: ["Web Speech API", "TTS", "GPT-4o", "Vercel AI SDK", "A11y"],
-    href: "/projects/voice-enabled-shopping-assistant",
-    status: "Live",
-  },
-] as const;
+export default async function ProjectsPage() {
+  const locale = await detectLocale();
+  const t = createT(locale);
+  const projects = getLocalizedProjects(locale);
 
-export default function ProjectsPage() {
   return (
     <>
       <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-20">
@@ -111,14 +57,13 @@ export default function ProjectsPage() {
                 clipRule="evenodd"
               />
             </svg>
-            Back to Home
+            {t(DICT.projects.backToHome)}
           </Link>
           <h1 className="text-4xl font-bold text-white sm:text-5xl">
-            Projects
+            {t(DICT.projects.pageTitle)}
           </h1>
           <p className="mt-4 max-w-xl text-lg text-neutral-400">
-            Live demos and production work — each one with its own visual
-            identity. Click any project to open it in a new tab.
+            {t(DICT.projects.intro)}
           </p>
         </div>
       </section>
@@ -127,7 +72,7 @@ export default function ProjectsPage() {
         <div className="mx-auto grid max-w-7xl gap-8 px-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
             <Link
-              key={project.title}
+              key={project.id}
               href={project.href}
               // Each demo lives behind its own brand chrome (KORE,
               // ROZÉ, Curated.) and the global navbar is hidden on
@@ -138,14 +83,16 @@ export default function ProjectsPage() {
               // the affordance matches the behaviour.
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`${project.title} (opens in a new tab)`}
+              aria-label={`${project.title} ${t(
+                DICT.projects.cardOpensInNewTab,
+              )}`}
               className="group relative flex overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
             >
               <div className="flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                    {project.status}
+                    {t(DICT.projects.statusLive)}
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -173,12 +120,12 @@ export default function ProjectsPage() {
                   {project.description}
                 </p>
                 <div className="mt-auto flex flex-wrap gap-2 pt-4">
-                  {project.tech.map((t) => (
+                  {project.tech.map((label) => (
                     <span
-                      key={t}
+                      key={label}
                       className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
                     >
-                      {t}
+                      {label}
                     </span>
                   ))}
                 </div>

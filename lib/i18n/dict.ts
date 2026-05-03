@@ -633,6 +633,26 @@ export const DICT = {
   },
 
   // -------------------------------------------------------------------
+  // /projects — portfolio listing chrome (the project cards themselves
+  // come from `lib/projects-data.ts` + `projects-data.bg.ts`)
+  // -------------------------------------------------------------------
+  projects: {
+    metaTitle: s("Projects", "Проекти"),
+    metaDescription: s(
+      "Portfolio projects by Nacho Tsvetkov – Full-Stack Software Engineer.",
+      "Портфолио проекти от Начо Цветков – Full-Stack софтуерен инженер.",
+    ),
+    pageTitle: s("Projects", "Проекти"),
+    intro: s(
+      "Live demos and production work — each one with its own visual identity. Click any project to open it in a new tab.",
+      "Демо проекти и работа в production — всеки със своя визуална идентичност. Кликни на който и да е проект, за да го отвориш в нов таб.",
+    ),
+    backToHome: s("Back to Home", "Обратно към началото"),
+    statusLive: s("Live", "На живо"),
+    cardOpensInNewTab: s("(opens in a new tab)", "(отваря се в нов таб)"),
+  },
+
+  // -------------------------------------------------------------------
   // /checkout — page chrome + order summary
   // -------------------------------------------------------------------
   checkout: {
