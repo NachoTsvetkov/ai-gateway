@@ -72,3 +72,37 @@ summary::-webkit-details-marker {
 .animate-fade-in-up {
   animation: fade-in-up 0.2s ease-out both;
 }
+
+/*
+  Gentle halo pulse for the floating sales-assistant launcher.
+  Lives on a sibling <span> behind the button so the button itself
+  never animates (avoids fighting with the existing hover:scale-105).
+  Goal: slow, soft "I'm here when you're ready" — not Slack-notification
+  urgency. ~2.6s loop, max scale 1.35, opacity peaks at 0.55.
+*/
+@keyframes sales-launcher-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.sales-launcher-pulse {
+  animation: sales-launcher-pulse 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/*
+  Honour the visitor's reduced-motion preference. A persistent pulsing
+  CTA can trigger vestibular discomfort, so we disable it entirely
+  rather than just slowing it down.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .sales-launcher-pulse {
+    animation: none;
+  }
+}

@@ -3,6 +3,10 @@ import Link from "next/link";
 import { SalesAssistant } from "components/ai/sales-assistant";
 import { formatPrice, formatPriceK, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import {
+  getHookServices,
+  renderServicePrice,
+} from "lib/services-data";
 
 // SEO metadata for the homepage. Kept in EUR — search engines crawl
 // from various IPs and the SERP description should be stable. The
@@ -29,130 +33,11 @@ const PHONE_DISPLAY = "+359 882 700 002";
 // €-prices and non-EU visitors see the same numbers converted to USD.
 // Update prices here in ONE place — they propagate to the rendered
 // page and (via `buildSystemPrompt(currency)`) to the AI assistant.
-
-// Discriminated union for the heterogeneous service-pricing strings.
-// Kept narrow so each variant prints exactly the original wording but
-// with currency-correct symbols/amounts.
-type ServicePrice =
-  | { kind: "from"; eur: number; trail?: string }
-  | { kind: "addon"; addonEur: number; combinedEur: number }
-  | { kind: "monthly"; eur: number }
-  | { kind: "tiered"; tiers: Array<{ label: string; eur: number }> };
-
-function renderServicePrice(p: ServicePrice, currency: Currency): string {
-  switch (p.kind) {
-    case "from":
-      return `Starting at ${formatPrice(p.eur, currency)}${p.trail ? ` ${p.trail}` : ""}`;
-    case "addon":
-      return `Add-on +${formatPrice(p.addonEur, currency)} (full site with chatbot: ${formatPrice(p.combinedEur, currency)})`;
-    case "monthly":
-      return `${formatPrice(p.eur, currency)}/month`;
-    case "tiered":
-      return `Starting at ${p.tiers
-        .map((t) => `${formatPrice(t.eur, currency)} (${t.label})`)
-        .join(" / ")}`;
-  }
-}
-
-// 12 services. Copy verbatim from the brief for items 1–3; written to match
-// the same pain → solution structure for the rest.
-const services: Array<{
-  name: string;
-  pain: string;
-  solution: string;
-  price: ServicePrice;
-}> = [
-  {
-    name: "Custom Responsive Website Build/Redesign",
-    pain: "Your current site looks outdated, loads slowly on mobile, ranks poorly, and doesn’t capture leads.",
-    solution:
-      "Lightning-fast, SEO-optimized, mobile-first sites with forms, analytics & booking.",
-    price: {
-      kind: "tiered",
-      tiers: [
-        { label: "1-page", eur: 59 },
-        { label: "3-page", eur: 97 },
-      ],
-    },
-  },
-  {
-    name: "E-commerce Store Setup & Customization",
-    pain: "Inventory chaos, abandoned carts, and manual order processing killing your margins.",
-    solution:
-      "Shopify/WooCommerce or headless stores with payments, inventory sync & recovery flows.",
-    price: { kind: "from", eur: 273, trail: "(full payments-ready site)" },
-  },
-  {
-    name: "AI Chatbot & Website Virtual Assistant",
-    pain: "Customers message you at night and get no reply → lost sales.",
-    solution:
-      "24/7 intelligent chatbot that answers questions, qualifies leads, books appointments, and even completes sales directly on your site.",
-    price: { kind: "addon", addonEur: 50, combinedEur: 323 },
-  },
-  {
-    name: "Marketing Automation",
-    pain: "You’re sending the same emails, follow-ups, and reminders manually — and 70% of leads go cold before you reach them.",
-    solution:
-      "Email/SMS sequences, abandoned-cart recovery, and behavior-triggered campaigns that nurture leads on autopilot.",
-    price: { kind: "from", eur: 197 },
-  },
-  {
-    name: "Custom CRM",
-    pain: "Customer info lives in spreadsheets, sticky notes, and three different inboxes — leads slip through the cracks.",
-    solution:
-      "A simple, custom CRM tailored to your workflow — pipelines, reminders, and one-click follow-ups your team will actually use.",
-    price: { kind: "from", eur: 297 },
-  },
-  {
-    name: "Online Booking",
-    pain: "You waste hours every week emailing back-and-forth to schedule a 15-minute call.",
-    solution:
-      "Branded booking page with calendar sync, deposits, automated reminders, and Zoom/Meet links — fully integrated into your site.",
-    price: { kind: "from", eur: 79 },
-  },
-  {
-    name: "API Integrations",
-    pain: "You’re copy-pasting data between Shopify, accounting, shipping, and your CRM every single day.",
-    solution:
-      "Custom integrations that sync everything in real time — Stripe, QuickBooks, Mailchimp, HubSpot, Twilio, you name it.",
-    price: { kind: "from", eur: 147 },
-  },
-  {
-    name: "SEO & Conversion Optimization",
-    pain: "You’re invisible on Google and the few visitors you do get bounce in 3 seconds.",
-    solution:
-      "Technical SEO, Core Web Vitals fixes, conversion-focused copy, and A/B-tested CTAs that turn traffic into customers.",
-    price: { kind: "from", eur: 197 },
-  },
-  {
-    name: "AI-Powered Personalization",
-    pain: "Every visitor sees the same generic homepage — so conversion stays flat at 1–2%.",
-    solution:
-      "AI personalizes copy, product recommendations, and offers in real time based on visitor behavior. Conversion lifts of 30–80% are typical.",
-    price: { kind: "from", eur: 247 },
-  },
-  {
-    name: "Ongoing Maintenance & Security Retainer",
-    pain: "One day your site goes down, gets hacked, or breaks after a plugin update — and you have no one to call.",
-    solution:
-      "Monthly retainer with monitoring, backups, security patches, content updates, and priority support. Sleep at night again.",
-    price: { kind: "monthly", eur: 97 },
-  },
-  {
-    name: "AI Agent Development (Autonomous Virtual Employees)",
-    pain: "You can’t afford a full-time assistant or sales rep — but the work keeps piling up.",
-    solution:
-      "Custom AI agents that act, not just chat — they research, send emails, update your CRM, qualify leads, and execute tasks autonomously. One agent can replace 20+ hours of weekly work.",
-    price: { kind: "from", eur: 497 },
-  },
-  {
-    name: "AI Lead Generation & Voice Agents",
-    pain: "Cold outreach is dead, your team hates the phone, and inbound leads vanish if you don’t call within 5 minutes.",
-    solution:
-      "AI voice agents that call, qualify, book meetings, and handle inbound calls 24/7 — in natural-sounding voices.",
-    price: { kind: "from", eur: 597 },
-  },
-];
+//
+// The 12-service catalogue + ServicePrice union now live in
+// `lib/services-data.ts` so they can be shared with `/services`. The
+// homepage only renders the 3 "hook" services as a teaser — see the
+// SERVICES TEASER section below and `getHookServices()`.
 
 // Bundle pricing. The one-time price + optional monthly retainer +
 // "buying separately" comparison are rendered through `formatPrice` so
@@ -164,6 +49,10 @@ type Bundle = {
   retainerEur?: number;
   pain: string;
   includes: string[];
+  /** Optional "free with retainer" perks. Rendered ABOVE `includes`
+   *  with a green check + "FREE" badge so they visually anchor the
+   *  retainer's perceived value. Only used by retainer bundles. */
+  freebies?: string[];
   roiHook: string; // sentence before the "Buying separately" anchor
   roiSavingsEur: number;
   highlight?: boolean;
@@ -193,6 +82,7 @@ const bundles: Bundle[] = [
     oneTimeEur: 354,
     retainerEur: 97,
     pain: "Your business is running but drowning in manual work — emails, follow-ups, scheduling, data entry.",
+    freebies: ["Domain name + hosting — covered by retainer"],
     includes: [
       "Everything in Startup Bundle",
       "Full redesign — up to 5 pages",
@@ -211,6 +101,7 @@ const bundles: Bundle[] = [
     oneTimeEur: 971,
     retainerEur: 97,
     pain: "You want to scale revenue without scaling headcount — and you don’t have time to wait.",
+    freebies: ["Domain name + hosting — covered by retainer"],
     includes: [
       "Everything in Scale-Up Bundle",
       "Custom AI agent (autonomous virtual employee)",
@@ -340,7 +231,7 @@ function buildFaqs(currency: Currency) {
     },
     {
       q: "How does the monthly retainer work?",
-      a: `${retainer}/month covers maintenance, security updates, content changes (up to 2 hours), and priority support. Cancel anytime.`,
+      a: `${retainer}/month covers maintenance, security updates, content changes (up to 2 hours), priority support — and your domain name + hosting are on me for as long as you stay on the retainer. Cancel anytime; you keep ownership of everything.`,
     },
     {
       q: "Do you sign NDAs?",
@@ -369,12 +260,33 @@ export default async function HomePage() {
       {/* ---------------------------------------------------------------- */}
       {/* HERO — sales-first framing, no "AI" framing in the headline       */}
       {/* ---------------------------------------------------------------- */}
+      {/*
+        Layer order (bottom → top):
+          1. `bg-neutral-950` on the section so the area is solid black
+             before the artwork loads (no flash on slow connections).
+          2. `<Image>` with `fill priority` — the homepage's LCP image.
+          3. Vertical darkening gradient so the body copy sits on a
+             calm surface even where the artwork is bright.
+          4. Existing blue/violet radial blobs — they bleed colour
+             back onto the darkened artwork.
+          5. Content (`relative`) — naturally on top thanks to `isolate`
+             on the parent + `-z-10` on the background layers.
+      */}
       <section
         aria-labelledby="hero-heading"
-        className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900"
+        className="relative isolate overflow-hidden bg-neutral-950"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
+        <Image
+          src="/hero-background.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover object-center"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-neutral-950/55 via-neutral-950/80 to-neutral-950/95" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
           {/* Status pill — kept from the original site as a credibility marker */}
@@ -483,7 +395,7 @@ export default async function HomePage() {
           </div>
 
           <p className="mt-8 text-xs text-neutral-400 sm:text-sm">
-            Sofia, Bulgaria · remote worldwide · usually shipping in under 2
+            Sofia, Bulgaria · remote worldwide · usually delivering in under 2
             weeks
           </p>
         </div>
@@ -498,12 +410,12 @@ export default async function HomePage() {
       >
         <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[auto_1fr] lg:items-center lg:gap-16">
           <div className="flex justify-center lg:justify-start">
-            <div className="relative h-44 w-44 shrink-0 overflow-hidden rounded-full border-4 border-blue-500/30 shadow-2xl shadow-blue-500/10 sm:h-52 sm:w-52">
+            <div className="relative h-60 w-60 shrink-0 overflow-hidden rounded-full border-4 border-blue-500/30 shadow-2xl shadow-blue-500/10 sm:h-72 sm:w-72">
               <Image
                 src="/profile.png"
                 alt="Nacho Tsvetkov"
                 fill
-                sizes="(max-width: 640px) 11rem, 13rem"
+                sizes="(max-width: 640px) 15rem, 18rem"
                 className="object-cover object-[center_-50px]"
                 priority
               />
@@ -565,108 +477,6 @@ export default async function HomePage() {
               </div>
             </dl>
           </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* SERVICES                                                         */}
-      {/* ---------------------------------------------------------------- */}
-      <section
-        id="services"
-        aria-labelledby="services-heading"
-        className="scroll-mt-24 border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              Services
-            </p>
-            <h2
-              id="services-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              What I Deliver for Small Businesses & Startups
-            </h2>
-            <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-              Pick a service or grab a bundle below — every line item is
-              fixed-price, fixed-scope, and ships in days.
-            </p>
-          </div>
-
-          {/* Anchor demo — the AI-Powered Shopify Store as living proof */}
-          <div className="mx-auto mt-12 max-w-5xl">
-            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 p-[1px]">
-              <div className="rounded-2xl bg-white p-8 dark:bg-neutral-900 sm:p-10">
-                <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex-1">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                      Live demo
-                    </span>
-                    <h3 className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
-                      AI-Powered Shopify Store
-                    </h3>
-                    <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400 sm:text-base">
-                      A real, deployed example of what a modern e-commerce
-                      site looks like — headless Next.js, real-time AI
-                      recommendations, intelligent chatbot, and one-tap
-                      checkout. Click around and break it.
-                    </p>
-                  </div>
-                  <Link
-                    href={DEMO_URL}
-                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
-                  >
-                    See live demo
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 12-service grid */}
-          <ul className="mx-auto mt-12 grid max-w-7xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <li
-                key={s.name}
-                className="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-              >
-                <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-                  {s.name}
-                </h3>
-                <div className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
-                  <p>
-                    <span className="font-semibold text-neutral-900 dark:text-white">
-                      Pain:
-                    </span>{" "}
-                    {s.pain}
-                  </p>
-                  <p>
-                    <span className="font-semibold text-neutral-900 dark:text-white">
-                      Solution:
-                    </span>{" "}
-                    {s.solution}
-                  </p>
-                </div>
-                <p className="mt-auto pt-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                  {renderServicePrice(s.price, currency)}
-                </p>
-              </li>
-            ))}
-          </ul>
         </div>
       </section>
 
@@ -750,7 +560,36 @@ export default async function HomePage() {
 
                   <p className="text-sm italic text-neutral-300">{b.pain}</p>
 
+                  {/* Includes list. Freebies (when present) render FIRST
+                      with green checks + a "FREE" badge so the visitor
+                      immediately registers them as bonus value before
+                      reading the regular line items. The list takes
+                      `flex-1` so cards align bottom-up regardless of
+                      how many items each bundle ships with. */}
                   <ul className="flex-1 space-y-3 text-sm text-neutral-300">
+                    {b.freebies?.map((item) => (
+                      <li key={`free:${item}`} className="flex gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>
+                          <span className="mr-1.5 inline-flex items-center rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                            Free
+                          </span>
+                          {item}
+                        </span>
+                      </li>
+                    ))}
                     {b.includes.map((item) => (
                       <li key={item} className="flex gap-2">
                         <svg
@@ -808,6 +647,114 @@ export default async function HomePage() {
               Tell me on a 15-min call →
             </a>
           </p>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* SERVICES TEASER — 3 hooks; full catalogue lives at /services      */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        id="services"
+        aria-labelledby="services-heading"
+        className="scroll-mt-24 border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              À la carte
+            </p>
+            <h2
+              id="services-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              Don&apos;t want a bundle? Start with one of these.
+            </h2>
+            <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
+              The three single services most small businesses pick first.
+              Every line item is fixed-price, fixed-scope, and ships in days.
+            </p>
+          </div>
+
+          {/* 3-card hook grid (`getHookServices()` → exactly 3 services).
+              Each card is a Link to its product page so the entire card
+              surface is clickable, not just a corner CTA. */}
+          <ul className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {getHookServices().map((s) => (
+              <li key={s.id}>
+                <Link
+                  href={`/services/${s.id}`}
+                  className="group flex h-full flex-col rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
+                >
+                  <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                    {s.name}
+                  </h3>
+                  <div className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
+                    <p>
+                      <span className="font-semibold text-neutral-900 dark:text-white">
+                        Pain:
+                      </span>{" "}
+                      {s.pain}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-neutral-900 dark:text-white">
+                        Solution:
+                      </span>{" "}
+                      {s.solution}
+                    </p>
+                  </div>
+                  <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                      {renderServicePrice(s.price, currency)}
+                    </p>
+                    <span
+                      aria-hidden="true"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-all group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-neutral-500 dark:group-hover:text-blue-400"
+                    >
+                      See details
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="h-3.5 w-3.5"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          {/* Full-catalogue CTA — links to the dedicated /services page. */}
+          <div className="mt-10 text-center">
+            <Link
+              href="/services"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:border-blue-500"
+            >
+              Browse all 12 services
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+            <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
+              Grouped by the pain they solve — find yours in seconds.
+            </p>
+          </div>
         </div>
       </section>
 

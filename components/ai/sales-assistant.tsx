@@ -385,29 +385,49 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
       {/* Floating launcher — replaces the old static "Book Discovery Call"
           button. The label text matches the user's intent so people who
           just want to book can still recognize it.
+
+          Wrapped in a positioned container so we can render a halo
+          <span> behind it for the gentle "I'm here when you're ready"
+          pulse. The halo lives on a sibling, NOT the button itself, so
+          the existing hover:scale-105 / active:scale-95 transitions
+          aren't fighting an `animation: transform` on the same element.
+
           The `bottom-[calc(...)]` keeps it clear of the iPhone home
           indicator (env(safe-area-inset-bottom) is 0 on every other
           device, so nothing changes there). */}
-      <button
-        type="button"
-        onClick={() => setIsOpen((v) => !v)}
-        className={`fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-blue-600 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 sm:right-8 sm:bottom-[calc(2rem+env(safe-area-inset-bottom))] sm:px-6 sm:py-3.5 ${
-          isOpen ? "opacity-0 pointer-events-none" : ""
+      <div
+        className={`fixed right-5 bottom-[calc(1.25rem+env(safe-area-inset-bottom))] z-50 sm:right-8 sm:bottom-[calc(2rem+env(safe-area-inset-bottom))] ${
+          isOpen ? "pointer-events-none opacity-0" : ""
         }`}
-        aria-label="Chat with Nacho's assistant or book a discovery call"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
+        {/* Halo: same gradient as the button, scaled up + faded out on
+            a 2.6s loop. `pointer-events-none` so it never intercepts the
+            click. Sits BEHIND the button via DOM order — no z-index
+            wrangling needed because the button repaints fully opaque
+            over it at scale(1). */}
+        <span
           aria-hidden="true"
-          className="h-5 w-5"
+          className="sales-launcher-pulse pointer-events-none absolute inset-0 rounded-full bg-gradient-to-br from-blue-600 to-violet-600"
+        />
+        <button
+          type="button"
+          onClick={() => setIsOpen((v) => !v)}
+          className="relative inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-blue-600 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 sm:px-6 sm:py-3.5"
+          aria-label="Chat with Nacho's assistant or book a discovery call"
         >
-          <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
-        </svg>
-        <span className="hidden sm:inline">Chat · Book a Call</span>
-        <span className="sm:hidden">Chat · Book</span>
-      </button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden="true"
+            className="h-5 w-5"
+          >
+            <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+          <span className="hidden sm:inline">Chat · Book a Call</span>
+          <span className="sm:hidden">Chat · Book</span>
+        </button>
+      </div>
 
       {/* Slide-up chat panel — height accounts for safe-area-inset on
           notched iPhones so the input row never hides behind the home
