@@ -10,12 +10,11 @@ import { baseUrl } from "lib/utils";
 export const metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default:
-      "Nacho Tsvetkov – Full-Stack Software Engineer | Fast Websites, AI Chatbots & Autonomous Agents",
+    default: "Nacho Tsvetkov – Money Generator for Small Businesses",
     template: "%s | Nacho Tsvetkov",
   },
   description:
-    "I build fast websites, AI chatbots, and autonomous agents that help small businesses stop losing money and scale without hiring. Starting at 59 €.",
+    "Professional website + smart automation that turns small businesses into 24/7 money generators. No more missed leads, no more manual work. Starting at 59 €.",
   robots: {
     follow: true,
     index: true,

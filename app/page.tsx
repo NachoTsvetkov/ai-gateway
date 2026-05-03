@@ -1,12 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SalesAssistant } from "components/ai/sales-assistant";
+import { formatPrice, formatPriceK, type Currency } from "lib/currency";
+import { detectCurrency } from "lib/currency.server";
 
-// SEO metadata for the homepage. Optimized for the new sales positioning.
+// SEO metadata for the homepage. Kept in EUR — search engines crawl
+// from various IPs and the SERP description should be stable. The
+// visible page content below is currency-aware (EUR for EU visitors,
+// USD for everyone else, derived from `detectCurrency()` at request
+// time).
 export const metadata = {
   title:
-    "Nacho Tsvetkov – Full-Stack Software Engineer | Fast Websites, AI Chatbots & Autonomous Agents",
+    "Nacho Tsvetkov – Money Generator for Small Businesses",
   description:
-    "I build fast websites, AI chatbots, and autonomous agents that help small businesses stop losing money and scale without hiring. Starting at 59 €.",
+    "Professional website + smart automation that turns small businesses into 24/7 money generators. No more missed leads, no more manual work. Starting at €59.",
   openGraph: { type: "website" },
 };
 
@@ -17,103 +24,157 @@ const EMAIL = "nacho.tsvetkov@gmail.com";
 const PHONE_E164 = "+359882700002";
 const PHONE_DISPLAY = "+359 882 700 002";
 
+// All prices below are stored as numeric EUR amounts and are formatted
+// at render-time via `formatPrice(eur, currency)` so EU visitors see
+// €-prices and non-EU visitors see the same numbers converted to USD.
+// Update prices here in ONE place — they propagate to the rendered
+// page and (via `buildSystemPrompt(currency)`) to the AI assistant.
+
+// Discriminated union for the heterogeneous service-pricing strings.
+// Kept narrow so each variant prints exactly the original wording but
+// with currency-correct symbols/amounts.
+type ServicePrice =
+  | { kind: "from"; eur: number; trail?: string }
+  | { kind: "addon"; addonEur: number; combinedEur: number }
+  | { kind: "monthly"; eur: number }
+  | { kind: "tiered"; tiers: Array<{ label: string; eur: number }> };
+
+function renderServicePrice(p: ServicePrice, currency: Currency): string {
+  switch (p.kind) {
+    case "from":
+      return `Starting at ${formatPrice(p.eur, currency)}${p.trail ? ` ${p.trail}` : ""}`;
+    case "addon":
+      return `Add-on +${formatPrice(p.addonEur, currency)} (full site with chatbot: ${formatPrice(p.combinedEur, currency)})`;
+    case "monthly":
+      return `${formatPrice(p.eur, currency)}/month`;
+    case "tiered":
+      return `Starting at ${p.tiers
+        .map((t) => `${formatPrice(t.eur, currency)} (${t.label})`)
+        .join(" / ")}`;
+  }
+}
+
 // 12 services. Copy verbatim from the brief for items 1–3; written to match
 // the same pain → solution structure for the rest.
-const services = [
+const services: Array<{
+  name: string;
+  pain: string;
+  solution: string;
+  price: ServicePrice;
+}> = [
   {
     name: "Custom Responsive Website Build/Redesign",
     pain: "Your current site looks outdated, loads slowly on mobile, ranks poorly, and doesn’t capture leads.",
     solution:
       "Lightning-fast, SEO-optimized, mobile-first sites with forms, analytics & booking.",
-    price: "Starting at 59 € (1-page) / 97 € (3-page)",
+    price: {
+      kind: "tiered",
+      tiers: [
+        { label: "1-page", eur: 59 },
+        { label: "3-page", eur: 97 },
+      ],
+    },
   },
   {
     name: "E-commerce Store Setup & Customization",
     pain: "Inventory chaos, abandoned carts, and manual order processing killing your margins.",
     solution:
       "Shopify/WooCommerce or headless stores with payments, inventory sync & recovery flows.",
-    price: "Starting at 273 € (full payments-ready site)",
+    price: { kind: "from", eur: 273, trail: "(full payments-ready site)" },
   },
   {
     name: "AI Chatbot & Website Virtual Assistant",
     pain: "Customers message you at night and get no reply → lost sales.",
     solution:
       "24/7 intelligent chatbot that answers questions, qualifies leads, books appointments, and even completes sales directly on your site.",
-    price: "Add-on +50 € (full site with chatbot: 323 €)",
+    price: { kind: "addon", addonEur: 50, combinedEur: 323 },
   },
   {
     name: "Marketing Automation",
     pain: "You’re sending the same emails, follow-ups, and reminders manually — and 70% of leads go cold before you reach them.",
     solution:
       "Email/SMS sequences, abandoned-cart recovery, and behavior-triggered campaigns that nurture leads on autopilot.",
-    price: "Starting at 197 €",
+    price: { kind: "from", eur: 197 },
   },
   {
     name: "Custom CRM",
     pain: "Customer info lives in spreadsheets, sticky notes, and three different inboxes — leads slip through the cracks.",
     solution:
       "A simple, custom CRM tailored to your workflow — pipelines, reminders, and one-click follow-ups your team will actually use.",
-    price: "Starting at 297 €",
+    price: { kind: "from", eur: 297 },
   },
   {
     name: "Online Booking",
     pain: "You waste hours every week emailing back-and-forth to schedule a 15-minute call.",
     solution:
       "Branded booking page with calendar sync, deposits, automated reminders, and Zoom/Meet links — fully integrated into your site.",
-    price: "Starting at 79 €",
+    price: { kind: "from", eur: 79 },
   },
   {
     name: "API Integrations",
     pain: "You’re copy-pasting data between Shopify, accounting, shipping, and your CRM every single day.",
     solution:
       "Custom integrations that sync everything in real time — Stripe, QuickBooks, Mailchimp, HubSpot, Twilio, you name it.",
-    price: "Starting at 147 €",
+    price: { kind: "from", eur: 147 },
   },
   {
     name: "SEO & Conversion Optimization",
     pain: "You’re invisible on Google and the few visitors you do get bounce in 3 seconds.",
     solution:
       "Technical SEO, Core Web Vitals fixes, conversion-focused copy, and A/B-tested CTAs that turn traffic into customers.",
-    price: "Starting at 197 €",
+    price: { kind: "from", eur: 197 },
   },
   {
     name: "AI-Powered Personalization",
     pain: "Every visitor sees the same generic homepage — so conversion stays flat at 1–2%.",
     solution:
       "AI personalizes copy, product recommendations, and offers in real time based on visitor behavior. Conversion lifts of 30–80% are typical.",
-    price: "Starting at 247 €",
+    price: { kind: "from", eur: 247 },
   },
   {
     name: "Ongoing Maintenance & Security Retainer",
     pain: "One day your site goes down, gets hacked, or breaks after a plugin update — and you have no one to call.",
     solution:
       "Monthly retainer with monitoring, backups, security patches, content updates, and priority support. Sleep at night again.",
-    price: "97 €/month",
+    price: { kind: "monthly", eur: 97 },
   },
   {
     name: "AI Agent Development (Autonomous Virtual Employees)",
     pain: "You can’t afford a full-time assistant or sales rep — but the work keeps piling up.",
     solution:
       "Custom AI agents that act, not just chat — they research, send emails, update your CRM, qualify leads, and execute tasks autonomously. One agent can replace 20+ hours of weekly work.",
-    price: "Starting at 497 €",
+    price: { kind: "from", eur: 497 },
   },
   {
     name: "AI Lead Generation & Voice Agents",
     pain: "Cold outreach is dead, your team hates the phone, and inbound leads vanish if you don’t call within 5 minutes.",
     solution:
       "AI voice agents that call, qualify, book meetings, and handle inbound calls 24/7 — in natural-sounding voices.",
-    price: "Starting at 597 €",
+    price: { kind: "from", eur: 597 },
   },
 ];
 
-// Bundle pricing. Enterprise intentionally matches Scale-Up monthly so it
-// reads as the no-brainer upgrade.
-const bundles = [
+// Bundle pricing. The one-time price + optional monthly retainer +
+// "buying separately" comparison are rendered through `formatPrice` so
+// they pick up the visitor's display currency.
+type Bundle = {
+  name: string;
+  tagline: string;
+  oneTimeEur: number;
+  retainerEur?: number;
+  pain: string;
+  includes: string[];
+  roiHook: string; // sentence before the "Buying separately" anchor
+  roiSavingsEur: number;
+  highlight?: boolean;
+  nudge?: string;
+};
+
+const bundles: Bundle[] = [
   {
     name: "Startup Bundle",
     tagline: "Launch Fast & Cheap",
-    pricing: "199 €",
-    pricingNote: "one-time",
+    oneTimeEur: 173,
     pain: "You have nothing online — or your current site is so dated it’s costing you customers every week.",
     includes: [
       "1-page custom website (mobile-first, SEO-optimized)",
@@ -123,13 +184,14 @@ const bundles = [
       "Google Analytics + Search Console setup",
       "Hosted & deployed for you",
     ],
-    roi: "First booking pays it back. Buying separately: ~600 €+",
+    roiHook: "First booking pays it back",
+    roiSavingsEur: 600,
   },
   {
     name: "Scale-Up Bundle",
     tagline: "Upgrade & Automate What You Already Have",
-    pricing: "997 €",
-    pricingNote: "one-time + 97 €/month retainer",
+    oneTimeEur: 354,
+    retainerEur: 97,
     pain: "Your business is running but drowning in manual work — emails, follow-ups, scheduling, data entry.",
     includes: [
       "Everything in Startup Bundle",
@@ -140,13 +202,14 @@ const bundles = [
       "Custom lightweight CRM",
       "Monthly: maintenance + content updates + 2h support",
     ],
-    roi: "Replaces 1–2 part-time hires. Buying separately: ~3,000 €+",
+    roiHook: "Replaces 1–2 part-time hires",
+    roiSavingsEur: 3000,
   },
   {
     name: "Enterprise Bundle",
     tagline: "Full AI Transformation",
-    pricing: "997 €",
-    pricingNote: "one-time + 97 €/month retainer",
+    oneTimeEur: 971,
+    retainerEur: 97,
     pain: "You want to scale revenue without scaling headcount — and you don’t have time to wait.",
     includes: [
       "Everything in Scale-Up Bundle",
@@ -156,12 +219,22 @@ const bundles = [
       "Advanced API integrations (CRM, ERP, vendors)",
       "Priority support + monthly strategy call",
     ],
-    roi: "Replaces a 3–5 person team. Buying separately: ~5,000 €+",
+    roiHook: "Replaces a 3–5 person team",
+    roiSavingsEur: 5000,
     highlight: true,
     nudge:
       "Most clients choose Enterprise — the extra AI agents pay for themselves in weeks.",
   },
 ];
+
+function renderBundlePricingNote(b: Bundle, currency: Currency): string {
+  if (!b.retainerEur) return "one-time";
+  return `one-time + ${formatPrice(b.retainerEur, currency)}/month retainer`;
+}
+
+function renderBundleRoi(b: Bundle, currency: Currency): string {
+  return `${b.roiHook}. Buying separately: ~${formatPrice(b.roiSavingsEur, currency)}+`;
+}
 
 // Hero project (real) + 2 fictional-but-realistic mini case studies.
 const caseStudies = [
@@ -230,73 +303,71 @@ const testimonials = [
     name: "David T.",
     role: "Founder, Coaching Studio",
   },
-  {
-    quote:
-      "We stopped paying our agency 4 k €/month. Nacho’s bundle does more for less than rent.",
-    name: "Sofia M.",
-    role: "Fashion Boutique Owner",
-  },
+  // The agency-cost number is the only price-bearing testimonial; we
+  // wrap the array in a builder so the EUR amount converts to USD via
+  // the same FX rate used everywhere else.
 ];
 
-const faqs = [
-  {
-    q: "How fast can you start?",
-    a: "Most projects begin within 48 hours of the discovery call. Simple sites are live in 3–7 days.",
-  },
-  {
-    q: "Do you work with my existing website?",
-    a: "Absolutely. I can refactor, redesign, or layer AI features onto whatever stack you’re on — WordPress, Shopify, custom code, anything.",
-  },
-  {
-    q: "What if I’m not happy?",
-    a: "You get unlimited revisions during the build. If you’re still not happy after launch, I refund the difference. No drama.",
-  },
-  {
-    q: "Where is my site hosted?",
-    a: "Default is Vercel (free tier covers most small businesses). You own everything — code, domain, data.",
-  },
-  {
-    q: "How does the monthly retainer work?",
-    a: "97 €/month covers maintenance, security updates, content changes (up to 2 hours), and priority support. Cancel anytime.",
-  },
-  {
-    q: "Do you sign NDAs?",
-    a: "Yes — standard mutual NDA before any code or data is exchanged.",
-  },
-];
+function buildTestimonials(currency: Currency) {
+  return [
+    ...testimonials,
+    {
+      quote: `We stopped paying our agency ${formatPriceK(4000, currency)}/month. Nacho’s bundle does more for less than rent.`,
+      name: "Sofia M.",
+      role: "Fashion Boutique Owner",
+    },
+  ];
+}
 
-export default function HomePage() {
+function buildFaqs(currency: Currency) {
+  const retainer = formatPrice(97, currency);
+  return [
+    {
+      q: "How fast can you start?",
+      a: "Most projects begin within 48 hours of the discovery call. Simple sites are live in 3–7 days.",
+    },
+    {
+      q: "Do you work with my existing website?",
+      a: "Absolutely. I can refactor, redesign, or layer AI features onto whatever stack you’re on — WordPress, Shopify, custom code, anything.",
+    },
+    {
+      q: "What if I’m not happy?",
+      a: "You get unlimited revisions during the build. If you’re still not happy after launch, I refund the difference. No drama.",
+    },
+    {
+      q: "Where is my site hosted?",
+      a: "Default is Vercel (free tier covers most small businesses). You own everything — code, domain, data.",
+    },
+    {
+      q: "How does the monthly retainer work?",
+      a: `${retainer}/month covers maintenance, security updates, content changes (up to 2 hours), and priority support. Cancel anytime.`,
+    },
+    {
+      q: "Do you sign NDAs?",
+      a: "Yes — standard mutual NDA before any code or data is exchanged.",
+    },
+  ];
+}
+
+export default async function HomePage() {
+  // Resolve display currency from the request headers (Vercel/CF geo).
+  // EU visitors see EUR; everyone else sees USD converted at the fixed
+  // rate in `lib/currency.ts`. Local dev / unknown IPs fall back to EUR.
+  const currency = await detectCurrency();
+  // Currency-aware copies of the price-bearing testimonial / FAQ list —
+  // the rest of each list is fully static.
+  const renderedTestimonials = buildTestimonials(currency);
+  const renderedFaqs = buildFaqs(currency);
+
   return (
     <>
       {/* ---------------------------------------------------------------- */}
-      {/* Floating CTA — visible on every section, never covers footer text */}
+      {/* Floating AI sales assistant — chat + 1-tap booking in one CTA   */}
       {/* ---------------------------------------------------------------- */}
-      <a
-        href={CALENDLY_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-600/40 transition-all hover:scale-105 hover:bg-blue-500 sm:bottom-8 sm:right-8 sm:px-6 sm:py-3.5"
-        aria-label="Book a discovery call"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-          className="h-4 w-4"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.75A2.75 2.75 0 0 1 18.5 6.75v8.5A2.75 2.75 0 0 1 15.75 18H4.25A2.75 2.75 0 0 1 1.5 15.25v-8.5A2.75 2.75 0 0 1 4.25 4H5V2.75A.75.75 0 0 1 5.75 2ZM3 8.5h14V6.75A1.25 1.25 0 0 0 15.75 5.5H4.25A1.25 1.25 0 0 0 3 6.75V8.5Z"
-            clipRule="evenodd"
-          />
-        </svg>
-        <span className="hidden sm:inline">Book Discovery Call</span>
-        <span className="sm:hidden">Book Call</span>
-      </a>
+      <SalesAssistant currency={currency} />
 
       {/* ---------------------------------------------------------------- */}
-      {/* HERO                                                             */}
+      {/* HERO — sales-first framing, no "AI" framing in the headline       */}
       {/* ---------------------------------------------------------------- */}
       <section
         aria-labelledby="hero-heading"
@@ -306,41 +377,55 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
-          {/* Available-for-hire status (kept from the original site) */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm text-green-300">
+          {/* Status pill — kept from the original site as a credibility marker */}
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm text-green-300">
             <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            Available for hire
+            Available for new projects
           </div>
 
-          <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
-            Full-Stack Software Engineer
-          </p>
-
+          {/*
+            The first line ("I Turn Small Businesses Into") is forced to
+            stay together via `whitespace-nowrap` on its wrapper span on
+            screens wide enough to fit it (≥sm). Below that breakpoint we
+            allow it to wrap naturally so it never overflows the viewport.
+            The gradient span is `block` so "Money Generators" always sits
+            on its own line regardless of viewport width. We deliberately
+            do NOT use `text-balance` here — that's what was pushing
+            "Into" onto the second line on desktop.
+          */}
           <h1
             id="hero-heading"
-            className="mx-auto mt-4 max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl"
+            className="mx-auto max-w-5xl text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
-            I Build Fast Websites, AI Chatbots & Autonomous Agents That Help
-            Small Businesses{" "}
-            <span className="text-blue-400">Stop Losing Money</span> and{" "}
-            <span className="text-blue-400">Scale Without Hiring</span>.
+            <span className="sm:whitespace-nowrap">
+              I Turn Small Businesses Into
+            </span>{" "}
+            <span className="block bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+              Money Generators
+            </span>
           </h1>
 
+          <div className="mx-auto mt-7 max-w-2xl space-y-1 text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
+            <p>No more missed leads at 2 AM.</p>
+            <p>No more manual work killing your evenings.</p>
+            <p>No more watching competitors scale while you stay stuck.</p>
+          </div>
+
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
-            No more manual work. No more missed leads at 2 AM. No more
-            expensive developers who disappear after launch.
-            <br className="hidden sm:block" />
-            Get a professional, AI-powered website + automation in days —
+            Get a professional website + smart automation that works 24/7 —
             starting at just{" "}
-            <span className="font-semibold text-white">59 €</span>.
+            <span className="font-semibold text-white">
+              {formatPrice(59, currency)}
+            </span>
+            .
           </p>
 
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              href="#services"
+              href="#bundles"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
-              See Services & Pricing
+              See the Bundles That Make Money
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -361,12 +446,45 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              Book a 15-min Discovery Call
+              Book 15-min Discovery Call
             </a>
           </div>
 
-          <p className="mt-6 text-xs text-neutral-400 sm:text-sm">
-            Available for new projects · Sofia, Bulgaria (remote worldwide)
+          {/* Micro-copy: 60-second preview of the rest of the page so the
+              visitor knows what they get if they keep scrolling. */}
+          <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-700/50 bg-neutral-900/40 p-5 text-left backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
+              In the next 60 seconds you’ll see
+            </p>
+            <ul className="mt-3 space-y-2 text-sm text-neutral-200">
+              {[
+                "The exact services that grow your revenue",
+                "3 done-for-you bundles (Startup → Enterprise)",
+                "Live proof that this actually works",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <p className="mt-8 text-xs text-neutral-400 sm:text-sm">
+            Sofia, Bulgaria · remote worldwide · usually shipping in under 2
+            weeks
           </p>
         </div>
       </section>
@@ -408,15 +526,15 @@ export default function HomePage() {
               I used to build complex enterprise tools. Now I focus
               exclusively on small business owners and early-stage startups
               who are tired of wasting time on manual tasks, losing sales to
-              slow websites, and watching competitors use AI while they stay
-              stuck.
+              slow websites, and watching competitors automate while they
+              stay stuck.
             </p>
             <p className="mt-4 text-base leading-relaxed text-neutral-600 dark:text-neutral-300">
               <span className="font-semibold text-neutral-900 dark:text-white">
                 My specialty:
               </span>{" "}
               fast, affordable solutions that combine modern web tech with
-              practical AI agents — so you get 24/7 automation, higher
+              smart automation — so you get 24/7 revenue systems, higher
               conversions, and real time back in your day.
             </p>
 
@@ -544,7 +662,7 @@ export default function HomePage() {
                   </p>
                 </div>
                 <p className="mt-auto pt-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                  {s.price}
+                  {renderServicePrice(s.price, currency)}
                 </p>
               </li>
             ))}
@@ -581,15 +699,32 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-14 grid items-stretch gap-6 lg:grid-cols-3">
+          {/*
+            Bottom-anchored layout: cards are flex columns, the includes
+            list grows (`flex-1`) to absorb any vertical slack, and
+            everything below the list is pinned tight against the bottom
+            of the card. Result:
+              - All buttons sit at the same Y across cards (grid stretch).
+              - The ROI box sits directly above the button on every card
+                — no orphan empty row when a card has no "nudge".
+              - The Enterprise "Most clients choose…" nudge appears just
+                above its ROI box, eating from its own list space.
+          */}
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {bundles.map((b) => {
               const highlighted = !!b.highlight;
               return (
                 <div
                   key={b.name}
-                  className={`relative flex flex-col rounded-2xl p-8 ${
+                  // The highlighted card is emphasised purely with border
+                  // + gradient + glow + badge. We deliberately do NOT use
+                  // `transform: scale()` here — it visually inflates the
+                  // card 3% and pushes its rendered button ~10px lower
+                  // than the other two, breaking horizontal alignment of
+                  // the ROI/CTA rows across the three columns.
+                  className={`relative flex flex-col gap-6 rounded-2xl p-8 ${
                     highlighted
-                      ? "border-2 border-blue-500 bg-gradient-to-b from-blue-950/60 to-neutral-900 shadow-2xl shadow-blue-600/20 lg:scale-[1.03]"
+                      ? "border-2 border-blue-500 bg-gradient-to-b from-blue-950/60 to-neutral-900 shadow-2xl shadow-blue-600/30 ring-1 ring-blue-500/40"
                       : "border border-neutral-800 bg-neutral-900/60"
                   }`}
                 >
@@ -599,23 +734,23 @@ export default function HomePage() {
                     </span>
                   )}
 
-                  <h3 className="text-xl font-bold text-white">{b.name}</h3>
-                  <p className="mt-1 text-sm text-blue-400">{b.tagline}</p>
+                  <header>
+                    <h3 className="text-xl font-bold text-white">{b.name}</h3>
+                    <p className="mt-1 text-sm text-blue-400">{b.tagline}</p>
+                  </header>
 
-                  <div className="mt-6">
+                  <div>
                     <span className="text-5xl font-extrabold tracking-tight text-white">
-                      {b.pricing}
+                      {formatPrice(b.oneTimeEur, currency)}
                     </span>
                     <p className="mt-1 text-sm text-neutral-400">
-                      {b.pricingNote}
+                      {renderBundlePricingNote(b, currency)}
                     </p>
                   </div>
 
-                  <p className="mt-6 text-sm italic text-neutral-300">
-                    {b.pain}
-                  </p>
+                  <p className="text-sm italic text-neutral-300">{b.pain}</p>
 
-                  <ul className="mt-6 space-y-3 text-sm text-neutral-300">
+                  <ul className="flex-1 space-y-3 text-sm text-neutral-300">
                     {b.includes.map((item) => (
                       <li key={item} className="flex gap-2">
                         <svg
@@ -636,20 +771,20 @@ export default function HomePage() {
                     ))}
                   </ul>
 
-                  <p className="mt-6 rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 text-xs text-neutral-300">
-                    <span className="font-semibold text-white">ROI:</span>{" "}
-                    {b.roi}
-                  </p>
-
                   {b.nudge && (
-                    <p className="mt-3 text-xs text-blue-300">{b.nudge}</p>
+                    <p className="text-xs text-blue-300">{b.nudge}</p>
                   )}
+
+                  <p className="rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 text-xs text-neutral-300">
+                    <span className="font-semibold text-white">ROI:</span>{" "}
+                    {renderBundleRoi(b, currency)}
+                  </p>
 
                   <a
                     href={CALENDLY_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`mt-7 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all ${
+                    className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all ${
                       highlighted
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500"
                         : "border border-neutral-700 text-white hover:border-neutral-500"
@@ -804,7 +939,7 @@ export default function HomePage() {
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {testimonials.map((t) => (
+            {renderedTestimonials.map((t) => (
               <figure
                 key={t.name}
                 className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950"
@@ -861,7 +996,7 @@ export default function HomePage() {
 
           {/* <details>/<summary> keeps this accordion 0-JS for max Lighthouse */}
           <dl className="mt-12 space-y-4">
-            {faqs.map((f) => (
+            {renderedFaqs.map((f) => (
               <details
                 key={f.q}
                 className="group rounded-xl border border-neutral-200 bg-white p-5 transition-all open:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
