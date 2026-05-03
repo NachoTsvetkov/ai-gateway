@@ -124,10 +124,6 @@ export function Navbar({
           </p>
 
           <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
-            {showLanguageToggle && (
-              <LanguageToggle currentLocale={locale} />
-            )}
-
             <Link
               href="/projects"
               prefetch={true}
@@ -171,6 +167,29 @@ export function Navbar({
             </a>
           </div>
         </div>
+
+        {/* Desktop language toggle — pulled out of the inline nav row
+            and absolutely positioned to "hang" below the CTA button.
+            Two reasons:
+              1. Keeps the navbar's height fixed regardless of whether
+                 the toggle is visible (BG visitors got a slightly
+                 taller bar than EN visitors before this).
+              2. Lets the pill float into the page content with a
+                 subtle visual lift, signalling it's a one-off
+                 affordance rather than a primary nav item.
+            The outer wrapper mirrors the inner row's max-w-7xl + px
+            so the pill aligns horizontally with the CTA above it,
+            on every viewport width. Mobile gets the toggle via the
+            menu sheet instead. */}
+        {showLanguageToggle && (
+          <div className="pointer-events-none absolute inset-x-0 top-full hidden sm:block">
+            <div className="mx-auto flex max-w-7xl justify-end px-3 sm:px-4 lg:px-6">
+              <div className="pointer-events-auto mt-1.5">
+                <LanguageToggle currentLocale={locale} />
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       <MobileMenuSheet

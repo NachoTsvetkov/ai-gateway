@@ -639,8 +639,8 @@ export const DICT = {
     pageTitle: s("Review your order", "Прегледай поръчката си"),
     kicker: s("Checkout", "Плащане"),
     intro: s(
-      "Confirm the line items below, fill in your details, and I'll send you a secure Stripe invoice within the hour. Kickoff usually happens within 48 hours of payment.",
-      "Потвърди редовете по-долу, попълни данните си и до един час ти изпращам сигурна Stripe фактура. Старт обикновено до 48 часа след плащане.",
+      "Confirm the line items below, fill in your details, and pay securely with PayPal. Kickoff usually happens within 48 hours of payment.",
+      "Потвърди редовете по-долу, попълни данните си и плати сигурно с PayPal. Старт обикновено до 48 часа след плащане.",
     ),
     summaryHeading: s("Order summary", "Резюме на поръчката"),
     summaryFirstMo: s("(1st mo)", "(1-ви м.)"),
@@ -702,8 +702,8 @@ export const DICT = {
       "При изпращане отиваш на сигурна страница за плащане — данните на картата не минават през този сайт.",
     ),
     formMailtoNote: s(
-      "Submitting forwards your details so I can send a secure Stripe invoice — no card info enters this page. Most invoices arrive within an hour.",
-      "При изпращане получавам данните и ти пращам сигурна Stripe фактура — данните на картата не минават през този сайт. Повечето фактури пристигат до един час.",
+      "Submitting forwards your details so I can send a secure PayPal invoice — no card info enters this page. Most invoices arrive within an hour.",
+      "При изпращане получавам данните и ти пращам сигурна PayPal фактура — данните на картата не минават през този сайт. Повечето фактури пристигат до един час.",
     ),
     formBookFirstPrefix: s("Or ", "Или "),
     formBookFirstLink: s(
