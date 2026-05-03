@@ -7,15 +7,13 @@ export const metadata = {
 };
 
 /**
- * Each project page has its own colour palette so visitors immediately
- * read them as distinct sites rather than templated portfolio entries.
- * The `accent` tokens here mirror the per-page hero theme:
- *   - dot: a small pill of solid colour the card displays at the top
- *   - hoverBorder / hoverShadow: the card frame's hover treatment
- *   - hoverArrow: the right-arrow's hover colour
- *
- * Tokens are literal Tailwind classes (not built dynamically) so the
- * JIT picks them up at build time.
+ * Project listing data. Each individual project page owns its own
+ * colour palette (KORE warm orange, ROZÉ cream + blush, Curated. blue,
+ * etc.) — but the listing here intentionally stays uniform. Mixing
+ * nine different brand colours on one grid reads as "templated card
+ * collection" rather than "nine distinct sites", which is the opposite
+ * of the effect we want; the visual identity each project carries lives
+ * behind its own click.
  */
 const projects = [
   {
@@ -25,12 +23,22 @@ const projects = [
     tech: ["Next.js 16", "Shopify", "OpenAI", "Vercel AI SDK", "Tailwind 4"],
     href: "/projects/ai-shopify-store",
     status: "Live",
-    accent: {
-      dot: "bg-blue-500",
-      hoverBorder: "hover:border-blue-300 dark:hover:border-blue-500/40",
-      hoverShadow: "hover:shadow-blue-600/10",
-      hoverArrow: "group-hover:text-blue-500",
-    },
+  },
+  {
+    title: "Local Fitness Studio · KORE",
+    description:
+      "Standalone studio site (warm orange + cream palette) with an after-hours AI receptionist that books classes, answers schedule questions, and hands off to a coach when needed.",
+    tech: ["Next.js 16", "GPT-4o", "Stripe", "Calendar API", "Tailwind 4"],
+    href: "/projects/local-fitness-studio",
+    status: "Live",
+  },
+  {
+    title: "Boutique Fashion Brand · ROZÉ",
+    description:
+      "Bulgarian-language luxury boutique (cream + blush + serif) with an AI personal stylist and abandoned-cart recovery emails that read like a human wrote them — never spam.",
+    tech: ["Bulgarian", "GPT-4o", "Shopify", "Klaviyo", "AI personalization"],
+    href: "/projects/boutique-fashion-brand",
+    status: "Live",
   },
   {
     title: "Multi-Modal Visual Stylist",
@@ -39,12 +47,6 @@ const projects = [
     tech: ["GPT-4o", "Vercel AI SDK", "Vision", "RAG", "Next.js"],
     href: "/projects/multi-modal-visual-stylist",
     status: "Live",
-    accent: {
-      dot: "bg-rose-500",
-      hoverBorder: "hover:border-rose-300 dark:hover:border-rose-500/40",
-      hoverShadow: "hover:shadow-rose-600/10",
-      hoverArrow: "group-hover:text-rose-500",
-    },
   },
   {
     title: "Autonomous Agentic Commerce Bot",
@@ -53,12 +55,6 @@ const projects = [
     tech: ["OpenAI Tools", "Vercel AI SDK", "Shopify", "Agentic AI"],
     href: "/projects/autonomous-agentic-commerce-bot",
     status: "Live",
-    accent: {
-      dot: "bg-amber-500",
-      hoverBorder: "hover:border-amber-300 dark:hover:border-amber-500/40",
-      hoverShadow: "hover:shadow-amber-600/10",
-      hoverArrow: "group-hover:text-amber-500",
-    },
   },
   {
     title: "AI Store Analytics & Insights",
@@ -67,12 +63,6 @@ const projects = [
     tech: ["GPT-4o", "RAG", "Analytics", "Vercel AI SDK", "Charts"],
     href: "/projects/ai-store-analytics-insights",
     status: "Live",
-    accent: {
-      dot: "bg-emerald-500",
-      hoverBorder: "hover:border-emerald-300 dark:hover:border-emerald-500/40",
-      hoverShadow: "hover:shadow-emerald-600/10",
-      hoverArrow: "group-hover:text-emerald-500",
-    },
   },
   {
     title: "Smart Cart Recovery Agent",
@@ -81,12 +71,6 @@ const projects = [
     tech: ["GPT-4o", "Proactive AI", "Vercel AI SDK", "Recovery"],
     href: "/projects/smart-cart-recovery-agent",
     status: "Live",
-    accent: {
-      dot: "bg-red-500",
-      hoverBorder: "hover:border-red-300 dark:hover:border-red-500/40",
-      hoverShadow: "hover:shadow-red-600/10",
-      hoverArrow: "group-hover:text-red-500",
-    },
   },
   {
     title: "Personalized Style Concierge",
@@ -95,12 +79,6 @@ const projects = [
     tech: ["GPT-4o", "Multi-turn", "Vercel AI SDK", "Outfit Builder"],
     href: "/projects/personalized-style-concierge",
     status: "Live",
-    accent: {
-      dot: "bg-violet-500",
-      hoverBorder: "hover:border-violet-300 dark:hover:border-violet-500/40",
-      hoverShadow: "hover:shadow-violet-600/10",
-      hoverArrow: "group-hover:text-violet-500",
-    },
   },
   {
     title: "Voice-Enabled Shopping Assistant",
@@ -109,12 +87,6 @@ const projects = [
     tech: ["Web Speech API", "TTS", "GPT-4o", "Vercel AI SDK", "A11y"],
     href: "/projects/voice-enabled-shopping-assistant",
     status: "Live",
-    accent: {
-      dot: "bg-sky-500",
-      hoverBorder: "hover:border-sky-300 dark:hover:border-sky-500/40",
-      hoverShadow: "hover:shadow-sky-600/10",
-      hoverArrow: "group-hover:text-sky-500",
-    },
   },
 ] as const;
 
@@ -146,7 +118,7 @@ export default function ProjectsPage() {
           </h1>
           <p className="mt-4 max-w-xl text-lg text-neutral-400">
             Live demos and production work — each one with its own visual
-            identity. Click any project to explore it interactively.
+            identity. Click any project to open it in a new tab.
           </p>
         </div>
       </section>
@@ -157,15 +129,19 @@ export default function ProjectsPage() {
             <Link
               key={project.title}
               href={project.href}
-              className={`group relative flex overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:shadow-xl dark:border-neutral-800 dark:bg-neutral-900 ${project.accent.hoverBorder} ${project.accent.hoverShadow}`}
+              // Each demo lives behind its own brand chrome (KORE,
+              // ROZÉ, Curated.) and the global navbar is hidden on
+              // those routes. Opening in a new tab keeps the visitor
+              // anchored on the portfolio so they can come back
+              // without "where am I?" confusion. The trailing arrow
+              // icon is also swapped for an external-link glyph so
+              // the affordance matches the behaviour.
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${project.title} (opens in a new tab)`}
+              className="group relative flex overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
             >
-              {/* Coloured side stripe — instant visual cue that this card
-                  represents a distinct site, even before the title is read. */}
-              <span
-                aria-hidden="true"
-                className={`absolute inset-y-0 left-0 w-1 ${project.accent.dot}`}
-              />
-              <div className="flex flex-1 flex-col p-6 pl-7">
+              <div className="flex flex-1 flex-col p-6">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -175,11 +151,17 @@ export default function ProjectsPage() {
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className={`h-5 w-5 text-neutral-400 transition-transform group-hover:translate-x-1 ${project.accent.hoverArrow}`}
+                    aria-hidden="true"
+                    className="h-5 w-5 text-neutral-400 transition-transform group-hover:scale-110 group-hover:text-neutral-700 dark:group-hover:text-neutral-300"
                   >
                     <path
                       fillRule="evenodd"
-                      d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                      d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
+                      clipRule="evenodd"
+                    />
+                    <path
+                      fillRule="evenodd"
+                      d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
                       clipRule="evenodd"
                     />
                   </svg>

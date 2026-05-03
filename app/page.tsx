@@ -128,7 +128,25 @@ function renderBundleRoi(b: Bundle, currency: Currency): string {
 }
 
 // Hero project (real) + 2 fictional-but-realistic mini case studies.
+//
+// Card order is deliberate: the Curated. shop sits in the MIDDLE so it
+// reads as the centerpiece of the trio (eye naturally lands on the
+// middle card in a 3-up grid). The `featured` flag on it triggers a
+// blue-bordered, gradient-haloed treatment in the rendering loop —
+// same visual language as the "Most popular" bundle pricing card.
 const caseStudies = [
+  {
+    title: "Local Fitness Studio",
+    summary:
+      "AI booking flow + chatbot replaced the front desk after hours. Members self-serve from any device.",
+    metric: "+340% bookings · 0 missed calls",
+    tech: "Next.js · Stripe · Calendar API · GPT-4o",
+    href: "/projects/local-fitness-studio",
+    cta: "See live demo",
+    badge: "Live demo",
+    real: true,
+    featured: false,
+  },
   {
     title: "AI-Powered Shopify Store",
     summary:
@@ -136,25 +154,22 @@ const caseStudies = [
     metric: "2× conversion rate · 4× faster page load",
     tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
     href: DEMO_URL,
-    cta: "See live demo",
-    badge: "Live demo",
+    cta: "Open the live shop",
+    badge: "Flagship demo · Live shop",
     real: true,
-  },
-  {
-    title: "Local Fitness Studio",
-    summary:
-      "AI booking flow + chatbot replaced the front desk after hours. Members self-serve from any device.",
-    metric: "+340% bookings · 0 missed calls",
-    tech: "Next.js · Stripe · Calendar API · GPT-4o",
-    badge: "Case study",
+    featured: true,
   },
   {
     title: "Boutique Fashion Brand",
     summary:
-      "AI personalization on product pages + abandoned-cart recovery sequences across email and SMS.",
+      "AI personalization on product pages + abandoned-cart recovery sequences across email and SMS. Bulgarian-language demo.",
     metric: "28% cart recovery · +19% AOV",
     tech: "Shopify · AI Personalization · Klaviyo",
-    badge: "Case study",
+    href: "/projects/boutique-fashion-brand",
+    cta: "See live demo",
+    badge: "Live demo",
+    real: true,
+    featured: false,
   },
 ];
 
@@ -798,27 +813,63 @@ export default async function HomePage() {
             </h2>
           </div>
 
+          {/* 3-up grid. The middle card is the flagship Curated. shop —
+              `featured: true` in the array drives a stronger visual
+              treatment (blue border, soft halo, gradient backplate, top
+              ribbon) so the eye lands on it first. Same pattern we use
+              on the bundle-pricing "Most popular" card; we deliberately
+              do NOT scale-transform the featured card because that
+              breaks horizontal alignment of the CTA row across the
+              three columns. */}
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {caseStudies.map((c) => (
               <article
                 key={c.title}
-                className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950"
+                className={`relative flex flex-col rounded-2xl p-6 ${
+                  c.featured
+                    ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/15 ring-1 ring-blue-500/20 dark:border-blue-400 dark:from-blue-950/50 dark:to-neutral-950 dark:shadow-blue-500/20 dark:ring-blue-400/30"
+                    : "border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
+                }`}
               >
-                <span
-                  className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    c.real
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                {c.featured && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md shadow-blue-600/30">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-3 w-3"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {c.badge}
+                  </span>
+                )}
+                {!c.featured && (
+                  <span
+                    className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      c.real
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        c.real ? "bg-green-500" : "bg-neutral-400"
+                      }`}
+                    />
+                    {c.badge}
+                  </span>
+                )}
+                <h3
+                  className={`text-lg font-bold text-neutral-900 dark:text-white ${
+                    c.featured ? "mt-3" : "mt-4"
                   }`}
                 >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      c.real ? "bg-green-500" : "bg-neutral-400"
-                    }`}
-                  />
-                  {c.badge}
-                </span>
-                <h3 className="mt-4 text-lg font-bold text-neutral-900 dark:text-white">
                   {c.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
@@ -833,13 +884,73 @@ export default async function HomePage() {
                 {c.href && (
                   <Link
                     href={c.href}
-                    className="mt-auto pt-5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400"
+                    // Each demo lives behind its own brand chrome (KORE,
+                    // ROZÉ, Curated.) and the global navbar is hidden on
+                    // those routes. Opening in a new tab keeps the
+                    // visitor anchored on the portfolio so they can come
+                    // back without "where am I?" confusion.
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${c.cta || "Read more"} (opens in a new tab)`}
+                    className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
+                      c.featured
+                        ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
+                        : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                    }`}
                   >
-                    {c.cta || "Read more"} →
+                    {c.cta || "Read more"}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
+                        clipRule="evenodd"
+                      />
+                      <path
+                        fillRule="evenodd"
+                        d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                   </Link>
                 )}
               </article>
             ))}
+          </div>
+
+          {/* Full-portfolio CTA — links to the dedicated /projects page.
+              Mirrors the services-section CTA below for visual rhythm:
+              outlined pill + arrow icon + subtitle clarifying what's
+              behind the link. Stays in-tab (same domain, no demo
+              chrome) so visitors can browse and come straight back. */}
+          <div className="mt-12 text-center">
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:border-blue-500"
+            >
+              See all 9 projects
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+            <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
+              + 6 more demos: voice shopping, visual styling, autonomous commerce, and more.
+            </p>
           </div>
         </div>
       </section>

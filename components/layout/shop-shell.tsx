@@ -19,14 +19,25 @@ import { ReactNode } from "react";
  *   still rendered on the other AI demo project pages individually.
  * - The portfolio Footer with the "Fiverr Portfolio Demo" line —
  *   replaced by ShopFooter, which is shop-shaped.
+ *
+ * The wrapping <div> forces a white background + light color-scheme
+ * for the entire shop subtree. The root body has `dark:bg-neutral-900`
+ * which would otherwise bleed through any gap between sections when
+ * the visitor's OS is in dark mode; this wrapper makes "Curated."
+ * read as a single uniform white-based DTC site regardless of system
+ * theme. `colorScheme: 'light'` also lines up form controls and
+ * scrollbars with the surface.
  */
 export function ShopShell({ children }: { children: ReactNode }) {
   return (
-    <>
+    <div
+      className="shop-light min-h-screen bg-white text-neutral-900"
+      style={{ colorScheme: "light" }}
+    >
       <StoreNav />
       {children}
       <ShopFooter />
       <Chatbot />
-    </>
+    </div>
   );
 }

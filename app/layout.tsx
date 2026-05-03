@@ -8,17 +8,22 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import { baseUrl } from "lib/utils";
 
-// Routes where the global marketing navbar should NOT render — the
-// standalone shop experience on the AI Shopify Store demo. These
-// routes use ShopShell (StoreNav + ShopFooter) instead and are framed
-// as a standalone storefront. /product and /search are listed here
-// even though they aren't nested under /projects/ai-shopify-store
-// because the StoreNav category links go to /search/<collection>
-// and product cards link to /product/<handle> — without these the
-// global navbar would reappear the moment the visitor clicks a
-// product or category and the "subdomain" illusion would collapse.
+// Routes where the global marketing navbar should NOT render. Each of
+// these is a standalone "live demo" with its own brand chrome (its
+// own nav + footer), and the marketing navbar would shatter the
+// subdomain-style illusion the moment a visitor lands on one.
+//
+// - /projects/ai-shopify-store + /product + /search → "Curated." shop
+//   (ShopShell). /product and /search live at the root of the app, so
+//   they need their own entries even though the brand sells them as
+//   a single store.
+// - /projects/local-fitness-studio → KORE fitness studio (KoreShell).
+// - /projects/boutique-fashion-brand → ROZÉ Bulgarian boutique
+//   (RozeShell).
 const HIDE_NAVBAR_ON: ReadonlyArray<string> = [
   "/projects/ai-shopify-store",
+  "/projects/local-fitness-studio",
+  "/projects/boutique-fashion-brand",
   "/product",
   "/search",
 ];

@@ -14,6 +14,10 @@ import { Menu } from "lib/shopify/types";
  *   the same Shopify menu the StoreNav uses, and a small honest
  *   "demo store" disclaimer so the visitor knows products aren't real.
  *
+ * Visual identity is white-based (no `dark:` variants) to match the
+ * rest of the standalone-shop experience — see the comment on the
+ * shop landing page for the full reasoning.
+ *
  * We keep it lean and don't fabricate "Free shipping / 30-day returns"
  * promises — the underlying data is a generic Shopify storefront and
  * nothing in the catalogue backs those claims.
@@ -23,19 +27,19 @@ export async function ShopFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950">
+    <footer className="border-t border-neutral-200 bg-neutral-50">
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-6">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand column */}
           <div className="lg:col-span-2">
             <Link
               href="/projects/ai-shopify-store"
-              className="inline-flex items-baseline text-xl font-bold tracking-tight text-neutral-900 dark:text-white"
+              className="inline-flex items-baseline text-xl font-bold tracking-tight text-neutral-900"
             >
               Curated
-              <span className="text-blue-600 dark:text-blue-400">.</span>
+              <span className="text-blue-600">.</span>
             </Link>
-            <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-neutral-600">
               Hand-picked apparel, accessories, and tech audio in one place.
               An AI shopping assistant helps you find exactly what you need.
             </p>
@@ -43,14 +47,14 @@ export async function ShopFooter() {
 
           {/* Shop column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-900 dark:text-white">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-900">
               Shop
             </h3>
             <ul className="mt-4 space-y-2">
               <li>
                 <Link
                   href="/search"
-                  className="text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+                  className="text-sm text-neutral-600 transition-colors hover:text-neutral-900"
                   prefetch
                 >
                   All products
@@ -60,7 +64,7 @@ export async function ShopFooter() {
                 <li key={item.title}>
                   <Link
                     href={item.path}
-                    className="text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+                    className="text-sm text-neutral-600 transition-colors hover:text-neutral-900"
                     prefetch
                   >
                     {item.title}
@@ -72,7 +76,7 @@ export async function ShopFooter() {
 
           {/* Help column */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-900 dark:text-white">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-neutral-900">
               Help
             </h3>
             <ul className="mt-4 space-y-2">
@@ -80,7 +84,7 @@ export async function ShopFooter() {
                 <button
                   type="button"
                   data-chat-trigger="true"
-                  className="text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+                  className="text-sm text-neutral-600 transition-colors hover:text-neutral-900"
                 >
                   Ask the AI assistant
                 </button>
@@ -88,7 +92,7 @@ export async function ShopFooter() {
               <li>
                 <Link
                   href="/search"
-                  className="text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+                  className="text-sm text-neutral-600 transition-colors hover:text-neutral-900"
                 >
                   Search the catalog
                 </Link>
@@ -101,12 +105,12 @@ export async function ShopFooter() {
             do NOT brand this as a portfolio piece here: the standalone
             shop framing breaks if we crow about being a demo. The
             disclosure is a single quiet line. */}
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center dark:border-neutral-800">
-          <p className="text-xs text-neutral-500 dark:text-neutral-500">
+        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-neutral-200 pt-6 sm:flex-row sm:items-center">
+          <p className="text-xs text-neutral-500">
             &copy; {currentYear} Curated. Demo storefront — products are
             illustrative only.
           </p>
-          <p className="text-xs text-neutral-400 dark:text-neutral-600">
+          <p className="text-xs text-neutral-400">
             Powered by Shopify · Next.js · OpenAI
           </p>
         </div>

@@ -26,6 +26,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local build / smoke-test artefacts (e.g. captured `npm run build` /
+# `next start` output during local verification). Never something we
+# want to track.
+*.log
+
 # local env files
 .env*
 !.env.example

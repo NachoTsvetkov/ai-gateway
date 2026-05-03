@@ -30,17 +30,17 @@ export async function StoreNav() {
   const menu = await getMenu("next-js-frontend-header-menu");
 
   return (
-    <div className="sticky top-0 z-30 border-b border-neutral-200/60 bg-neutral-50/95 backdrop-blur-md dark:border-neutral-800/60 dark:bg-neutral-950/95">
+    <div className="sticky top-0 z-30 border-b border-neutral-200/70 bg-white/95 backdrop-blur-md">
       {/* Row 1: brand · search · cart */}
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 lg:px-6">
         <Link
           href="/projects/ai-shopify-store"
           prefetch
-          className="inline-flex items-baseline text-lg font-bold tracking-tight text-neutral-900 transition-colors hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+          className="inline-flex items-baseline text-lg font-bold tracking-tight text-neutral-900 transition-colors hover:text-blue-600"
           aria-label="Curated. — shop home"
         >
           Curated
-          <span className="text-blue-600 dark:text-blue-400">.</span>
+          <span className="text-blue-600">.</span>
         </Link>
 
         <div className="hidden flex-1 justify-center md:flex">
@@ -62,7 +62,7 @@ export async function StoreNav() {
       {menu.length ? (
         <nav
           aria-label="Shop categories"
-          className="border-t border-neutral-200/60 dark:border-neutral-800/60"
+          className="border-t border-neutral-200/70"
         >
           <ul className="mx-auto flex max-w-7xl items-center gap-5 overflow-x-auto px-4 py-2 text-xs font-medium lg:px-6">
             {menu.map((item: Menu) => (
@@ -70,7 +70,7 @@ export async function StoreNav() {
                 <Link
                   href={item.path}
                   prefetch
-                  className="whitespace-nowrap text-neutral-600 underline-offset-4 transition-colors hover:text-neutral-900 hover:underline dark:text-neutral-400 dark:hover:text-white"
+                  className="whitespace-nowrap text-neutral-600 underline-offset-4 transition-colors hover:text-neutral-900 hover:underline"
                 >
                   {item.title}
                 </Link>

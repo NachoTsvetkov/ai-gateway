@@ -82,11 +82,29 @@ export default async function ServicesPage() {
         aria-labelledby="services-heading"
         className="relative overflow-hidden bg-neutral-950 py-20 sm:py-24"
       >
-        {/* Cityscape + floating UI cards background. The image already
-            ships dark, but a vertical darkening gradient is layered on
-            top to keep the white headline + neutral-300 body copy
-            legible regardless of where the image's bright spots fall.
-            A faint blue radial preserves the existing brand glow. */}
+        {/* Background: cityscape skyline + nebula glow + floating UI
+            cards labelled "More Customers / Higher Conversions / Save
+            Time / Reliable Security / Built for Growth / Fixed Price"
+            — they thematically mirror the page's value props, so we
+            want them to actually be visible.
+            
+            The image already ships dark (deep navy + violet horizon),
+            so the overlay only needs to be light enough to keep the
+            white headline + neutral-300 body copy legible without
+            burying the nebula and UI cards behind a wall of black.
+            
+            Stack:
+              1. <Image>             — the photo itself (back)
+              2. dark vignette       — radial: darker at the centre
+                                       horizon (where the headline
+                                       sits) than at the edges (where
+                                       the UI cards live), so text is
+                                       readable but the chrome reads.
+              3. bottom fade         — bottom 30% goes opaque to
+                                       sell the transition into the
+                                       lighter content section below.
+              4. subtle blue glow    — preserves the existing brand
+                                       hint above the eyebrow line.   */}
         <Image
           src="/services-hero-background.png"
           alt=""
@@ -95,7 +113,8 @@ export default async function ServicesPage() {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-neutral-950/65 via-neutral-950/75 to-neutral-950/90" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/65 via-neutral-950/35 to-neutral-950/15" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-neutral-950" />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
