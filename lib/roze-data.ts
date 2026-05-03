@@ -52,6 +52,7 @@ export const ROZE_PRODUCTS: ReadonlyArray<RozeProduct> = [
     price: "720 лв",
     priceBgn: 720,
     swatch: "from-rose-300 via-rose-200 to-[#F4DDD1]",
+    image: "/projects/roze/orchid.jpg",
     badge: "Нова",
   },
   {
@@ -61,6 +62,7 @@ export const ROZE_PRODUCTS: ReadonlyArray<RozeProduct> = [
     price: "980 лв",
     priceBgn: 980,
     swatch: "from-stone-700 via-stone-600 to-stone-800",
+    image: "/projects/roze/sofia.jpg",
     badge: "Лимитирано",
   },
   {
@@ -70,6 +72,7 @@ export const ROZE_PRODUCTS: ReadonlyArray<RozeProduct> = [
     price: "290 лв",
     priceBgn: 290,
     swatch: "from-rose-200 via-[#F4DDD1] to-stone-100",
+    image: "/projects/roze/rose-valley.jpg",
   },
   {
     id: "balchik",
@@ -87,6 +90,7 @@ export const ROZE_PRODUCTS: ReadonlyArray<RozeProduct> = [
     price: "560 лв",
     priceBgn: 560,
     swatch: "from-amber-200 via-amber-100 to-stone-200",
+    image: "/projects/roze/nesebar.jpg",
   },
 ];
 

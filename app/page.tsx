@@ -155,7 +155,7 @@ const caseStudies = [
     tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
     href: DEMO_URL,
     cta: "Open the live shop",
-    badge: "Flagship demo · Live shop",
+    badge: "Live demo",
     real: true,
     featured: true,
   },
@@ -705,19 +705,28 @@ export default async function HomePage() {
               solution is one click away on the product page, and
               keeping the body short makes the card scannable.
 
-              The price block always renders on TWO lines (primary
-              offer / larger offer) regardless of price shape — see
-              `renderServicePriceParts()`. This keeps all three cards
-              visually equal-height and prevents long prices from
-              squeezing the "See details" affordance.
-
-              "See details →" lives on its own row below the price so
-              it never has to fight long price strings for horizontal
-              space — and `whitespace-nowrap` is a belt-and-braces
-              guard against the icon orphaning on a second line. */}
+              Price + "See details →" share the bottom row: price is
+              left-aligned, CTA is right-aligned and pinned to the
+              bottom edge with `items-end`. For "from" prices we
+              collapse the kicker ("Starting at") into the same line
+              as the amount ("€197") so simple prices read as one
+              tight string instead of two awkward stacked lines. For
+              "tiered" and "addon" prices, both lines carry distinct
+              info (e.g. "Add-on +€50" / "Full site with chatbot:
+              €323"), so we keep them stacked — and the right column
+              still bottom-aligns cleanly thanks to `items-end`. */}
           <ul className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {getHookServices().map((s) => {
               const price = renderServicePriceParts(s.price, currency);
+              // "Starting at" is a kicker label, not standalone information,
+              // so for `from` prices we render it as a single combined
+              // line. Same idea for `monthly` (kicker → "€/month").
+              const singleLine =
+                s.price.kind === "from"
+                  ? `${price.primary} ${price.secondary}`
+                  : s.price.kind === "monthly"
+                    ? price.secondary
+                    : null;
               return (
                 <li key={s.id}>
                   <Link
@@ -733,31 +742,35 @@ export default async function HomePage() {
                       </span>{" "}
                       {s.pain}
                     </p>
-                    <div className="mt-auto pt-4">
-                      <div className="space-y-0.5 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                        <p>{price.primary}</p>
-                        <p>{price.secondary}</p>
+                    <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                      <div className="text-sm font-semibold leading-tight text-blue-600 dark:text-blue-400">
+                        {singleLine ? (
+                          <p>{singleLine}</p>
+                        ) : (
+                          <>
+                            <p>{price.primary}</p>
+                            <p>{price.secondary}</p>
+                          </>
+                        )}
                       </div>
-                      <div className="mt-3 flex justify-end">
-                        <span
-                          aria-hidden="true"
-                          className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-neutral-500 transition-all group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-neutral-500 dark:group-hover:text-blue-400"
+                      <span
+                        aria-hidden="true"
+                        className="inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-neutral-500 transition-all group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-neutral-500 dark:group-hover:text-blue-400"
+                      >
+                        See details
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          className="h-3.5 w-3.5"
                         >
-                          See details
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="h-3.5 w-3.5"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </span>
-                      </div>
+                          <path
+                            fillRule="evenodd"
+                            d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </span>
                     </div>
                   </Link>
                 </li>
@@ -832,20 +845,8 @@ export default async function HomePage() {
                 }`}
               >
                 {c.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md shadow-blue-600/30">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-3 w-3"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
                     {c.badge}
                   </span>
                 )}

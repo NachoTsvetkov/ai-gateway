@@ -22,9 +22,12 @@ export const metadata = {
  *   - CartRecovery: a pretend Klaviyo email mock that shows how a
  *     forgotten cart gets re-opened with a personalised note.
  *
- * No stock photography — every "image" is rendered as a colour swatch
- * or gradient panel so the page ships fast and looks deliberate
- * instead of obviously placeholder-y.
+ * Photography mixes hand-picked Unsplash editorial photos (free
+ * license, brand-coherent palette: blush silk, folded knits, cream
+ * fabric, vintage atelier scenes) with brand-correct gradient
+ * swatches as a graceful fallback. The gradients still live behind
+ * each <Image> so a slow connection or missing asset never reveals
+ * a white box — it reveals the brand's colour story.
  */
 export default function RozePage() {
   return (
@@ -375,14 +378,30 @@ function CartRecovery() {
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-stone-200 bg-rose-50 p-3">
-                <div className="aspect-[4/5] rounded-lg bg-gradient-to-br from-rose-300 via-rose-200 to-[#F4DDD1]" />
+                <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-gradient-to-br from-rose-300 via-rose-200 to-[#F4DDD1]">
+                  <Image
+                    src="/projects/roze/orchid.jpg"
+                    alt="Копринена рокля Орхидея"
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 220px"
+                    className="object-cover"
+                  />
+                </div>
                 <p className="mt-2 font-serif text-sm text-stone-950">
                   Орхидея
                 </p>
                 <p className="font-mono text-xs text-stone-600">720 лв</p>
               </div>
               <div className="rounded-xl border border-stone-200 bg-rose-50 p-3">
-                <div className="aspect-[4/5] rounded-lg bg-gradient-to-br from-rose-200 via-[#F4DDD1] to-stone-100" />
+                <div className="relative aspect-[4/5] overflow-hidden rounded-lg bg-gradient-to-br from-rose-200 via-[#F4DDD1] to-stone-100">
+                  <Image
+                    src="/projects/roze/rose-valley.jpg"
+                    alt="Кашмирен шал Розова долина"
+                    fill
+                    sizes="(max-width: 1024px) 50vw, 220px"
+                    className="object-cover"
+                  />
+                </div>
                 <p className="mt-2 font-serif text-sm text-stone-950">
                   Розова долина
                 </p>
@@ -411,16 +430,22 @@ function Editorial() {
       title: "Какво да облечеш на сватба през пролетта",
       tag: "Гардероб",
       gradient: "from-rose-200 via-[#F4DDD1] to-stone-200",
+      image: "/projects/roze/editorial-wedding.jpg",
+      alt: "Букет от бели божури и лавандула",
     },
     {
       title: "Грижа за кашмирен пуловер: 4 правила",
       tag: "Грижа",
       gradient: "from-stone-200 via-stone-100 to-stone-300",
+      image: "/projects/roze/editorial-cashmere.jpg",
+      alt: "Кремав плат с меки гънки",
     },
     {
       title: "Зад кулисите на ателието в София",
       tag: "Ателие",
       gradient: "from-amber-200 via-rose-100 to-stone-200",
+      image: "/projects/roze/editorial-atelier.jpg",
+      alt: "Винтидж шевно ателие с шевна машина и манекен",
     },
   ] as const;
   return (
@@ -449,8 +474,16 @@ function Editorial() {
               className="group cursor-pointer overflow-hidden rounded-2xl border border-stone-200 bg-white"
             >
               <div
-                className={`aspect-[4/3] bg-gradient-to-br ${c.gradient} transition-transform duration-500 group-hover:scale-105`}
-              />
+                className={`relative aspect-[4/3] overflow-hidden bg-gradient-to-br ${c.gradient}`}
+              >
+                <Image
+                  src={c.image}
+                  alt={c.alt}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
               <div className="px-5 py-5">
                 <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-rose-700">
                   {c.tag}

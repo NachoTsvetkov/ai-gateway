@@ -80,31 +80,41 @@ export default async function ServicesPage() {
       {/* ---------------------------------------------------------------- */}
       <section
         aria-labelledby="services-heading"
-        className="relative overflow-hidden bg-neutral-950 py-20 sm:py-24"
+        className="relative isolate overflow-hidden bg-neutral-950 py-20 sm:py-24"
       >
         {/* Background: cityscape skyline + nebula glow + floating UI
             cards labelled "More Customers / Higher Conversions / Save
             Time / Reliable Security / Built for Growth / Fixed Price"
             — they thematically mirror the page's value props, so we
             want them to actually be visible.
-            
+
+            CRITICAL: the section MUST carry `isolate` so it creates
+            its own stacking context. Without it, the `-z-10` layers
+            below fall BEHIND `bg-neutral-950` and the entire hero
+            renders as flat black (which is exactly the bug we just
+            fixed). `isolate` makes -z-10 mean "below content, above
+            this section's own background" — the layering we want.
+
             The image already ships dark (deep navy + violet horizon),
             so the overlay only needs to be light enough to keep the
             white headline + neutral-300 body copy legible without
             burying the nebula and UI cards behind a wall of black.
-            
-            Stack:
-              1. <Image>             — the photo itself (back)
-              2. dark vignette       — radial: darker at the centre
-                                       horizon (where the headline
-                                       sits) than at the edges (where
-                                       the UI cards live), so text is
-                                       readable but the chrome reads.
-              3. bottom fade         — bottom 30% goes opaque to
-                                       sell the transition into the
-                                       lighter content section below.
-              4. subtle blue glow    — preserves the existing brand
-                                       hint above the eyebrow line.   */}
+
+            Stack (bottom → top, all -z-10 except content):
+              1. section bg-neutral-950 — solid black before paint
+              2. <Image>                — the photo itself
+              3. dark vignette          — radial: darker at the centre
+                                          horizon (where the headline
+                                          sits) than at the edges
+                                          (where the UI cards live).
+              4. bottom fade            — bottom 30% goes opaque to
+                                          sell the transition into the
+                                          lighter content section below.
+              5. subtle blue glow       — preserves the existing brand
+                                          hint above the eyebrow line.
+              6. content (`relative`)   — sits at default z-index,
+                                          naturally above the -z-10
+                                          stack thanks to `isolate`.   */}
         <Image
           src="/services-hero-background.png"
           alt=""
@@ -113,7 +123,7 @@ export default async function ServicesPage() {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/65 via-neutral-950/35 to-neutral-950/15" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/85 via-neutral-950/65 to-neutral-950/35" />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-neutral-950" />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
