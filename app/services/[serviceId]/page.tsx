@@ -102,6 +102,26 @@ const ACCENT_GRADIENT: Record<PainCategory["accent"], string> = {
   emerald: "from-emerald-400 to-teal-400",
   amber: "from-amber-400 to-orange-400",
 };
+// Borders for accent-coloured cards (e.g. the "kickoff within 48h"
+// ribbon). Spelled out so Tailwind JIT keeps them in the bundle.
+const ACCENT_BORDER: Record<PainCategory["accent"], string> = {
+  blue: "border-blue-300 dark:border-blue-500/40",
+  violet: "border-violet-300 dark:border-violet-500/40",
+  emerald: "border-emerald-300 dark:border-emerald-500/40",
+  amber: "border-amber-300 dark:border-amber-500/40",
+};
+// Accent gradients tuned for hero-strength CTA cards (light bg, dark
+// text). Used by the deliverables-section "skip the back-and-forth"
+// banner so it visually pops as the page's strongest in-content CTA.
+const ACCENT_GRADIENT_BG: Record<PainCategory["accent"], string> = {
+  blue: "from-blue-50 via-white to-violet-50 dark:from-blue-950/40 dark:via-neutral-900 dark:to-violet-950/40",
+  violet:
+    "from-violet-50 via-white to-fuchsia-50 dark:from-violet-950/40 dark:via-neutral-900 dark:to-fuchsia-950/40",
+  emerald:
+    "from-emerald-50 via-white to-teal-50 dark:from-emerald-950/40 dark:via-neutral-900 dark:to-teal-950/40",
+  amber:
+    "from-amber-50 via-white to-orange-50 dark:from-amber-950/40 dark:via-neutral-900 dark:to-orange-950/40",
+};
 
 // ---------------------------------------------------------------------
 // Page
@@ -288,6 +308,39 @@ export default async function ServiceDetailPage({
                 </li>
               ))}
             </ul>
+
+            {/* End-of-section CTA #1 — PAIN. Red danger framing
+                because the visitor just read 3-5 things actively
+                costing them money. Tone: "stop bleeding". */}
+            <a
+              href="#buy"
+              className="mt-10 flex flex-col items-center justify-between gap-4 rounded-2xl border-2 border-red-300 bg-gradient-to-r from-red-50 to-orange-50 p-6 transition-all hover:border-red-400 hover:shadow-md sm:flex-row dark:border-red-500/40 dark:from-red-950/40 dark:to-orange-950/30 dark:hover:border-red-500/60"
+            >
+              <div className="text-center sm:text-left">
+                <p className="text-base font-bold text-red-900 sm:text-lg dark:text-red-200">
+                  Recognise three of these?
+                </p>
+                <p className="mt-1 text-sm text-red-800/80 dark:text-red-300/80">
+                  Stop the bleeding — every week you wait is money lost.
+                </p>
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-red-700">
+                {buyable.cta.primary}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+            </a>
           </div>
         </section>
       )}
@@ -338,6 +391,61 @@ export default async function ServiceDetailPage({
                 </li>
               ))}
             </ul>
+
+            {/* End-of-section CTA #2 — SOLUTION. Affirmative emerald
+                framing: every box on the list above can be ticked.
+                Visual mirrors the green check icon from the list. */}
+            <div className="mt-10 overflow-hidden rounded-2xl border border-emerald-200 bg-white dark:border-emerald-500/30 dark:bg-neutral-900">
+              <div className="grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto] sm:p-7">
+                <div className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-5 w-5"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </span>
+                  <div>
+                    <p className="text-base font-bold text-neutral-900 sm:text-lg dark:text-white">
+                      Every box above — ticked. Yours in days.
+                    </p>
+                    <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                      No back-and-forth. Fixed scope, fixed price, no
+                      surprises.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href="#buy"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-emerald-500"
+                >
+                  {buyable.cta.primary}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
           </div>
         </section>
       )}
@@ -394,6 +502,47 @@ export default async function ServiceDetailPage({
                 </li>
               ))}
             </ol>
+
+            {/* End-of-section CTA #3 — IMPLEMENTATION. Timeline-led
+                ribbon styled as the next step on the numbered list
+                above (matching numbered circle, dashed connector).
+                Tone: "you've seen the process — kickoff yours". */}
+            <a
+              href="#buy"
+              className={`mt-2 flex items-center gap-5 rounded-2xl border-2 border-dashed p-5 transition-all hover:border-solid hover:bg-neutral-50 dark:hover:bg-neutral-950 ${ACCENT_BORDER[accent]}`}
+            >
+              <span
+                aria-hidden="true"
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-current ${ACCENT_TEXT[accent]}`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .2.08.39.22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78V5Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+              <div className="flex-1">
+                <p className="text-base font-bold text-neutral-900 dark:text-white">
+                  Kickoff within 48h of payment.
+                </p>
+                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                  Lock in your slot — the queue moves fast.
+                </p>
+              </div>
+              <span
+                className={`hidden shrink-0 items-center gap-1.5 text-sm font-semibold sm:inline-flex ${ACCENT_TEXT[accent]}`}
+              >
+                {buyable.cta.primary}
+                <span aria-hidden="true">→</span>
+              </span>
+            </a>
           </div>
         </section>
       )}
@@ -480,6 +629,46 @@ export default async function ServiceDetailPage({
                 </div>
               </div>
             </div>
+
+            {/* End-of-section CTA #4 — DELIVERABLES. The strongest
+                in-content CTA on the page: full-width, accent
+                gradient, price baked in. Tone: "you've seen
+                everything — here's the price, click to commit". */}
+            <a
+              href="#buy"
+              className={`mt-12 flex flex-col items-center gap-6 rounded-2xl border border-neutral-200 bg-gradient-to-br p-8 transition-all hover:-translate-y-0.5 hover:shadow-xl sm:flex-row sm:p-10 dark:border-neutral-800 ${ACCENT_GRADIENT_BG[accent]}`}
+            >
+              <div className="flex-1 text-center sm:text-left">
+                <p className="text-xl font-bold tracking-tight text-neutral-900 sm:text-2xl dark:text-white">
+                  Skip the back-and-forth.
+                </p>
+                <p className="mt-2 text-base text-neutral-700 dark:text-neutral-300">
+                  Get all of this for{" "}
+                  <span
+                    className={`bg-gradient-to-r bg-clip-text font-bold text-transparent ${ACCENT_GRADIENT[accent]}`}
+                  >
+                    {priceText}
+                  </span>{" "}
+                  — fixed scope, fixed price, no surprises.
+                </p>
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-base dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
+                {buyable.cta.primary}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="h-4 w-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </span>
+            </a>
           </div>
         </section>
       )}
@@ -523,6 +712,45 @@ export default async function ServiceDetailPage({
                 </details>
               ))}
             </dl>
+
+            {/* End-of-section CTA #5 — FAQ. Minimal text-led close
+                because the dramatic CTA is right below this section
+                (the actual buy box). Two paths: out of questions →
+                buy; still unsure → talk first. */}
+            <div className="mt-10 border-t border-neutral-200 pt-8 text-center dark:border-neutral-800">
+              <p className="text-base font-semibold text-neutral-900 dark:text-white">
+                Out of questions?
+              </p>
+              <div className="mt-4 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+                <a
+                  href="#buy"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-blue-500"
+                >
+                  {buyable.cta.primary}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href={CALENDLY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-neutral-600 underline-offset-4 transition-colors hover:text-blue-600 hover:underline dark:text-neutral-400 dark:hover:text-blue-400"
+                >
+                  Still unsure? Book a 15-min call instead
+                </a>
+              </div>
+            </div>
           </div>
         </section>
       )}
