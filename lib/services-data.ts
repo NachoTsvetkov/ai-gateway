@@ -14,11 +14,16 @@ import { formatPrice, type Currency } from "./currency";
 // price-shape conventions used across the catalogue.
 // ----------------------------------------------------------------------
 
+type Tier = { label: string; eur: number };
+
 export type ServicePrice =
   | { kind: "from"; eur: number; trail?: string }
   | { kind: "addon"; addonEur: number; combinedEur: number }
   | { kind: "monthly"; eur: number }
-  | { kind: "tiered"; tiers: Array<{ label: string; eur: number }> };
+  // Non-empty tuple type so `[first, ...rest] = tiers` is provably safe
+  // under strict TS — without this TypeScript widens `first` to `Tier
+  // | undefined` because `Array<Tier>` may be empty.
+  | { kind: "tiered"; tiers: readonly [Tier, ...Tier[]] };
 
 export function renderServicePrice(
   p: ServicePrice,
