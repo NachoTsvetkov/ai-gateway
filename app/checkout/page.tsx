@@ -18,15 +18,36 @@ import {
   type Buyable,
   resolveBuyableFromSearchParams,
 } from "lib/buyable";
-import { BUNDLES, getBundle, resolveUpsells } from "lib/bundles-data";
+import {
+  getBundle,
+  getLocalizedBundles,
+  resolveLocalizedUpsells,
+} from "lib/bundles-data";
 import { type Currency, formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import { detectLocale } from "lib/i18n/locale.server";
+import { type Locale, createT } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 import { CheckoutForm } from "components/checkout/checkout-form";
 
-export const metadata = {
-  title: "Checkout — Nacho Tsvetkov",
-  description: "Review your order and pay securely.",
-};
+// Locale-aware metadata: a static `metadata` export always renders in
+// English even when the visitor's cookie says BG, leaking
+// "Review your order and pay securely" into the <title>, <meta
+// description>, og:description and twitter:description on a fully
+// translated page. `generateMetadata` lets us read the locale at
+// request time so the head tags match the body.
+export async function generateMetadata() {
+  const locale = await detectLocale();
+  return locale === "bg"
+    ? {
+        title: "Плащане — Nacho Tsvetkov",
+        description: "Прегледай поръчката си и плати сигурно.",
+      }
+    : {
+        title: "Checkout — Nacho Tsvetkov",
+        description: "Review your order and pay securely.",
+      };
+}
 
 type SearchParams = {
   bundle?: string;
@@ -41,16 +62,31 @@ export default async function CheckoutPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-  const buyable = resolveBuyableFromSearchParams(sp);
-  const currency = await detectCurrency();
+  // Resolve currency + locale in parallel — neither depends on the
+  // other and both reads are cheap, but stacking them serially adds
+  // ~50ms to TTFB on warm SSR.
+  const [currency, locale] = await Promise.all([
+    detectCurrency(),
+    detectLocale(),
+  ]);
+  const t = createT(locale);
+  const buyable = resolveBuyableFromSearchParams(sp, locale);
 
   if (!buyable) {
-    return <PickBundleFallback />;
+    return <PickBundleFallback locale={locale} />;
   }
 
-  const selectedUpsells = resolveUpsells(sp.upsells);
+  const selectedUpsells = resolveLocalizedUpsells(sp.upsells, locale);
   const upsellTotal = selectedUpsells.reduce((sum, u) => sum + u.eur, 0);
-  const oneTimeTotal = buyable.oneTimeEur + upsellTotal;
+
+  // Day-1 charge — same shape across all three buyable variants:
+  //   - One-time order:               setup + upsells
+  //   - Pure-monthly subscription:    first month (= setup) + upsells
+  //   - Setup + retainer subscription: setup + upsells
+  //     (PayPal-side, this is "reduced setup_fee + first cycle"; the
+  //      net charge equals the bundle's advertised one-time price.
+  //      See lib/paypal/subscriptions.ts for the math.)
+  const dueTodayTotal = buyable.oneTimeEur + upsellTotal;
 
   // Hosted-payment URL — bundles can carry a `stripePaymentLink`. For
   // services there's no equivalent today; if Nacho later configures
@@ -66,19 +102,17 @@ export default async function CheckoutPage({
   return (
     <main className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
-        <BackLink href={buyable.detailsUrl} label="Back" />
+        <BackLink href={buyable.detailsUrl} label={t(DICT.cta.backLabel)} />
 
         <header className="mt-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-            Checkout
+            {t(DICT.checkout.kicker)}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
-            Review your order
+            {t(DICT.checkout.pageTitle)}
           </h1>
           <p className="mt-3 max-w-2xl text-base text-neutral-600 dark:text-neutral-400">
-            Confirm the line items below, fill in your details, and I'll
-            send you a secure Stripe invoice within the hour. Kickoff
-            usually happens within 48 hours of payment.
+            {t(DICT.checkout.intro)}
           </p>
         </header>
 
@@ -86,15 +120,21 @@ export default async function CheckoutPage({
           <OrderSummary
             buyable={buyable}
             upsells={selectedUpsells}
-            oneTimeTotal={oneTimeTotal}
+            dueTodayTotal={dueTodayTotal}
             currency={currency}
+            locale={locale}
           />
           <CheckoutForm
             buyable={buyable}
             upsells={selectedUpsells}
-            oneTimeTotalEur={oneTimeTotal}
+            oneTimeTotalEur={dueTodayTotal}
             currency={currency}
             paymentLink={paymentLink}
+            locale={locale}
+            paypalClientId={process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}
+            paypalEnv={
+              process.env.PAYPAL_ENV === "live" ? "live" : "sandbox"
+            }
           />
         </div>
       </div>
@@ -109,14 +149,19 @@ export default async function CheckoutPage({
 function OrderSummary({
   buyable,
   upsells,
-  oneTimeTotal,
+  dueTodayTotal,
   currency,
+  locale,
 }: {
   buyable: Buyable;
-  upsells: ReturnType<typeof resolveUpsells>;
-  oneTimeTotal: number;
+  upsells: ReturnType<typeof resolveLocalizedUpsells>;
+  /** Day-1 charge — setup price + upsells. Matches what PayPal pulls
+   *  from the buyer's card today. */
+  dueTodayTotal: number;
   currency: Currency;
+  locale: Locale;
 }) {
+  const t = createT(locale);
   const isPureMonthly =
     buyable.retainerEur !== undefined &&
     buyable.retainerEur === buyable.oneTimeEur;
@@ -129,7 +174,7 @@ function OrderSummary({
         id="summary-heading"
         className="text-lg font-bold text-neutral-900 dark:text-white"
       >
-        Order summary
+        {t(DICT.checkout.summaryHeading)}
       </h2>
 
       <ul className="mt-5 divide-y divide-neutral-200 dark:divide-neutral-800">
@@ -146,15 +191,15 @@ function OrderSummary({
               className="mt-1 inline-block text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
               {buyable.kind === "bundle"
-                ? "View what's included →"
-                : "View service details →"}
+                ? t(DICT.cta.viewBundleIncludes)
+                : t(DICT.cta.viewServiceDetails)}
             </Link>
           </div>
           <p className="flex-none whitespace-nowrap font-mono text-sm font-semibold text-neutral-900 dark:text-white">
             {formatPrice(buyable.oneTimeEur, currency)}
             {isPureMonthly && (
               <span className="ml-1 text-xs font-normal text-neutral-500">
-                (1st mo)
+                {t(DICT.checkout.summaryFirstMo)}
               </span>
             )}
           </p>
@@ -178,36 +223,41 @@ function OrderSummary({
             </p>
           </li>
         ))}
+
       </ul>
 
       <div className="mt-2 space-y-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
         <div className="flex items-baseline justify-between">
           <span className="text-base font-bold text-neutral-900 dark:text-white">
-            {isPureMonthly ? "First month" : "Total due today"}
+            {isPureMonthly
+              ? t(DICT.checkout.summaryFirstMonth)
+              : t(DICT.checkout.summaryTotalDueToday)}
           </span>
           <span className="font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
-            {formatPrice(oneTimeTotal, currency)}
+            {formatPrice(dueTodayTotal, currency)}
           </span>
         </div>
         {buyable.retainerEur && !isPureMonthly && (
           <div className="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
-            <span>Then monthly retainer</span>
+            <span>{t(DICT.checkout.summaryThenMonthly)}</span>
             <span className="font-mono">
-              {formatPrice(buyable.retainerEur, currency)}/month
+              {formatPrice(buyable.retainerEur, currency)}
+              {t(DICT.pricing.perMonth)}
             </span>
           </div>
         )}
         {isPureMonthly && (
           <div className="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
-            <span>Recurring monthly</span>
+            <span>{t(DICT.checkout.summaryRecurringMonthly)}</span>
             <span className="font-mono">
-              {formatPrice(buyable.retainerEur ?? 0, currency)}/month
+              {formatPrice(buyable.retainerEur ?? 0, currency)}
+              {t(DICT.pricing.perMonth)}
             </span>
           </div>
         )}
         <p className="pt-2 text-xs text-neutral-500 dark:text-neutral-500">
-          Prices in {currency}. Local taxes (if applicable) will be added
-          on the invoice based on your billing country.
+          {t(DICT.checkout.summaryCurrencyPrefix)}
+          {currency}. {t(DICT.checkout.summaryTaxesNote)}
         </p>
       </div>
     </section>
@@ -218,19 +268,20 @@ function OrderSummary({
 // Fallback when no valid buyable is in the URL
 // ---------------------------------------------------------------------
 
-function PickBundleFallback() {
+function PickBundleFallback({ locale }: { locale: Locale }) {
+  const t = createT(locale);
+  const bundles = getLocalizedBundles(locale);
   return (
     <main className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
-          Pick something to check out
+          {t(DICT.checkout.fallbackHeadline)}
         </h1>
         <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-          Looks like the link didn't carry an order through. Pick a
-          bundle below to get back on track, or browse single services.
+          {t(DICT.checkout.fallbackSub)}
         </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
-          {BUNDLES.map((b) => (
+          {bundles.map((b) => (
             <Link
               key={b.id}
               href={`/bundles/${b.id}`}
@@ -247,18 +298,17 @@ function PickBundleFallback() {
                 €{b.oneTimeEur}
               </p>
               <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 transition-transform group-hover:translate-x-0.5 dark:text-blue-400">
-                See bundle →
+                {t(DICT.checkout.fallbackSeeBundle)}
               </p>
             </Link>
           ))}
         </div>
         <p className="mt-8 text-sm text-neutral-600 dark:text-neutral-400">
-          Or{" "}
           <Link
             href="/services"
             className="font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
           >
-            browse single services →
+            {t(DICT.checkout.fallbackBrowse)}
           </Link>
         </p>
       </div>

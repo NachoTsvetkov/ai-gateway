@@ -25,6 +25,8 @@ import {
   isUpsellRecommendedFor,
 } from "lib/buyable";
 import type { Upsell } from "lib/bundles-data";
+import { type Locale, createT, DEFAULT_LOCALE } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 
 export type TierOption = {
   /** Index into the source `tiers[]`. Must match the URL `tier` param. */
@@ -53,9 +55,22 @@ type Props = {
    * the running total + checkout link.
    */
   tiers?: ReadonlyArray<TierOption>;
+  /**
+   * Active locale. Threaded down from the parent server component
+   * (which detected it via cookies + headers). Defaults to English so
+   * older callers keep working unchanged.
+   */
+  locale?: Locale;
 };
 
-export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
+export function CheckoutIsland({
+  buyable,
+  upsells,
+  currency,
+  tiers,
+  locale = DEFAULT_LOCALE,
+}: Props) {
+  const t = createT(locale);
   const headingId = useId();
 
   // Tier state — defaults to whatever tier the buyable arrived as
@@ -133,19 +148,20 @@ export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
     >
       <header className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-          {buyable.kind === "bundle" ? "Optional upgrades" : "Add to your order"}
+          {buyable.kind === "bundle"
+            ? t(DICT.checkoutIsland.optionalUpgradesKicker)
+            : t(DICT.checkoutIsland.addToOrderKicker)}
         </p>
         <h2
           id={headingId}
           className="mt-2 text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white"
         >
           {tiers && tiers.length > 1
-            ? "Pick a tier, then add anything you'd like"
-            : "Add anything you'd like — or just skip them all"}
+            ? t(DICT.checkoutIsland.pickTierHeading)
+            : t(DICT.checkoutIsland.addAnythingHeading)}
         </h2>
         <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-          Recommended upgrades are pre-selected. Untick anything you don't
-          want and the price updates live.
+          {t(DICT.checkoutIsland.upgradesSub)}
         </p>
       </header>
 
@@ -155,7 +171,7 @@ export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
       {tiers && tiers.length > 1 && (
         <fieldset className="mb-6">
           <legend className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-            Tier
+            {t(DICT.checkoutIsland.tierLabel)}
           </legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {tiers.map((t) => {
@@ -225,7 +241,7 @@ export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
                       {u.label}
                       {recommended && (
                         <span className="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
-                          Recommended
+                          {t(DICT.checkoutIsland.recommendedBadge)}
                         </span>
                       )}
                     </p>
@@ -261,7 +277,10 @@ export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
         {upsellTotal > 0 && (
           <div className="flex items-center justify-between text-neutral-700 dark:text-neutral-300">
             <span>
-              {checked.size} upgrade{checked.size === 1 ? "" : "s"}
+              {checked.size}{" "}
+              {checked.size === 1
+                ? t(DICT.checkoutIsland.upgradesSingular)
+                : t(DICT.checkoutIsland.upgradesPlural)}
             </span>
             <span className="font-mono">
               +{formatPrice(upsellTotal, currency)}
@@ -270,7 +289,9 @@ export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
         )}
         <div className="mt-2 flex items-baseline justify-between border-t border-neutral-200 pt-3 dark:border-neutral-800">
           <span className="text-base font-semibold text-neutral-900 dark:text-white">
-            {isPureMonthly ? "First month" : "Total due today"}
+            {isPureMonthly
+              ? t(DICT.checkoutIsland.firstMonth)
+              : t(DICT.checkoutIsland.totalDueToday)}
           </span>
           <span className="font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
             {formatPrice(oneTimeTotal, currency)}
@@ -278,14 +299,17 @@ export function CheckoutIsland({ buyable, upsells, currency, tiers }: Props) {
         </div>
         {buyable.retainerEur && !isPureMonthly && (
           <p className="text-xs text-neutral-500 dark:text-neutral-500">
-            + {formatPrice(buyable.retainerEur, currency)}/month retainer.
-            Cancel anytime.
+            {t(DICT.checkoutIsland.retainerLeading)}
+            {formatPrice(buyable.retainerEur, currency)}
+            {t(DICT.checkoutIsland.retainerLine)}
           </p>
         )}
         {isPureMonthly && (
           <p className="text-xs text-neutral-500 dark:text-neutral-500">
-            Then {formatPrice(buyable.retainerEur ?? 0, currency)}/month.
-            Cancel anytime — you keep ownership of everything.
+            {t(DICT.checkoutIsland.pureMonthlyThen)}
+            {formatPrice(buyable.retainerEur ?? 0, currency)}
+            {t(DICT.pricing.perMonth)}.{" "}
+            {t(DICT.checkoutIsland.pureMonthlyHelper)}
           </p>
         )}
       </div>
