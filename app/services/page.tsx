@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
@@ -79,9 +80,23 @@ export default async function ServicesPage() {
       {/* ---------------------------------------------------------------- */}
       <section
         aria-labelledby="services-heading"
-        className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-20 sm:py-24"
+        className="relative overflow-hidden bg-neutral-950 py-20 sm:py-24"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
+        {/* Cityscape + floating UI cards background. The image already
+            ships dark, but a vertical darkening gradient is layered on
+            top to keep the white headline + neutral-300 body copy
+            legible regardless of where the image's bright spots fall.
+            A faint blue radial preserves the existing brand glow. */}
+        <Image
+          src="/services-hero-background.png"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-10 object-cover object-center"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-neutral-950/65 via-neutral-950/75 to-neutral-950/90" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">

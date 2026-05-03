@@ -934,10 +934,6 @@ export default async function HomePage() {
               </figure>
             ))}
           </div>
-
-          <p className="mt-8 text-center text-xs text-neutral-500 dark:text-neutral-500">
-            (Replace with real testimonials when available.)
-          </p>
         </div>
       </section>
 
