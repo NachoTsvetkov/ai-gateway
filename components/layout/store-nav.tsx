@@ -10,7 +10,10 @@ export async function StoreNav() {
   const menu = await getMenu("next-js-frontend-header-menu");
 
   return (
-    <div className="sticky top-[57px] z-30 flex items-center justify-between border-b border-neutral-200/60 bg-neutral-50/90 px-4 py-2 backdrop-blur-md lg:px-6 dark:border-neutral-800/60 dark:bg-neutral-950/90">
+    // Sticky to top-0 because the AI Shopify Store route hides the
+    // global marketing navbar (see NavbarGate) — this is the topmost
+    // sticky bar on the page, mimicking a standalone shop subdomain.
+    <div className="sticky top-0 z-30 flex items-center justify-between border-b border-neutral-200/60 bg-neutral-50/90 px-4 py-2 backdrop-blur-md lg:px-6 dark:border-neutral-800/60 dark:bg-neutral-950/90">
       <div className="flex w-full items-center">
         <div className="flex w-full items-center gap-1 md:w-1/3">
           {menu.length ? (
