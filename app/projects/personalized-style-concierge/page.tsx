@@ -15,7 +15,7 @@ export default function PersonalizedStyleConciergePage() {
         <div className="mx-auto flex max-w-7xl items-center gap-3">
           <Link
             href="/projects"
-            className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 transition-colors hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400"
+            className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 transition-colors hover:text-violet-600 dark:text-neutral-400 dark:hover:text-violet-400"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -42,13 +42,13 @@ export default function PersonalizedStyleConciergePage() {
         </div>
       </div>
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
+      <section className="relative overflow-hidden bg-gradient-to-br from-violet-950 via-purple-900 to-neutral-900">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-500/25 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-fuchsia-500/15 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-7xl px-6 py-16 sm:py-20 lg:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-sm text-blue-300">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-sm text-violet-200">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -107,7 +107,7 @@ export default function PersonalizedStyleConciergePage() {
       <section className="border-t border-neutral-200 bg-white py-16 dark:border-neutral-800 dark:bg-neutral-900">
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            <p className="text-sm font-semibold uppercase tracking-widest text-violet-600 dark:text-violet-400">
               How it works
             </p>
             <h2 className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-white">

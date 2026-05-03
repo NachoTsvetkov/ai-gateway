@@ -1,6 +1,4 @@
-import { Chatbot } from "components/ai/chatbot";
-import { DemoLauncher } from "components/ai/demo-launcher";
-import { StoreNav } from "components/layout/store-nav";
+import { ShopShell } from "components/layout/shop-shell";
 import { ReactNode } from "react";
 
 export default function StoreProjectLayout({
@@ -8,12 +6,5 @@ export default function StoreProjectLayout({
 }: {
   children: ReactNode;
 }) {
-  return (
-    <>
-      <StoreNav />
-      {children}
-      <DemoLauncher />
-      <Chatbot />
-    </>
-  );
+  return <ShopShell>{children}</ShopShell>;
 }
