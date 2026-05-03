@@ -91,7 +91,7 @@ export default async function Footer() {
             <span className="text-neutral-400">April 2026</span>
             <span className="hidden text-neutral-600 sm:inline">|</span>
             <span className="text-neutral-400">
-              Built by Full-Stack AI Engineer
+              Built by Full-Stack Software Engineer
             </span>
           </p>
           <p className="text-xs text-neutral-600">

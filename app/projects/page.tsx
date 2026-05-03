@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Projects",
-  description: "Portfolio projects by Nacho Tsvetkov – Full-Stack AI Engineer.",
+  description: "Portfolio projects by Nacho Tsvetkov – Full-Stack Software Engineer.",
 };
 
 const projects = [

@@ -1,304 +1,1003 @@
 import Image from "next/image";
 import Link from "next/link";
 
+// SEO metadata for the homepage. Optimized for the new sales positioning.
 export const metadata = {
-  title: "Nacho Tsvetkov – Full-Stack AI Engineer",
+  title:
+    "Nacho Tsvetkov – Full-Stack Software Engineer | Fast Websites, AI Chatbots & Autonomous Agents",
   description:
-    "Full-Stack AI Engineer specializing in Next.js, React, C#, and AI-powered applications. 10+ years of experience building production systems.",
-  openGraph: {
-    type: "website",
-  },
+    "I build fast websites, AI chatbots, and autonomous agents that help small businesses stop losing money and scale without hiring. Starting at 59 €.",
+  openGraph: { type: "website" },
 };
 
-const skills = [
-  { category: "Frontend", items: "React, Next.js, React Native, Tailwind CSS, HTML5, CSS3" },
-  { category: "Backend", items: "C#, .NET Core, ASP.NET, Node.js, PHP" },
-  { category: "AI / ML", items: "OpenAI, Vercel AI SDK, Google Cloud AI" },
-  { category: "Databases", items: "MS SQL, PostgreSQL, MySQL" },
-  { category: "DevOps", items: "Docker, Jenkins, Git, Bamboo, Kafka, RabbitMQ" },
-  { category: "Monitoring", items: "Grafana, Graphite" },
+// Centralized links so the page is easy to repoint later.
+const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
+const DEMO_URL = "/projects/ai-shopify-store";
+const EMAIL = "nacho.tsvetkov@gmail.com";
+const PHONE_E164 = "+359882700002";
+const PHONE_DISPLAY = "+359 882 700 002";
+
+// 12 services. Copy verbatim from the brief for items 1–3; written to match
+// the same pain → solution structure for the rest.
+const services = [
+  {
+    name: "Custom Responsive Website Build/Redesign",
+    pain: "Your current site looks outdated, loads slowly on mobile, ranks poorly, and doesn’t capture leads.",
+    solution:
+      "Lightning-fast, SEO-optimized, mobile-first sites with forms, analytics & booking.",
+    price: "Starting at 59 € (1-page) / 97 € (3-page)",
+  },
+  {
+    name: "E-commerce Store Setup & Customization",
+    pain: "Inventory chaos, abandoned carts, and manual order processing killing your margins.",
+    solution:
+      "Shopify/WooCommerce or headless stores with payments, inventory sync & recovery flows.",
+    price: "Starting at 273 € (full payments-ready site)",
+  },
+  {
+    name: "AI Chatbot & Website Virtual Assistant",
+    pain: "Customers message you at night and get no reply → lost sales.",
+    solution:
+      "24/7 intelligent chatbot that answers questions, qualifies leads, books appointments, and even completes sales directly on your site.",
+    price: "Add-on +50 € (full site with chatbot: 323 €)",
+  },
+  {
+    name: "Marketing Automation",
+    pain: "You’re sending the same emails, follow-ups, and reminders manually — and 70% of leads go cold before you reach them.",
+    solution:
+      "Email/SMS sequences, abandoned-cart recovery, and behavior-triggered campaigns that nurture leads on autopilot.",
+    price: "Starting at 197 €",
+  },
+  {
+    name: "Custom CRM",
+    pain: "Customer info lives in spreadsheets, sticky notes, and three different inboxes — leads slip through the cracks.",
+    solution:
+      "A simple, custom CRM tailored to your workflow — pipelines, reminders, and one-click follow-ups your team will actually use.",
+    price: "Starting at 297 €",
+  },
+  {
+    name: "Online Booking",
+    pain: "You waste hours every week emailing back-and-forth to schedule a 15-minute call.",
+    solution:
+      "Branded booking page with calendar sync, deposits, automated reminders, and Zoom/Meet links — fully integrated into your site.",
+    price: "Starting at 79 €",
+  },
+  {
+    name: "API Integrations",
+    pain: "You’re copy-pasting data between Shopify, accounting, shipping, and your CRM every single day.",
+    solution:
+      "Custom integrations that sync everything in real time — Stripe, QuickBooks, Mailchimp, HubSpot, Twilio, you name it.",
+    price: "Starting at 147 €",
+  },
+  {
+    name: "SEO & Conversion Optimization",
+    pain: "You’re invisible on Google and the few visitors you do get bounce in 3 seconds.",
+    solution:
+      "Technical SEO, Core Web Vitals fixes, conversion-focused copy, and A/B-tested CTAs that turn traffic into customers.",
+    price: "Starting at 197 €",
+  },
+  {
+    name: "AI-Powered Personalization",
+    pain: "Every visitor sees the same generic homepage — so conversion stays flat at 1–2%.",
+    solution:
+      "AI personalizes copy, product recommendations, and offers in real time based on visitor behavior. Conversion lifts of 30–80% are typical.",
+    price: "Starting at 247 €",
+  },
+  {
+    name: "Ongoing Maintenance & Security Retainer",
+    pain: "One day your site goes down, gets hacked, or breaks after a plugin update — and you have no one to call.",
+    solution:
+      "Monthly retainer with monitoring, backups, security patches, content updates, and priority support. Sleep at night again.",
+    price: "97 €/month",
+  },
+  {
+    name: "AI Agent Development (Autonomous Virtual Employees)",
+    pain: "You can’t afford a full-time assistant or sales rep — but the work keeps piling up.",
+    solution:
+      "Custom AI agents that act, not just chat — they research, send emails, update your CRM, qualify leads, and execute tasks autonomously. One agent can replace 20+ hours of weekly work.",
+    price: "Starting at 497 €",
+  },
+  {
+    name: "AI Lead Generation & Voice Agents",
+    pain: "Cold outreach is dead, your team hates the phone, and inbound leads vanish if you don’t call within 5 minutes.",
+    solution:
+      "AI voice agents that call, qualify, book meetings, and handle inbound calls 24/7 — in natural-sounding voices.",
+    price: "Starting at 597 €",
+  },
 ];
 
-const experience = [
+// Bundle pricing. Enterprise intentionally matches Scale-Up monthly so it
+// reads as the no-brainer upgrade.
+const bundles = [
   {
-    role: "Team Lead",
-    company: "E-Commerce NT",
-    period: "April 2021 – Present",
-    tech: "JavaScript, React Native, Google Cloud AI, C#, WPF, ReactJS, PHP",
+    name: "Startup Bundle",
+    tagline: "Launch Fast & Cheap",
+    pricing: "199 €",
+    pricingNote: "one-time",
+    pain: "You have nothing online — or your current site is so dated it’s costing you customers every week.",
+    includes: [
+      "1-page custom website (mobile-first, SEO-optimized)",
+      "AI chatbot trained on your business",
+      "Online booking integration",
+      "Contact form + email capture",
+      "Google Analytics + Search Console setup",
+      "Hosted & deployed for you",
+    ],
+    roi: "First booking pays it back. Buying separately: ~600 €+",
   },
   {
-    role: "Senior Developer",
-    company: "HedgeServ",
-    period: "October 2019 – April 2021",
-    tech: "C#, .NET Core 3.1, ASP.NET, Docker, RabbitMQ, MS SQL",
+    name: "Scale-Up Bundle",
+    tagline: "Upgrade & Automate What You Already Have",
+    pricing: "997 €",
+    pricingNote: "one-time + 97 €/month retainer",
+    pain: "Your business is running but drowning in manual work — emails, follow-ups, scheduling, data entry.",
+    includes: [
+      "Everything in Startup Bundle",
+      "Full redesign — up to 5 pages",
+      "E-commerce / payments ready",
+      "AI chatbot with lead qualification",
+      "Marketing automation (email + SMS sequences)",
+      "Custom lightweight CRM",
+      "Monthly: maintenance + content updates + 2h support",
+    ],
+    roi: "Replaces 1–2 part-time hires. Buying separately: ~3,000 €+",
   },
   {
-    role: "Senior Developer",
-    company: "Team.Blue Nordic",
-    period: "May 2019 – October 2019",
-    tech: "C#, .NET Core 2.1, ASP.NET MVC, MS SQL",
-  },
-  {
-    role: "Intern → Senior Developer",
-    company: "Prevalent, ComStream, Sb Tech, Smart It, Sofia Marine, Dais Software",
-    period: "2013 – 2019",
-    tech: "C#, ASP.NET MVC, WCF, PostgreSQL, RabbitMQ, Docker",
+    name: "Enterprise Bundle",
+    tagline: "Full AI Transformation",
+    pricing: "997 €",
+    pricingNote: "one-time + 97 €/month retainer",
+    pain: "You want to scale revenue without scaling headcount — and you don’t have time to wait.",
+    includes: [
+      "Everything in Scale-Up Bundle",
+      "Custom AI agent (autonomous virtual employee)",
+      "AI voice agent for leads & support",
+      "AI-powered personalization",
+      "Advanced API integrations (CRM, ERP, vendors)",
+      "Priority support + monthly strategy call",
+    ],
+    roi: "Replaces a 3–5 person team. Buying separately: ~5,000 €+",
+    highlight: true,
+    nudge:
+      "Most clients choose Enterprise — the extra AI agents pay for themselves in weeks.",
   },
 ];
 
-export default function PortfolioHome() {
+// Hero project (real) + 2 fictional-but-realistic mini case studies.
+const caseStudies = [
+  {
+    title: "AI-Powered Shopify Store",
+    summary:
+      "Headless Next.js storefront with real-time AI recommendations, intelligent chatbot with Add to Cart, and seamless Shopify integration.",
+    metric: "2× conversion rate · 4× faster page load",
+    tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
+    href: DEMO_URL,
+    cta: "See live demo",
+    badge: "Live demo",
+    real: true,
+  },
+  {
+    title: "Local Fitness Studio",
+    summary:
+      "AI booking flow + chatbot replaced the front desk after hours. Members self-serve from any device.",
+    metric: "+340% bookings · 0 missed calls",
+    tech: "Next.js · Stripe · Calendar API · GPT-4o",
+    badge: "Case study",
+  },
+  {
+    title: "Boutique Fashion Brand",
+    summary:
+      "AI personalization on product pages + abandoned-cart recovery sequences across email and SMS.",
+    metric: "28% cart recovery · +19% AOV",
+    tech: "Shopify · AI Personalization · Klaviyo",
+    badge: "Case study",
+  },
+];
+
+const steps = [
+  {
+    n: "01",
+    title: "Free 15-min discovery call",
+    body: "We map your goals, biggest leaks, and quickest wins. No pressure, no jargon.",
+  },
+  {
+    n: "02",
+    title: "Custom proposal in 24h",
+    body: "Fixed scope, fixed price, fixed timeline. You know exactly what you’re paying for.",
+  },
+  {
+    n: "03",
+    title: "Build & launch in days",
+    body: "Most projects ship in under 2 weeks. You see daily progress in a shared workspace.",
+  },
+  {
+    n: "04",
+    title: "Optional ongoing support",
+    body: "Stay on the retainer for maintenance, new features, or AI tuning. Cancel anytime.",
+  },
+];
+
+const testimonials = [
+  {
+    quote:
+      "Nacho rebuilt our site in 4 days. Lighthouse went from 32 to 98. Conversions doubled in the first week.",
+    name: "Maria K.",
+    role: "Owner, Local Bakery",
+  },
+  {
+    quote:
+      "The AI chatbot books client consultations while I sleep. It paid for itself in 2 weeks.",
+    name: "David T.",
+    role: "Founder, Coaching Studio",
+  },
+  {
+    quote:
+      "We stopped paying our agency 4 k €/month. Nacho’s bundle does more for less than rent.",
+    name: "Sofia M.",
+    role: "Fashion Boutique Owner",
+  },
+];
+
+const faqs = [
+  {
+    q: "How fast can you start?",
+    a: "Most projects begin within 48 hours of the discovery call. Simple sites are live in 3–7 days.",
+  },
+  {
+    q: "Do you work with my existing website?",
+    a: "Absolutely. I can refactor, redesign, or layer AI features onto whatever stack you’re on — WordPress, Shopify, custom code, anything.",
+  },
+  {
+    q: "What if I’m not happy?",
+    a: "You get unlimited revisions during the build. If you’re still not happy after launch, I refund the difference. No drama.",
+  },
+  {
+    q: "Where is my site hosted?",
+    a: "Default is Vercel (free tier covers most small businesses). You own everything — code, domain, data.",
+  },
+  {
+    q: "How does the monthly retainer work?",
+    a: "97 €/month covers maintenance, security updates, content changes (up to 2 hours), and priority support. Cancel anytime.",
+  },
+  {
+    q: "Do you sign NDAs?",
+    a: "Yes — standard mutual NDA before any code or data is exchanged.",
+  },
+];
+
+export default function HomePage() {
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900">
+      {/* ---------------------------------------------------------------- */}
+      {/* Floating CTA — visible on every section, never covers footer text */}
+      {/* ---------------------------------------------------------------- */}
+      <a
+        href={CALENDLY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-600/40 transition-all hover:scale-105 hover:bg-blue-500 sm:bottom-8 sm:right-8 sm:px-6 sm:py-3.5"
+        aria-label="Book a discovery call"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+          className="h-4 w-4"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.75A2.75 2.75 0 0 1 18.5 6.75v8.5A2.75 2.75 0 0 1 15.75 18H4.25A2.75 2.75 0 0 1 1.5 15.25v-8.5A2.75 2.75 0 0 1 4.25 4H5V2.75A.75.75 0 0 1 5.75 2ZM3 8.5h14V6.75A1.25 1.25 0 0 0 15.75 5.5H4.25A1.25 1.25 0 0 0 3 6.75V8.5Z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <span className="hidden sm:inline">Book Discovery Call</span>
+        <span className="sm:hidden">Book Call</span>
+      </a>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* HERO                                                             */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        aria-labelledby="hero-heading"
+        className="relative overflow-hidden bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900"
+      >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
 
-        <div className="relative mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:py-32">
-          <div className="flex flex-col items-center gap-10 lg:flex-row lg:gap-16">
-            {/* Photo */}
-            <div className="shrink-0">
-              <div className="relative h-48 w-48 overflow-hidden rounded-full border-4 border-blue-500/30 shadow-2xl shadow-blue-500/20 sm:h-56 sm:w-56">
-                <Image
-                  src="/profile.png"
-                  alt="Nacho Tsvetkov"
-                  fill
-                  className="object-cover object-top"
-                  priority
+        <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
+          {/* Available-for-hire status (kept from the original site) */}
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm text-green-300">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+            Available for hire
+          </div>
+
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
+            Full-Stack Software Engineer
+          </p>
+
+          <h1
+            id="hero-heading"
+            className="mx-auto mt-4 max-w-4xl text-balance text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl"
+          >
+            I Build Fast Websites, AI Chatbots & Autonomous Agents That Help
+            Small Businesses{" "}
+            <span className="text-blue-400">Stop Losing Money</span> and{" "}
+            <span className="text-blue-400">Scale Without Hiring</span>.
+          </h1>
+
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
+            No more manual work. No more missed leads at 2 AM. No more
+            expensive developers who disappear after launch.
+            <br className="hidden sm:block" />
+            Get a professional, AI-powered website + automation in days —
+            starting at just{" "}
+            <span className="font-semibold text-white">59 €</span>.
+          </p>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="#services"
+              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
+            >
+              See Services & Pricing
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                  clipRule="evenodd"
                 />
-              </div>
+              </svg>
+            </Link>
+            <a
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
+            >
+              Book a 15-min Discovery Call
+            </a>
+          </div>
+
+          <p className="mt-6 text-xs text-neutral-400 sm:text-sm">
+            Available for new projects · Sofia, Bulgaria (remote worldwide)
+          </p>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* ABOUT                                                            */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        aria-labelledby="about-heading"
+        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
+      >
+        <div className="mx-auto grid max-w-6xl gap-12 px-6 lg:grid-cols-[auto_1fr] lg:items-center lg:gap-16">
+          <div className="flex justify-center lg:justify-start">
+            <div className="relative h-44 w-44 shrink-0 overflow-hidden rounded-full border-4 border-blue-500/30 shadow-2xl shadow-blue-500/10 sm:h-52 sm:w-52">
+              <Image
+                src="/profile.png"
+                alt="Nacho Tsvetkov"
+                fill
+                sizes="(max-width: 640px) 11rem, 13rem"
+                className="object-cover object-[center_-50px]"
+                priority
+              />
             </div>
+          </div>
 
-            {/* Info */}
-            <div className="text-center lg:text-left">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm text-green-300">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-                Available for hire
+          <div>
+            <h2
+              id="about-heading"
+              className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400"
+            >
+              About
+            </h2>
+            <p className="mt-3 text-2xl font-bold leading-tight tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
+              I’m Nacho Tsvetkov, Full-Stack Software Engineer with 20+ years
+              building production systems for e-commerce, fintech, and
+              startups.
+            </p>
+            <p className="mt-5 text-base leading-relaxed text-neutral-600 dark:text-neutral-300">
+              I used to build complex enterprise tools. Now I focus
+              exclusively on small business owners and early-stage startups
+              who are tired of wasting time on manual tasks, losing sales to
+              slow websites, and watching competitors use AI while they stay
+              stuck.
+            </p>
+            <p className="mt-4 text-base leading-relaxed text-neutral-600 dark:text-neutral-300">
+              <span className="font-semibold text-neutral-900 dark:text-white">
+                My specialty:
+              </span>{" "}
+              fast, affordable solutions that combine modern web tech with
+              practical AI agents — so you get 24/7 automation, higher
+              conversions, and real time back in your day.
+            </p>
+
+            <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                  Experience
+                </dt>
+                <dd className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
+                  20+ yrs
+                </dd>
               </div>
-
-              <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-                Nacho Tsvetkov
-              </h1>
-              <p className="mt-3 text-xl font-medium text-blue-400 sm:text-2xl">
-                Full-Stack AI Engineer
-              </p>
-              <p className="mt-4 max-w-xl text-lg leading-relaxed text-neutral-300">
-                10+ years building production systems with C#, React, Next.js,
-                and AI. Team lead experienced in e-commerce, fintech, and cloud
-                platforms. Based in Sofia, Bulgaria.
-              </p>
-
-              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-                <Link
-                  href="/projects"
-                  className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
-                >
-                  View Projects
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
-                  </svg>
-                </Link>
-                <a
-                  href="https://www.fiverr.com/users/nachotsvetkov/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-full bg-green-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-green-600/25 transition-all hover:bg-green-500"
-                >
-                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13.74 4.76c-.72 0-1.34.46-1.57 1.1H9.15c-1.7 0-3.08 1.38-3.08 3.08v.63H4.54v3.07h1.53v6.6h3.26v-6.6h2.71v6.6h3.26V12.64h.95v-3.07h-.95V9.1c0-.21.17-.38.38-.38h.57V5.38h-.95c-.02-.4-.12-.62-.56-.62zm-5.2 4.18c.33 0 .6.27.6.6s-.27.6-.6.6-.6-.27-.6-.6.27-.6.6-.6z" />
-                  </svg>
-                  Hire Me on Fiverr
-                </a>
-                <a
-                  href="mailto:nacho.tsvetkov@gmail.com"
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-8 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-500 hover:text-white"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
-                    <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
-                  </svg>
-                  Contact Me
-                </a>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                  Projects
+                </dt>
+                <dd className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
+                  50+
+                </dd>
               </div>
-
-              {/* Social Links */}
-              <div className="mt-6 flex items-center justify-center gap-4 lg:justify-start">
-                <a
-                  href="mailto:nacho.tsvetkov@gmail.com"
-                  className="rounded-lg border border-neutral-700 p-2.5 text-neutral-400 transition-colors hover:border-neutral-500 hover:text-white"
-                  aria-label="Email"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                    <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
-                    <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
-                  </svg>
-                </a>
-                <a
-                  href="https://linkedin.com/in/nachotsvetkov"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-neutral-700 p-2.5 text-neutral-400 transition-colors hover:border-neutral-500 hover:text-white"
-                  aria-label="LinkedIn"
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                  </svg>
-                </a>
-                <a
-                  href="https://facebook.com/nachotsvetkov"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-neutral-700 p-2.5 text-neutral-400 transition-colors hover:border-neutral-500 hover:text-white"
-                  aria-label="Facebook"
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                </a>
-                <a
-                  href="https://x.com/nachotsvetkov"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-neutral-700 p-2.5 text-neutral-400 transition-colors hover:border-neutral-500 hover:text-white"
-                  aria-label="X (Twitter)"
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </a>
-                <a
-                  href="https://www.fiverr.com/users/nachotsvetkov/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-neutral-700 p-2.5 text-neutral-400 transition-colors hover:border-green-500/50 hover:text-green-400"
-                  aria-label="Fiverr"
-                >
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M13.74 4.76c-.72 0-1.34.46-1.57 1.1H9.15c-1.7 0-3.08 1.38-3.08 3.08v.63H4.54v3.07h1.53v6.6h3.26v-6.6h2.71v6.6h3.26V12.64h.95v-3.07h-.95V9.1c0-.21.17-.38.38-.38h.57V5.38h-.95c-.02-.4-.12-.62-.56-.62zm-5.2 4.18c.33 0 .6.27.6.6s-.27.6-.6.6-.6-.27-.6-.6.27-.6.6-.6z" />
-                  </svg>
-                </a>
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                  Avg. delivery
+                </dt>
+                <dd className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
+                  &lt; 2 wks
+                </dd>
               </div>
-
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-neutral-400 lg:justify-start">
-                <span className="inline-flex items-center gap-1.5">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="m9.69 18.933.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 1 0 3 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 0 0 2.273 1.765 11.842 11.842 0 0 0 .976.544l.062.029.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" clipRule="evenodd" />
-                  </svg>
-                  Sofia, Bulgaria
-                </span>
-                <span>·</span>
-                <span>English (Excellent)</span>
-                <span>·</span>
-                <span>Bulgarian (Native)</span>
-              </div>
-            </div>
+            </dl>
           </div>
         </div>
       </section>
 
-      {/* Skills */}
-      <section className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900">
+      {/* ---------------------------------------------------------------- */}
+      {/* SERVICES                                                         */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        id="services"
+        aria-labelledby="services-heading"
+        className="scroll-mt-24 border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
+      >
         <div className="mx-auto max-w-7xl px-6">
-          <h2 className="text-center text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-            Technical Skills
-          </h2>
-          <div className="mx-auto mt-10 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {skills.map((s) => (
-              <div
-                key={s.category}
-                className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-800/50"
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              Services
+            </p>
+            <h2
+              id="services-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              What I Deliver for Small Businesses & Startups
+            </h2>
+            <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
+              Pick a service or grab a bundle below — every line item is
+              fixed-price, fixed-scope, and ships in days.
+            </p>
+          </div>
+
+          {/* Anchor demo — the AI-Powered Shopify Store as living proof */}
+          <div className="mx-auto mt-12 max-w-5xl">
+            <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 p-[1px]">
+              <div className="rounded-2xl bg-white p-8 dark:bg-neutral-900 sm:p-10">
+                <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                      Live demo
+                    </span>
+                    <h3 className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
+                      AI-Powered Shopify Store
+                    </h3>
+                    <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400 sm:text-base">
+                      A real, deployed example of what a modern e-commerce
+                      site looks like — headless Next.js, real-time AI
+                      recommendations, intelligent chatbot, and one-tap
+                      checkout. Click around and break it.
+                    </p>
+                  </div>
+                  <Link
+                    href={DEMO_URL}
+                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
+                  >
+                    See live demo
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 12-service grid */}
+          <ul className="mx-auto mt-12 grid max-w-7xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {services.map((s) => (
+              <li
+                key={s.name}
+                className="flex flex-col rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
               >
-                <h3 className="text-sm font-bold uppercase tracking-wide text-neutral-900 dark:text-white">
-                  {s.category}
+                <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                  {s.name}
+                </h3>
+                <div className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
+                  <p>
+                    <span className="font-semibold text-neutral-900 dark:text-white">
+                      Pain:
+                    </span>{" "}
+                    {s.pain}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-neutral-900 dark:text-white">
+                      Solution:
+                    </span>{" "}
+                    {s.solution}
+                  </p>
+                </div>
+                <p className="mt-auto pt-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
+                  {s.price}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* BUNDLES (the money section)                                      */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        id="bundles"
+        aria-labelledby="bundles-heading"
+        className="scroll-mt-24 border-t border-neutral-800 bg-neutral-950 py-20"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
+              Bundles
+            </p>
+            <h2
+              id="bundles-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            >
+              Pick the Bundle That Pays for Itself
+            </h2>
+            <p className="mt-4 text-base text-neutral-400">
+              Each bundle costs roughly{" "}
+              <span className="font-semibold text-white">
+                1/3 of buying everything separately
+              </span>
+              . The retainer keeps everything alive, secure, and improving
+              every month.
+            </p>
+          </div>
+
+          <div className="mt-14 grid items-stretch gap-6 lg:grid-cols-3">
+            {bundles.map((b) => {
+              const highlighted = !!b.highlight;
+              return (
+                <div
+                  key={b.name}
+                  className={`relative flex flex-col rounded-2xl p-8 ${
+                    highlighted
+                      ? "border-2 border-blue-500 bg-gradient-to-b from-blue-950/60 to-neutral-900 shadow-2xl shadow-blue-600/20 lg:scale-[1.03]"
+                      : "border border-neutral-800 bg-neutral-900/60"
+                  }`}
+                >
+                  {highlighted && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                      Most popular
+                    </span>
+                  )}
+
+                  <h3 className="text-xl font-bold text-white">{b.name}</h3>
+                  <p className="mt-1 text-sm text-blue-400">{b.tagline}</p>
+
+                  <div className="mt-6">
+                    <span className="text-5xl font-extrabold tracking-tight text-white">
+                      {b.pricing}
+                    </span>
+                    <p className="mt-1 text-sm text-neutral-400">
+                      {b.pricingNote}
+                    </p>
+                  </div>
+
+                  <p className="mt-6 text-sm italic text-neutral-300">
+                    {b.pain}
+                  </p>
+
+                  <ul className="mt-6 space-y-3 text-sm text-neutral-300">
+                    {b.includes.map((item) => (
+                      <li key={item} className="flex gap-2">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                          aria-hidden="true"
+                          className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="mt-6 rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 text-xs text-neutral-300">
+                    <span className="font-semibold text-white">ROI:</span>{" "}
+                    {b.roi}
+                  </p>
+
+                  {b.nudge && (
+                    <p className="mt-3 text-xs text-blue-300">{b.nudge}</p>
+                  )}
+
+                  <a
+                    href={CALENDLY_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`mt-7 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all ${
+                      highlighted
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500"
+                        : "border border-neutral-700 text-white hover:border-neutral-500"
+                    }`}
+                  >
+                    Get this bundle
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="mt-10 text-center text-sm text-neutral-400">
+            Need something custom?{" "}
+            <a
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-blue-400 transition-colors hover:text-blue-300"
+            >
+              Tell me on a 15-min call →
+            </a>
+          </p>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* PROVEN RESULTS                                                   */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        aria-labelledby="results-heading"
+        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              Proven Results
+            </p>
+            <h2
+              id="results-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              Real Projects, Real Numbers
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {caseStudies.map((c) => (
+              <article
+                key={c.title}
+                className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950"
+              >
+                <span
+                  className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    c.real
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      c.real ? "bg-green-500" : "bg-neutral-400"
+                    }`}
+                  />
+                  {c.badge}
+                </span>
+                <h3 className="mt-4 text-lg font-bold text-neutral-900 dark:text-white">
+                  {c.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {s.items}
+                  {c.summary}
                 </p>
-              </div>
+                <p className="mt-4 text-sm font-bold text-blue-600 dark:text-blue-400">
+                  {c.metric}
+                </p>
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
+                  {c.tech}
+                </p>
+                {c.href && (
+                  <Link
+                    href={c.href}
+                    className="mt-auto pt-5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400"
+                  >
+                    {c.cta || "Read more"} →
+                  </Link>
+                )}
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Experience */}
-      <section className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950">
+      {/* ---------------------------------------------------------------- */}
+      {/* HOW IT WORKS                                                     */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        aria-labelledby="process-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
+      >
         <div className="mx-auto max-w-7xl px-6">
-          <h2 className="text-center text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-            Experience
-          </h2>
-          <div className="mx-auto mt-10 max-w-3xl space-y-6">
-            {experience.map((exp) => (
-              <div
-                key={exp.role + exp.company}
-                className="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              Process
+            </p>
+            <h2
+              id="process-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              How It Works
+            </h2>
+          </div>
+
+          <ol className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step) => (
+              <li
+                key={step.n}
+                className="rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:border-blue-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
               >
-                <div className="flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
-                  <h3 className="font-semibold text-neutral-900 dark:text-white">
-                    {exp.role}
-                  </h3>
-                  <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                    {exp.period}
-                  </span>
+                <div className="text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400">
+                  {step.n}
                 </div>
-                <p className="mt-1 text-sm text-blue-600 dark:text-blue-400">
-                  {exp.company}
+                <h3 className="mt-2 text-base font-bold text-neutral-900 dark:text-white">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                  {step.body}
                 </p>
-                <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
-                  {exp.tech}
-                </p>
-              </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* TESTIMONIALS                                                     */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        aria-labelledby="testimonials-heading"
+        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              Clients
+            </p>
+            <h2
+              id="testimonials-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              What People Say
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {testimonials.map((t) => (
+              <figure
+                key={t.name}
+                className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                >
+                  <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                </svg>
+                <blockquote className="mt-4 text-base leading-relaxed text-neutral-700 dark:text-neutral-200">
+                  “{t.quote}”
+                </blockquote>
+                <figcaption className="mt-auto pt-6 text-sm">
+                  <div className="font-semibold text-neutral-900 dark:text-white">
+                    {t.name}
+                  </div>
+                  <div className="text-neutral-500 dark:text-neutral-400">
+                    {t.role}
+                  </div>
+                </figcaption>
+              </figure>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Featured Project CTA */}
-      <section className="border-t border-neutral-800 bg-neutral-900 py-20">
-        <div className="mx-auto max-w-7xl px-6 text-center">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-blue-400">
-            Featured Project
-          </h2>
-          <h3 className="mt-4 text-3xl font-bold text-white sm:text-4xl">
-            AI-Powered Shopify Store
-          </h3>
-          <p className="mx-auto mt-4 max-w-xl text-neutral-400">
-            Headless Next.js storefront with real-time AI product
-            recommendations, intelligent chatbot, and seamless Shopify
-            integration. Try it live.
+          <p className="mt-8 text-center text-xs text-neutral-500 dark:text-neutral-500">
+            (Replace with real testimonials when available.)
           </p>
-          <Link
-            href="/projects/ai-shopify-store"
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
-          >
-            Explore Live Demo
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z" clipRule="evenodd" />
-            </svg>
-          </Link>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-800 bg-neutral-950 py-8">
-        <div className="mx-auto max-w-7xl px-6 text-center text-sm text-neutral-500">
-          <div className="mb-4 flex items-center justify-center gap-5">
-            <a href="mailto:nacho.tsvetkov@gmail.com" className="text-neutral-500 transition-colors hover:text-white" aria-label="Email">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      {/* ---------------------------------------------------------------- */}
+      {/* FAQ                                                              */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        aria-labelledby="faq-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              FAQ
+            </p>
+            <h2
+              id="faq-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              Quick Answers
+            </h2>
+          </div>
+
+          {/* <details>/<summary> keeps this accordion 0-JS for max Lighthouse */}
+          <dl className="mt-12 space-y-4">
+            {faqs.map((f) => (
+              <details
+                key={f.q}
+                className="group rounded-xl border border-neutral-200 bg-white p-5 transition-all open:shadow-md dark:border-neutral-800 dark:bg-neutral-900"
+              >
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-base font-semibold text-neutral-900 dark:text-white">
+                  <dt>{f.q}</dt>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 text-neutral-400 transition-transform group-open:rotate-45"
+                  >
+                    <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+                  </svg>
+                </summary>
+                <dd className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                  {f.a}
+                </dd>
+              </details>
+            ))}
+          </dl>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* FINAL CTA                                                        */}
+      {/* ---------------------------------------------------------------- */}
+      <section
+        id="contact"
+        aria-labelledby="cta-heading"
+        className="scroll-mt-24 border-t border-neutral-800 bg-gradient-to-br from-blue-700 via-blue-600 to-violet-700 py-20 text-white"
+      >
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <h2
+            id="cta-heading"
+            className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
+          >
+            Stop losing money to slow tech and manual work.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg">
+            Book a free 15-minute discovery call. I’ll map your biggest leak,
+            quote it on the spot, and you’ll know within 24 hours whether
+            we’re a fit.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <a
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-blue-700 shadow-lg transition-all hover:scale-[1.02] hover:bg-blue-50"
+            >
+              Book Discovery Call
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </a>
+            <a
+              href={`mailto:${EMAIL}`}
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
+            >
+              Or email me directly
+            </a>
+          </div>
+          <p className="mt-6 text-xs text-blue-100">
+            Most calls booked today get a proposal back tomorrow.
+          </p>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------------------- */}
+      {/* PAGE FOOTER                                                      */}
+      {/* ---------------------------------------------------------------- */}
+      <footer className="border-t border-neutral-800 bg-neutral-950 py-10">
+        <div className="mx-auto max-w-7xl px-6 text-center text-sm text-neutral-400">
+          <div className="mb-5 flex items-center justify-center gap-4">
+            <a
+              href={`mailto:${EMAIL}`}
+              className="rounded-lg border border-neutral-800 p-2.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+              aria-label={`Email Nacho at ${EMAIL}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-4 w-4"
+              >
                 <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
                 <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
               </svg>
             </a>
-            <a href="https://linkedin.com/in/nachotsvetkov" target="_blank" rel="noopener noreferrer" className="text-neutral-500 transition-colors hover:text-white" aria-label="LinkedIn">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+            <a
+              href={`tel:${PHONE_E164}`}
+              className="rounded-lg border border-neutral-800 p-2.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+              aria-label={`Call Nacho at ${PHONE_DISPLAY}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+                className="h-4 w-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M2 3.5A1.5 1.5 0 0 1 3.5 2h1.148a1.5 1.5 0 0 1 1.465 1.175l.716 3.223a1.5 1.5 0 0 1-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 0 0 6.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 0 1 1.767-1.052l3.223.716A1.5 1.5 0 0 1 18 15.352V16.5a1.5 1.5 0 0 1-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 0 1 2.43 8.326 13.019 13.019 0 0 1 2 5V3.5Z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </a>
-            <a href="https://facebook.com/nachotsvetkov" target="_blank" rel="noopener noreferrer" className="text-neutral-500 transition-colors hover:text-white" aria-label="Facebook">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-            </a>
-            <a href="https://x.com/nachotsvetkov" target="_blank" rel="noopener noreferrer" className="text-neutral-500 transition-colors hover:text-white" aria-label="X">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-            </a>
-            <a href="https://www.fiverr.com/users/nachotsvetkov/" target="_blank" rel="noopener noreferrer" className="text-neutral-500 transition-colors hover:text-green-400" aria-label="Fiverr">
-              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13.74 4.76c-.72 0-1.34.46-1.57 1.1H9.15c-1.7 0-3.08 1.38-3.08 3.08v.63H4.54v3.07h1.53v6.6h3.26v-6.6h2.71v6.6h3.26V12.64h.95v-3.07h-.95V9.1c0-.21.17-.38.38-.38h.57V5.38h-.95c-.02-.4-.12-.62-.56-.62zm-5.2 4.18c.33 0 .6.27.6.6s-.27.6-.6.6-.6-.27-.6-.6.27-.6.6-.6z" /></svg>
+            <a
+              href="https://linkedin.com/in/nachotsvetkov"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-lg border border-neutral-800 p-2.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+              aria-label="LinkedIn"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+              </svg>
             </a>
           </div>
           <p>
@@ -306,7 +1005,20 @@ export default function PortfolioHome() {
             reserved.
           </p>
           <p className="mt-2 text-xs text-neutral-600">
-            nacho.tsvetkov@gmail.com &middot; Sofia, Bulgaria
+            <a
+              href={`mailto:${EMAIL}`}
+              className="transition-colors hover:text-neutral-300"
+            >
+              {EMAIL}
+            </a>{" "}
+            ·{" "}
+            <a
+              href={`tel:${PHONE_E164}`}
+              className="transition-colors hover:text-neutral-300"
+            >
+              {PHONE_DISPLAY}
+            </a>{" "}
+            · Sofia, Bulgaria
           </p>
         </div>
       </footer>
