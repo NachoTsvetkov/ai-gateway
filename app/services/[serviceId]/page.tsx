@@ -173,7 +173,11 @@ export default async function ServiceDetailPage({
   // client-side as the visitor toggles between tiers.
   const buyable = buyableFromService(service, undefined, locale);
   const tiers = buildTierOptions(baseService);
-  const upsells = getApplicableUpsells(buyable);
+  // Pass `locale` so the upsell labels + descriptions render through
+  // the BG overlay. Without this the island falls back to EN copy
+  // even on a fully translated page (the default for the optional
+  // arg is "en").
+  const upsells = getApplicableUpsells(buyable, locale);
 
   return (
     <main className="bg-white dark:bg-neutral-900">
