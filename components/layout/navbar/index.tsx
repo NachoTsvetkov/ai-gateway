@@ -14,17 +14,27 @@ const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
  *             Because the left and right columns are both `flex-1`,
  *             they share the remaining space equally — so this label
  *             sits on the page's geometric centre regardless of how
- *             wide the side clusters are. Hidden below `md` to avoid
- *             overlapping the side clusters at narrow widths.
- *   - Right:  `flex-1` column with `justify-end`. Holds the Services
- *             link + primary CTA. Mirror of the left column so the
- *             two side columns frame the centred label symmetrically.
+ *             wide the side clusters are. Hidden below `lg` because at
+ *             md (with the Projects + Services + Book Call cluster on
+ *             the right) the right side outgrows its flex share and
+ *             would overlap the centred label. At lg the cluster fits
+ *             cleanly with breathing room either side.
+ *   - Right:  `flex-1` column with `justify-end`. Holds the Projects
+ *             link, Services link, and primary CTA. Mirror of the
+ *             left column so the two side columns frame the centred
+ *             label symmetrically when both their contents fit.
  *
- * The earlier layout used `flex-1` on the centre `<p>` itself, which
- * centres the text within the *remaining* space between the side
- * elements — when those side widths differ (and they do, by design)
- * the text reads off-centre. Equal-flex sides fix this without
- * resorting to absolute positioning.
+ * Responsive notes (the right cluster is the main width driver):
+ *   - <sm  (mobile):  hide Projects. iPhone SE (320px) only just fits
+ *                     wordmark + Services + Book Call; adding a third
+ *                     pill overflows. Projects is still discoverable
+ *                     from the homepage and the AI chat.
+ *   - sm–lg          : show Projects, hide centre label. Cluster +
+ *                     wordmark fit comfortably; adding the centre on
+ *                     top would overflow at md / be lopsided at lg.
+ *   - lg+            : full nav (wordmark · centre · projects ·
+ *                     services · book call). flex-1 sides keep the
+ *                     centre on the page's geometric midline.
  */
 export async function Navbar() {
   return (
@@ -45,8 +55,9 @@ export async function Navbar() {
 
         {/* CENTER: content-sized so equal-flex sides frame it on the
             true geometric centre. `whitespace-nowrap` keeps the line
-            intact at md (just barely fits) and at all wider widths. */}
-        <p className="hidden whitespace-nowrap text-sm font-bold tracking-tight text-neutral-900 md:block dark:text-white">
+            intact at every breakpoint where the label is shown.
+            See the layout comment above for the lg-vs-md trade-off. */}
+        <p className="hidden whitespace-nowrap text-sm font-bold tracking-tight text-neutral-900 lg:block dark:text-white">
           Money Generator for{" "}
           <span className="text-blue-600 dark:text-blue-400">
             Small Businesses
@@ -57,6 +68,18 @@ export async function Navbar() {
             children to the right edge of the column, so visually the
             cluster sits at the right edge of the nav. */}
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
+          {/* Projects link — hidden on phones because at <sm the
+              wordmark + 3 pills overflow narrow viewports
+              (e.g. iPhone SE at 320px). Same visual treatment as
+              Services so they read as a paired secondary nav. */}
+          <Link
+            href="/projects"
+            prefetch={true}
+            className="hidden items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:inline-flex sm:px-3 sm:py-2 sm:text-sm dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"
+          >
+            Projects
+          </Link>
+
           <Link
             href="/services"
             prefetch={true}

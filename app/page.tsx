@@ -325,10 +325,17 @@ export default async function HomePage() {
 
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
             Get a professional website + smart automation that works 24/7 —
-            starting at just{" "}
-            <span className="font-semibold text-white">
-              {formatPrice(59, currency)}
-            </span>
+            starting at{" "}
+            {/* "just €59" links to the website product page since the
+                €59 in the catalogue is the 1-page Custom Website tier.
+                Subtle underline + hover tint signals it's interactive
+                without competing with the hero CTAs below. */}
+            <Link
+              href="/services/website"
+              className="font-semibold text-white underline decoration-blue-400/40 decoration-2 underline-offset-4 transition-colors hover:text-blue-200 hover:decoration-blue-300"
+            >
+              just {formatPrice(59, currency)}
+            </Link>
             .
           </p>
 
