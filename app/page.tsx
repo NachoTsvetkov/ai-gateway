@@ -7,6 +7,10 @@ import {
   getHookServices,
   renderServicePriceParts,
 } from "lib/services-data";
+import {
+  type Bundle,
+  BUNDLES as bundles,
+} from "lib/bundles-data";
 
 // SEO metadata for the homepage. Kept in EUR — search engines crawl
 // from various IPs and the SERP description should be stable. The
@@ -39,84 +43,11 @@ const PHONE_DISPLAY = "+359 882 700 002";
 // homepage only renders the 3 "hook" services as a teaser — see the
 // SERVICES TEASER section below and `getHookServices()`.
 
-// Bundle pricing. The one-time price + optional monthly retainer +
-// "buying separately" comparison are rendered through `formatPrice` so
-// they pick up the visitor's display currency.
-type Bundle = {
-  name: string;
-  tagline: string;
-  oneTimeEur: number;
-  retainerEur?: number;
-  pain: string;
-  includes: string[];
-  /** Optional "free with retainer" perks. Rendered ABOVE `includes`
-   *  with a green check + "FREE" badge so they visually anchor the
-   *  retainer's perceived value. Only used by retainer bundles. */
-  freebies?: string[];
-  roiHook: string; // sentence before the "Buying separately" anchor
-  roiSavingsEur: number;
-  highlight?: boolean;
-  nudge?: string;
-};
-
-const bundles: Bundle[] = [
-  {
-    name: "Startup Bundle",
-    tagline: "Launch Fast & Cheap",
-    oneTimeEur: 173,
-    pain: "You have nothing online — or your current site is so dated it’s costing you customers every week.",
-    includes: [
-      "1-page custom website (mobile-first, SEO-optimized)",
-      "AI chatbot trained on your business",
-      "Online booking integration",
-      "Contact form + email capture",
-      "Google Analytics + Search Console setup",
-      "Hosted & deployed for you",
-    ],
-    roiHook: "First booking pays it back",
-    roiSavingsEur: 600,
-  },
-  {
-    name: "Scale-Up Bundle",
-    tagline: "Upgrade & Automate What You Already Have",
-    oneTimeEur: 354,
-    retainerEur: 97,
-    pain: "Your business is running but drowning in manual work — emails, follow-ups, scheduling, data entry.",
-    freebies: ["Domain name + hosting — covered by retainer"],
-    includes: [
-      "Everything in Startup Bundle",
-      "Full redesign — up to 5 pages",
-      "E-commerce / payments ready",
-      "AI chatbot with lead qualification",
-      "Marketing automation (email + SMS sequences)",
-      "Custom lightweight CRM",
-      "Monthly: maintenance + content updates + 2h support",
-    ],
-    roiHook: "Replaces 1–2 part-time hires",
-    roiSavingsEur: 3000,
-  },
-  {
-    name: "Enterprise Bundle",
-    tagline: "Full AI Transformation",
-    oneTimeEur: 971,
-    retainerEur: 97,
-    pain: "You want to scale revenue without scaling headcount — and you don’t have time to wait.",
-    freebies: ["Domain name + hosting — covered by retainer"],
-    includes: [
-      "Everything in Scale-Up Bundle",
-      "Custom AI agent (autonomous virtual employee)",
-      "AI voice agent for leads & support",
-      "AI-powered personalization",
-      "Advanced API integrations (CRM, ERP, vendors)",
-      "Priority support + monthly strategy call",
-    ],
-    roiHook: "Replaces a 3–5 person team",
-    roiSavingsEur: 5000,
-    highlight: true,
-    nudge:
-      "Most clients choose Enterprise — the extra AI agents pay for themselves in weeks.",
-  },
-];
+// Bundle pricing data lives in `lib/bundles-data.ts` so it can be shared
+// with the dedicated `/bundles/[slug]` detail pages and the AI assistant
+// without duplicating the source-of-truth amounts. The renderers below
+// turn the structured bundle into the marketing-card copy used in the
+// homepage section.
 
 function renderBundlePricingNote(b: Bundle, currency: Currency): string {
   if (!b.retainerEur) return "one-time";
@@ -126,6 +57,41 @@ function renderBundlePricingNote(b: Bundle, currency: Currency): string {
 function renderBundleRoi(b: Bundle, currency: Currency): string {
   return `${b.roiHook}. Buying separately: ~${formatPrice(b.roiSavingsEur, currency)}+`;
 }
+
+// Homepage bundle cards still show the human-readable inclusions list
+// the way the marketing copy was originally written. The structured
+// `bundle.contents` is great for the detail page (we link each line to
+// its service page) but on the small card it would feel cluttered. So
+// we render a flattened, marketing-tuned copy of the same information
+// here — kept as a Map so adding a new bundle in `bundles-data.ts`
+// won't compile until we also write its homepage-card copy.
+const BUNDLE_CARD_INCLUDES: Record<Bundle["id"], ReadonlyArray<string>> = {
+  startup: [
+    "1-page custom website (mobile-first, SEO-optimized)",
+    "AI chatbot trained on your business",
+    "Online booking integration",
+    "Contact form + email capture",
+    "Google Analytics + Search Console setup",
+    "Hosted & deployed for you",
+  ],
+  scaleup: [
+    "Everything in Startup Bundle",
+    "Full redesign — up to 5 pages",
+    "E-commerce / payments ready",
+    "AI chatbot with lead qualification",
+    "Marketing automation (email + SMS sequences)",
+    "Custom lightweight CRM",
+    "Monthly: maintenance + content updates + 2h support",
+  ],
+  enterprise: [
+    "Everything in Scale-Up Bundle",
+    "Custom AI agent (autonomous virtual employee)",
+    "AI voice agent for leads & support",
+    "AI-powered personalization",
+    "Advanced API integrations (CRM, ERP, vendors)",
+    "Priority support + monthly strategy call",
+  ],
+};
 
 // Hero project (real) + 2 fictional-but-realistic mini case studies.
 //
@@ -612,7 +578,7 @@ export default async function HomePage() {
                         </span>
                       </li>
                     ))}
-                    {b.includes.map((item) => (
+                    {BUNDLE_CARD_INCLUDES[b.id].map((item) => (
                       <li key={item} className="flex gap-2">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -641,18 +607,36 @@ export default async function HomePage() {
                     {renderBundleRoi(b, currency)}
                   </p>
 
-                  <a
-                    href={CALENDLY_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  {/* Each bundle CTA uses its own action verb (Get /
+                      Start the process / Buy) so the three cards feel
+                      like distinct commitments rather than three flavours
+                      of "click here". The href routes to the dedicated
+                      bundle detail page where the visitor can pick
+                      upsells before checkout. */}
+                  <Link
+                    href={`/bundles/${b.id}`}
+                    prefetch={true}
                     className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all ${
                       highlighted
                         ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500"
                         : "border border-neutral-700 text-white hover:border-neutral-500"
                     }`}
                   >
-                    Get this bundle
-                  </a>
+                    {b.cta.primary}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                      className="h-4 w-4"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
                 </div>
               );
             })}

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -37,6 +38,11 @@ type BundleInfo = {
 // `app/api/sales-assistant/chat/route.ts`.
 function getBundleInfo(currency: Currency): Record<BundleId, BundleInfo> {
   const retainer = formatPrice(97, currency);
+  // CTA verbs match the bundle's `cta.primary` wording in
+  // lib/bundles-data.ts but compressed for the chat card pill (small
+  // pill, no room for the full sentence). Keep the verb consistent so
+  // the user sees the same "Get / Start / Buy" framing across the
+  // homepage card → chat card → bundle detail page.
   return {
     startup: {
       name: "Startup Bundle",
@@ -50,14 +56,14 @@ function getBundleInfo(currency: Currency): Record<BundleId, BundleInfo> {
       tagline: "Upgrade & Automate",
       price: formatPrice(354, currency),
       sub: `one-time + ${retainer}/mo`,
-      cta: "Get Scale-Up",
+      cta: "Start Scale-Up",
     },
     enterprise: {
       name: "Enterprise Bundle",
       tagline: "Full AI Transformation",
       price: formatPrice(971, currency),
       sub: `one-time + ${retainer}/mo`,
-      cta: "Get Enterprise",
+      cta: "Buy Enterprise",
     },
   };
 }
@@ -72,16 +78,13 @@ const MD_LINK_RE = /\[([^\]]+)\]\(([^)]+)\)/g;
 const BOLD_RE = /\*\*([^*]+)\*\*/g;
 const PLACEHOLDER_RE = /\u0000LINK(\d+)\u0000/g;
 
-// Cap how much of a model-supplied note we trust into a URL — Calendly
-// truncates long answers anyway and we never want to blow up the link.
-const MAX_NOTE_LEN = 280;
-
-function buildCalendlyUrl(note?: string): string {
-  if (!note) return CALENDLY_URL;
-  const clean = note.trim().slice(0, MAX_NOTE_LEN);
-  if (!clean) return CALENDLY_URL;
-  return `${CALENDLY_URL}?a1=${encodeURIComponent(clean)}`;
-}
+// Calendly URLs in chat replies arrive as regular markdown links from
+// the system prompt (e.g. "Book a free 15-min call") and are rendered
+// through the standard `MD_LINK_RE` pipeline below. The bundle card
+// now forwards to `/bundles/<id>` instead of Calendly, so we no
+// longer need a `buildCalendlyUrl` helper here — the conversation
+// note is preserved on the bundle URL and surfaced to Nacho via the
+// checkout email.
 
 const LINK_CLASS =
   "font-medium text-blue-600 underline decoration-blue-600/30 underline-offset-2 hover:text-blue-800 hover:decoration-blue-800/50 dark:text-blue-400 dark:hover:text-blue-300";
@@ -161,17 +164,29 @@ function renderMessageHtml(text: string): string {
   return html;
 }
 
-function BundleCard({ info, note }: { info: BundleInfo; note?: string }) {
+function BundleCard({
+  bundleId,
+  info,
+  note,
+}: {
+  bundleId: BundleId;
+  info: BundleInfo;
+  note?: string;
+}) {
   const b = info;
-  // Always send Nacho some context. If the model didn't supply a note,
-  // fall back to a generic "Interested in <Bundle>" so the booking is
-  // never received completely blind.
-  const href = buildCalendlyUrl(note ?? `Interested in the ${b.name}.`);
+  // Bundle cards used to forward to Calendly with the note as the
+  // `?a1=` param. Now that the site has a real `/bundles/[slug]`
+  // detail + checkout flow, the card forwards there instead — the
+  // visitor lands on the page, can read what's included, pick upsells,
+  // and continue to checkout. The Calendly link is still in the
+  // assistant's reply as a separate "let's just talk" path. The note
+  // is preserved on the URL so it could later be used to prefill the
+  // checkout form's "Anything I should know" textarea.
+  const href = `/bundles/${bundleId}${note ? `?note=${encodeURIComponent(note)}` : ""}`;
   return (
-    <a
+    <Link
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      prefetch={true}
       className="my-2 block overflow-hidden rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-violet-50 p-4 transition-all hover:border-blue-400 hover:shadow-md hover:shadow-blue-600/10 dark:border-blue-500/30 dark:from-blue-950/40 dark:to-violet-950/40 dark:hover:border-blue-400/60"
     >
       <div className="flex items-start justify-between gap-3">
@@ -197,7 +212,7 @@ function BundleCard({ info, note }: { info: BundleInfo; note?: string }) {
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-          Free 15-min discovery call
+          See what's included →
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
           {b.cta}
@@ -216,7 +231,7 @@ function BundleCard({ info, note }: { info: BundleInfo; note?: string }) {
           </svg>
         </span>
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -268,7 +283,12 @@ function ChatMessage({
       {bundleRecs.length > 0 && (
         <div className="ml-8 mt-1 grid gap-2">
           {bundleRecs.map((r) => (
-            <BundleCard key={r.id} info={bundleInfo[r.id]} note={r.note} />
+            <BundleCard
+              key={r.id}
+              bundleId={r.id}
+              info={bundleInfo[r.id]}
+              note={r.note}
+            />
           ))}
         </div>
       )}
