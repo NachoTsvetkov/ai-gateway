@@ -123,7 +123,7 @@ export default async function ServicesPage() {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/85 via-neutral-950/65 to-neutral-950/35" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/95 via-neutral-950/80 to-neutral-950/55" />
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-neutral-950" />
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
