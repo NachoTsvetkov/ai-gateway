@@ -13,6 +13,8 @@
 // works — but every service in the catalogue should ideally have one.
 
 import type { ServiceId } from "./services-data";
+import type { Locale } from "./i18n/locale";
+import { SERVICE_DETAILS_BG } from "./service-details.bg";
 
 export type ServiceDetail = {
   /** Hero subheadline — one-sentence emotional framing. */
@@ -633,4 +635,33 @@ export const SERVICE_DETAILS: Partial<Record<ServiceId, ServiceDetail>> = {
 
 export function getServiceDetail(id: ServiceId): ServiceDetail | undefined {
   return SERVICE_DETAILS[id];
+}
+
+/**
+ * Locale-aware variant: returns the BG translation when locale === "bg"
+ * and a translation exists, otherwise falls back to the English source
+ * so a partially-translated catalogue still renders.
+ */
+export function getLocalizedServiceDetail(
+  id: ServiceId,
+  locale: Locale,
+): ServiceDetail | undefined {
+  const en = SERVICE_DETAILS[id];
+  if (!en) return undefined;
+  if (locale === "en") return en;
+  const bg = SERVICE_DETAILS_BG[id];
+  if (!bg) return en;
+  // Field-by-field overlay so a half-translated entry (e.g. only the
+  // tagline is BG, the painPoints aren't yet) still gives the visitor
+  // BG where it exists and English where it doesn't.
+  return {
+    tagline: bg.tagline ?? en.tagline,
+    painPoints: bg.painPoints ?? en.painPoints,
+    solutionPoints: bg.solutionPoints ?? en.solutionPoints,
+    implementation: bg.implementation ?? en.implementation,
+    timeline: bg.timeline ?? en.timeline,
+    deliverables: bg.deliverables ?? en.deliverables,
+    bestFor: bg.bestFor ?? en.bestFor,
+    faq: bg.faq ?? en.faq,
+  };
 }

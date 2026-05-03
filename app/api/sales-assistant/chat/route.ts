@@ -5,6 +5,7 @@ import {
   UIMessage,
 } from "ai";
 import { formatPrice, type Currency } from "lib/currency";
+import { type Locale, isLocale } from "lib/i18n/locale";
 
 // Vercel AI Gateway has a generous default; this caps a hung stream at 60s.
 export const maxDuration = 60;
@@ -28,11 +29,48 @@ export const maxDuration = 60;
 // where `currency` is sent by the client (resolved from the visitor's
 // IP geo). EU visitors get EUR, everyone else gets USD. The assistant
 // must NEVER quote a currency the visitor isn't seeing on the page.
-function buildSystemPrompt(currency: Currency): string {
+function buildSystemPrompt(currency: Currency, locale: Locale): string {
   // Shorthand so the prompt template stays readable.
   const p = (eur: number) => formatPrice(eur, currency);
 
-  return `You are **Nacho's Assistant** — a friendly, professional, highly helpful guide for small business owners and startups visiting Nacho's website.
+  // The instructions themselves stay in English (the model's
+  // instruction-following is best-tuned in English) but a hard rule at
+  // the very top tells the model to OUTPUT exclusively in the
+  // visitor's locale. Bundle names + sample reply phrases also have a
+  // BG variant block below so the model has a concrete reference for
+  // the names rather than translating them on the fly.
+  const languageBlock =
+    locale === "bg"
+      ? `# OUTPUT LANGUAGE — BULGARIAN ONLY
+The visitor's UI is in Bulgarian. Every word you output to the visitor MUST be in fluent, idiomatic Bulgarian — replies, acknowledgements, bundle labels, booking notes, suggestion text, headers, error messages.
+
+Translation map (use these exact Bulgarian forms):
+- "Startup Bundle" → "Startup пакет"
+- "Scale-Up Bundle" → "Scale-Up пакет"
+- "Enterprise Bundle" → "Enterprise пакет"
+- "Money Generator" → "машина за пари"
+- "Book a free 15-min call" → "Запази безплатен 15-минутен разговор"
+- "browse all services" → "разгледай всички услуги"
+- "discovery call" → "безплатен разговор"
+- bundle CTA verbs: Get → "Вземи", Start the process → "Започни", Buy → "Купи"
+
+Link anchors STAY in English (the UI parses them as keys):
+- \`#bundle:startup\`, \`#bundle:scaleup\`, \`#bundle:enterprise\` — unchanged
+- \`/services/<id>\` — unchanged
+- \`https://calendly.com/...\` — unchanged
+
+ONLY the visible label between [...] is translated. Example:
+  \`[Scale-Up пакет](#bundle:scaleup?note=...)\`
+
+Booking notes (\`?a1=...\` / \`?note=...\`) MAY be written in Bulgarian — Nacho speaks both. Use Bulgarian phrasing for the path label too: "Стартов" or "Startup", "Скалиращ" or "Scale-Up", "Корпоративен" or "Enterprise" — match the visitor's framing.
+
+If the visitor writes in English, still reply in Bulgarian unless they explicitly ask for English.`
+      : `# OUTPUT LANGUAGE — ENGLISH
+The visitor's UI is in English. Respond in English.`;
+
+  return `${languageBlock}
+
+You are **Nacho's Assistant** — a friendly, professional, highly helpful guide for small business owners and startups visiting Nacho's website.
 
 Your #1 job: help the visitor turn their business into a **Money Generator** — a simple system that brings in revenue 24/7 while giving them their time back.
 
@@ -301,15 +339,21 @@ export async function POST(req: Request) {
   const body = (await req.json()) as {
     messages: UIMessage[];
     currency?: unknown;
+    locale?: unknown;
   };
   const { messages } = body;
-  // Trust the client tag but validate it. If anything looks wrong we
-  // fall back to EUR so the prompt is still well-formed.
+  // Trust the client tags but validate them. If anything looks wrong
+  // we fall back to safe defaults (EUR + English) so the prompt is
+  // still well-formed and the assistant degrades gracefully.
   const currency: Currency = isCurrency(body.currency) ? body.currency : "EUR";
+  const locale: Locale =
+    typeof body.locale === "string" && isLocale(body.locale)
+      ? body.locale
+      : "en";
 
   const result = streamText({
     model: gateway("openai/gpt-4o-mini"),
-    system: buildSystemPrompt(currency),
+    system: buildSystemPrompt(currency, locale),
     messages: await convertToModelMessages(messages),
   });
 

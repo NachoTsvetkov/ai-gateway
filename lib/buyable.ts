@@ -14,19 +14,22 @@
 //     domain's data into their bundle.
 
 import type { Currency } from "./currency";
+import { type Locale } from "./i18n/locale";
+import { DICT } from "./i18n/dict";
 import {
   type Bundle,
   type BundleId,
   type Upsell,
   BUNDLES,
   UPSELLS,
-  getBundle,
+  getLocalizedBundle,
+  getLocalizedUpsells,
 } from "./bundles-data";
 import {
   type Service,
   type ServiceId,
   type ServicePrice,
-  getServiceById,
+  getLocalizedServiceById,
   services,
 } from "./services-data";
 
@@ -82,6 +85,10 @@ export type Buyable = {
 // ----------------------------------------------------------------------
 
 export function buyableFromBundle(bundle: Bundle): Buyable {
+  // The caller is expected to pass a bundle that's already been
+  // localised via `getLocalizedBundle(id, locale)` if BG copy is
+  // wanted. The buyable just projects whatever it receives, so the
+  // same factory works for both locales.
   const sp = new URLSearchParams();
   sp.set("bundle", bundle.id);
   return {
@@ -114,12 +121,14 @@ export function buyableFromBundle(bundle: Bundle): Buyable {
 export function buyableFromService(
   service: Service,
   tier: number | undefined,
+  locale: Locale = "en",
 ): Buyable {
   const { oneTimeEur, retainerEur, tierName } = resolveServicePrice(
     service.price,
     tier,
+    locale,
   );
-  const cta = getServiceCta(service.id, tierName);
+  const cta = getServiceCta(service.id, tierName, locale);
   const sp = new URLSearchParams();
   sp.set("service", service.id);
   if (tier !== undefined) sp.set("tier", String(tier));
@@ -151,6 +160,7 @@ type ResolvedPrice = {
 function resolveServicePrice(
   price: ServicePrice,
   tier: number | undefined,
+  locale: Locale = "en",
 ): ResolvedPrice {
   switch (price.kind) {
     case "from":
@@ -165,9 +175,20 @@ function resolveServicePrice(
     case "tiered": {
       const idx = tier ?? 0;
       const t = price.tiers[idx] ?? price.tiers[0];
-      return { oneTimeEur: t.eur, tierName: t.label };
+      return { oneTimeEur: t.eur, tierName: localizeTierLabel(t.label, locale) };
     }
   }
+}
+
+// Translate the canonical English tier label ("1-page" / "3-page") into
+// its BG equivalent. Keeps the tier IDs themselves stable while letting
+// the rendered UI feel native — the buyable's `tierName` flows into the
+// detail page header and the order summary.
+function localizeTierLabel(label: string, locale: Locale): string {
+  if (locale === "en") return label;
+  if (label === "1-page") return DICT.pricing.tier1Page.bg;
+  if (label === "3-page") return DICT.pricing.tier3Page.bg;
+  return label;
 }
 
 // ----------------------------------------------------------------------
@@ -179,29 +200,45 @@ function resolveServicePrice(
 // principle as the bundle CTAs ("Get / Start the process / Buy"):
 // distinct verbs imply distinct commitments.
 
-const SERVICE_PRIMARY_CTA: Record<ServiceId, string> = {
-  website: "Build my site",
-  ecommerce: "Launch my store",
-  chatbot: "Add the chatbot",
-  "marketing-automation": "Start automating",
-  crm: "Get my CRM",
-  booking: "Set up booking",
-  integrations: "Wire it up",
-  seo: "Boost my SEO",
-  personalization: "Personalize my site",
-  maintenance: "Subscribe to retainer",
-  "ai-agents": "Hire an AI agent",
-  "voice-agents": "Get a voice agent",
+const SERVICE_PRIMARY_CTA: Record<ServiceId, { en: string; bg: string }> = {
+  website: { en: "Build my site", bg: "Изградете сайта ми" },
+  ecommerce: { en: "Launch my store", bg: "Пусни магазина ми" },
+  chatbot: { en: "Add the chatbot", bg: "Добави чатбота" },
+  "marketing-automation": {
+    en: "Start automating",
+    bg: "Започни автоматизацията",
+  },
+  crm: { en: "Get my CRM", bg: "Вземи моя CRM" },
+  booking: { en: "Set up booking", bg: "Пусни резервациите" },
+  integrations: { en: "Wire it up", bg: "Свържи системите" },
+  seo: { en: "Boost my SEO", bg: "Качи ми SEO-то" },
+  personalization: {
+    en: "Personalize my site",
+    bg: "Персонализирай сайта ми",
+  },
+  maintenance: {
+    en: "Subscribe to retainer",
+    bg: "Запиши се на абонамента",
+  },
+  "ai-agents": { en: "Hire an AI agent", bg: "Наеми AI агент" },
+  "voice-agents": { en: "Get a voice agent", bg: "Вземи гласов агент" },
+};
+
+const SERVICE_CTA_HELPER: Record<Locale, string> = {
+  en: "Continue to checkout — pay securely online",
+  bg: "Продължи към плащане — сигурно онлайн",
 };
 
 function getServiceCta(
   id: ServiceId,
   tierName: string | undefined,
+  locale: Locale = "en",
 ): Buyable["cta"] {
-  const primary = SERVICE_PRIMARY_CTA[id] + (tierName ? ` — ${tierName}` : "");
+  const verb = SERVICE_PRIMARY_CTA[id][locale];
+  const primary = verb + (tierName ? ` — ${tierName}` : "");
   return {
     primary,
-    helper: "Continue to checkout — pay securely online",
+    helper: SERVICE_CTA_HELPER[locale],
     checkout: primary,
   };
 }
@@ -220,14 +257,17 @@ const SERVICE_IDS: ReadonlySet<string> = new Set(services.map((s) => s.id));
 
 export function resolveBuyableFromSearchParams(
   sp: { bundle?: string; service?: string; tier?: string },
+  locale: Locale = "en",
 ): Buyable | undefined {
   if (sp.bundle && BUNDLE_IDS.has(sp.bundle)) {
-    return buyableFromBundle(getBundle(sp.bundle as BundleId));
+    return buyableFromBundle(
+      getLocalizedBundle(sp.bundle as BundleId, locale),
+    );
   }
   if (sp.service && SERVICE_IDS.has(sp.service)) {
     const tier = parseTier(sp.tier);
-    const svc = getServiceById(sp.service as ServiceId);
-    return buyableFromService(svc, tier);
+    const svc = getLocalizedServiceById(sp.service as ServiceId, locale);
+    return buyableFromService(svc, tier, locale);
   }
   return undefined;
 }
@@ -256,15 +296,33 @@ function parseTier(v: string | undefined): number | undefined {
  * The filtering is a UX decision — e.g. "+5 design revisions" doesn't
  * make sense alongside `maintenance`, so it's hidden there. Avoids a
  * cluttered checkout with options the visitor can't meaningfully use.
+ *
+ * Locale: when "bg", every applicable upsell is run through the
+ * BG localiser before being returned. The filtering itself is
+ * locale-independent (it only cares about ids).
  */
-export function getApplicableUpsells(buyable: Buyable): ReadonlyArray<Upsell> {
-  if (buyable.kind === "bundle") return UPSELLS;
-  // service
+export function getApplicableUpsells(
+  buyable: Buyable,
+  locale: Locale = "en",
+): ReadonlyArray<Upsell> {
+  const localized = getLocalizedUpsellsForLocale(locale);
+  if (buyable.kind === "bundle") return localized;
   const sid = buyable.id as ServiceId;
-  return UPSELLS.filter((u) => {
+  return localized.filter((u) => {
     if (!u.applicableToServiceIds) return true;
     return u.applicableToServiceIds.includes(sid);
   });
+}
+
+// Tiny indirection so we don't pull `getLocalizedUpsells` from
+// bundles-data into the import graph for callers that just want the
+// EN list. Lazy-evaluated; the BG branch only runs when actually
+// needed.
+function getLocalizedUpsellsForLocale(
+  locale: Locale,
+): ReadonlyArray<Upsell> {
+  if (locale === "en") return UPSELLS;
+  return getLocalizedUpsells(locale);
 }
 
 /**
@@ -291,15 +349,18 @@ export function isUpsellRecommendedFor(
 export function formatBuyableHeadlinePrice(
   buyable: Buyable,
   currency: Currency,
+  locale: Locale = "en",
 ): string {
+  const perMonth = locale === "bg" ? "/месец" : "/month";
+  const perMo = locale === "bg" ? "/месец" : "/mo";
   const parts: string[] = [];
   parts.push(formatCurrency(buyable.oneTimeEur, currency));
   if (buyable.retainerEur && buyable.oneTimeEur === buyable.retainerEur) {
     // Pure-monthly service: "€97/month" (don't double up).
-    return `${formatCurrency(buyable.retainerEur, currency)}/month`;
+    return `${formatCurrency(buyable.retainerEur, currency)}${perMonth}`;
   }
   if (buyable.retainerEur) {
-    parts.push(`+ ${formatCurrency(buyable.retainerEur, currency)}/mo`);
+    parts.push(`+ ${formatCurrency(buyable.retainerEur, currency)}${perMo}`);
   }
   return parts.join(" ");
 }

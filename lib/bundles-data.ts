@@ -23,6 +23,13 @@ import {
   type ServiceId,
   type ServicePrice,
 } from "./services-data";
+import type { Locale } from "./i18n/locale";
+import {
+  BUNDLES_BG,
+  BUNDLE_BONUS_BG,
+  BUNDLE_FAQ_BG,
+  UPSELLS_BG,
+} from "./bundles-data.bg";
 
 // Re-export so consumers (e.g. the buyable adapter, the checkout
 // island, the checkout page) can import everything they need from one
@@ -477,4 +484,93 @@ export function resolveUpsells(csv: string | undefined): ReadonlyArray<Upsell> {
       .filter(Boolean),
   );
   return UPSELLS.filter((u) => wanted.has(u.id));
+}
+
+// ----------------------------------------------------------------------
+// Locale-aware accessors
+// ----------------------------------------------------------------------
+//
+// Same overlay pattern as `services-data.ts`: the English structures
+// above stay the source of truth (ids, prices, ordering, references).
+// These helpers project a BG-localised view at request time so call
+// sites that already read locale (server components) can swap in the
+// right strings without per-field fallbacks.
+
+function localizeBundle(b: Bundle, locale: Locale): Bundle {
+  if (locale === "en") return b;
+  const overrides = BUNDLES_BG[b.id];
+  if (!overrides) return b;
+  return {
+    ...b,
+    name: overrides.name ?? b.name,
+    tagline: overrides.tagline ?? b.tagline,
+    pain: overrides.pain ?? b.pain,
+    contents: b.contents.map((line) => {
+      // Service lines: only the per-line `note` is translated. The
+      // service id and tier index stay untouched (they're structural).
+      if (line.kind === "service" && line.note && overrides.contentNotes) {
+        const bgNote = overrides.contentNotes[line.serviceId];
+        if (bgNote) return { ...line, note: bgNote };
+      }
+      // Bonus lines: look up the translated label by exact English text.
+      if (line.kind === "bonus") {
+        const bgLabel = BUNDLE_BONUS_BG[line.label];
+        if (bgLabel) return { ...line, label: bgLabel };
+      }
+      return line;
+    }),
+    freebies: overrides.freebies ?? b.freebies,
+    roiHook: overrides.roiHook ?? b.roiHook,
+    nudge: overrides.nudge ?? b.nudge,
+    cta: {
+      primary: overrides.cta?.primary ?? b.cta.primary,
+      helper: overrides.cta?.helper ?? b.cta.helper,
+      checkout: overrides.cta?.checkout ?? b.cta.checkout,
+    },
+  };
+}
+
+export function getLocalizedBundles(locale: Locale): ReadonlyArray<Bundle> {
+  if (locale === "en") return BUNDLES;
+  return BUNDLES.map((b) => localizeBundle(b, locale));
+}
+
+export function getLocalizedBundle(id: BundleId, locale: Locale): Bundle {
+  return localizeBundle(getBundle(id), locale);
+}
+
+function localizeUpsell(u: Upsell, locale: Locale): Upsell {
+  if (locale === "en") return u;
+  const overrides = UPSELLS_BG[u.id];
+  if (!overrides) return u;
+  return {
+    ...u,
+    label: overrides.label ?? u.label,
+    description: overrides.description ?? u.description,
+  };
+}
+
+export function getLocalizedUpsells(locale: Locale): ReadonlyArray<Upsell> {
+  if (locale === "en") return UPSELLS;
+  return UPSELLS.map((u) => localizeUpsell(u, locale));
+}
+
+export function resolveLocalizedUpsells(
+  csv: string | undefined,
+  locale: Locale,
+): ReadonlyArray<Upsell> {
+  return resolveUpsells(csv).map((u) => localizeUpsell(u, locale));
+}
+
+/**
+ * Per-bundle FAQ for `/bundles/[slug]`. The English source lives inline
+ * in the page component (each bundle's FAQ is hand-tuned), so we expose
+ * the BG override map here under a locale-aware getter that returns
+ * `undefined` for English — the page keeps using its own English FAQ
+ * array in that case.
+ */
+export function getBundleFaqBg(
+  id: BundleId,
+): ReadonlyArray<{ q: string; a: string }> | undefined {
+  return BUNDLE_FAQ_BG[id];
 }

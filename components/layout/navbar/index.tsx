@@ -3,37 +3,56 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import {
+  LanguageToggle,
+  LanguageToggleMobile,
+} from "components/layout/language-toggle";
+import { type Locale } from "lib/i18n/locale";
 
 // Single source of truth for the discovery-call URL. Mirrors the value
 // in app/page.tsx and components/ai/sales-assistant.tsx.
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
 /**
- * Sticky top bar for the sales-focused homepage.
+ * Sticky top bar for the sales-focused homepage. Receives all visible
+ * strings from the server layout so the navbar is locale-agnostic —
+ * the Server Component upstream resolves the visitor's locale via
+ * `detectLocale()` and threads the right copy down.
  *
  * The "Money Generator for Small Businesses" tagline is the brand
  * positioning line and is visible at every breakpoint — this is the
  * one piece of the nav we never hide. The wordmark and secondary
- * nav adapt around it:
+ * nav adapt around it. See the file's previous header for the full
+ * breakpoint breakdown.
  *
- *   - <sm  (mobile):  hamburger button replaces the wordmark; nav
- *                     links live inside a slide-down menu sheet. The
- *                     primary "Book Call" CTA stays in the bar so the
- *                     conversion path is one tap from anywhere.
- *   - sm–lg          : wordmark + centre tagline + Projects /
- *                     Services / Book Call cluster (no hamburger).
- *   - lg+            : full-text "Book Discovery Call" CTA.
- *
- * The centre tagline stacks to two lines on mobile (text-[10px],
- * leading-tight) and collapses to one line at sm+ (text-sm
- * whitespace-nowrap). That gives us enough horizontal room for
- * hamburger + tagline + Book CTA on iPhone-SE-class viewports.
- *
- * This component is a Client Component because the hamburger menu
- * needs local state (open/closed), Escape-to-close, and
- * close-on-route-change behaviour.
+ * Locale toggle: rendered ONLY when `showLanguageToggle` is true,
+ * which the layout sets when the visitor's geo header is `BG`. Outside
+ * Bulgaria, the toggle never appears.
  */
-export function Navbar() {
+export type NavbarLabels = {
+  wordmark: string;
+  taglineLead: string;
+  taglineHighlight: string;
+  projects: string;
+  services: string;
+  bookFull: string;
+  bookMid: string;
+  bookShort: string;
+  homeLabel: string;
+  ariaSiteNav: string;
+  ariaOpenMenu: string;
+  ariaCloseMenu: string;
+};
+
+export function Navbar({
+  labels,
+  locale,
+  showLanguageToggle,
+}: {
+  labels: NavbarLabels;
+  locale: Locale;
+  showLanguageToggle: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
 
@@ -61,15 +80,11 @@ export function Navbar() {
     <>
       <nav className="sticky top-0 z-40 border-b border-neutral-200/60 bg-white/85 backdrop-blur-lg dark:border-neutral-800/60 dark:bg-neutral-900/85">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4 lg:px-6">
-          {/* LEFT: hamburger on mobile, wordmark on sm+. Equal-flex
-              column lets the centre tagline sit on the page's true
-              geometric midline regardless of the right cluster's
-              size. */}
           <div className="flex flex-1 items-center">
             <button
               type="button"
               onClick={() => setIsOpen(true)}
-              aria-label="Open navigation menu"
+              aria-label={labels.ariaOpenMenu}
               aria-expanded={isOpen}
               aria-controls="primary-nav-menu"
               className="-ml-1 inline-flex h-9 w-9 items-center justify-center rounded-md text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:hidden dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"
@@ -93,37 +108,32 @@ export function Navbar() {
               prefetch={true}
               className="hidden text-base font-bold tracking-tight text-neutral-900 transition-colors hover:text-blue-600 sm:inline-flex sm:text-lg dark:text-white dark:hover:text-blue-400"
             >
-              Nacho Tsvetkov
+              {labels.wordmark}
             </Link>
           </div>
 
-          {/* CENTER: brand tagline. Visible at every breakpoint — the
-              one thing that always stays. Mobile: 2-line stack at
-              text-[10px] so it fits next to the hamburger + Book
-              CTA on a 320px viewport. Desktop: single line at
-              text-sm. */}
           <p className="flex flex-1 justify-center text-center text-[10px] font-bold leading-tight tracking-tight text-neutral-900 sm:text-sm dark:text-white">
             <span className="sm:whitespace-nowrap">
-              Money Generator{" "}
+              {labels.taglineLead}{" "}
               <span className="block sm:inline">
-                for{" "}
                 <span className="text-blue-600 dark:text-blue-400">
-                  Small Businesses
+                  {labels.taglineHighlight}
                 </span>
               </span>
             </span>
           </p>
 
-          {/* RIGHT: secondary nav (sm+) + primary CTA (always). The
-              Projects/Services links live inside the hamburger sheet
-              on mobile, so we don't render them here below sm. */}
           <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
+            {showLanguageToggle && (
+              <LanguageToggle currentLocale={locale} />
+            )}
+
             <Link
               href="/projects"
               prefetch={true}
               className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:inline-flex dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"
             >
-              Projects
+              {labels.projects}
             </Link>
 
             <Link
@@ -131,7 +141,7 @@ export function Navbar() {
               prefetch={true}
               className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900 sm:inline-flex dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"
             >
-              Services
+              {labels.services}
             </Link>
 
             <a
@@ -153,92 +163,80 @@ export function Navbar() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="hidden lg:inline">Book Discovery Call</span>
-              <span className="hidden sm:inline lg:hidden">Book Call</span>
-              <span className="sm:hidden">Book</span>
+              <span className="hidden lg:inline">{labels.bookFull}</span>
+              <span className="hidden sm:inline lg:hidden">
+                {labels.bookMid}
+              </span>
+              <span className="sm:hidden">{labels.bookShort}</span>
             </a>
           </div>
         </div>
       </nav>
 
-      <MobileMenuSheet open={isOpen} onClose={() => setIsOpen(false)} />
+      <MobileMenuSheet
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        labels={labels}
+        locale={locale}
+        showLanguageToggle={showLanguageToggle}
+      />
     </>
   );
 }
 
-/**
- * Slide-down mobile navigation sheet. Anchors below the sticky nav
- * (top-14 to clear the bar height) and uses CSS-only transitions
- * driven by a `data-open` boolean — no library dependency.
- *
- * Behaviour the parent already wires:
- *   - Auto-closes on route change (parent's pathname effect).
- *   - Closes on Escape (parent's keydown listener).
- *   - Locks body scroll while open (parent's overflow effect).
- *
- * Behaviour this component owns:
- *   - Click on backdrop closes.
- *   - Click on any link closes (so the link's navigation runs while
- *     the sheet is animating out).
- */
 function MobileMenuSheet({
   open,
   onClose,
+  labels,
+  locale,
+  showLanguageToggle,
 }: {
   open: boolean;
   onClose: () => void;
+  labels: NavbarLabels;
+  locale: Locale;
+  showLanguageToggle: boolean;
 }) {
-  // While closed we still render the sheet (with `pointer-events: none`
-  // and zero opacity) so its CSS transition runs in both directions.
   return (
     <div
       id="primary-nav-menu"
       role="dialog"
       aria-modal="true"
-      aria-label="Site navigation"
+      aria-label={labels.ariaSiteNav}
       data-open={open || undefined}
       className="pointer-events-none fixed inset-0 top-14 z-30 sm:hidden"
     >
-      {/* Backdrop — dimmed page underneath. The whole layer is the
-          click-to-close target. The parent has pointer-events-none
-          so we explicitly opt back in here only when open, which
-          means clicks pass through to the page while we're animating
-          out / closed. */}
       <button
         type="button"
-        aria-label="Close navigation menu"
+        aria-label={labels.ariaCloseMenu}
         onClick={onClose}
         tabIndex={open ? 0 : -1}
         data-open={open || undefined}
         className="absolute inset-0 cursor-default bg-neutral-950/50 opacity-0 backdrop-blur-sm transition-opacity duration-200 data-[open]:pointer-events-auto data-[open]:opacity-100"
       />
 
-      {/* Sheet panel */}
       <div
         data-open={open || undefined}
         className="relative -translate-y-2 opacity-0 transition-[transform,opacity] duration-200 ease-out data-[open]:pointer-events-auto data-[open]:translate-y-0 data-[open]:opacity-100"
       >
         <div className="mx-3 mt-3 overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl shadow-neutral-900/15 dark:border-neutral-800 dark:bg-neutral-900">
-          {/* Header — brand identity, replaces the desktop wordmark
-              that the visitor doesn't see while on mobile. */}
           <div className="border-b border-neutral-100 px-5 pt-5 pb-4 dark:border-neutral-800">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">
-              Nacho Tsvetkov
+              {labels.wordmark}
             </p>
             <p className="mt-1 text-sm leading-snug text-neutral-600 dark:text-neutral-400">
-              Money Generator for{" "}
+              {labels.taglineLead}{" "}
               <span className="font-semibold text-neutral-900 dark:text-white">
-                Small Businesses
+                {labels.taglineHighlight}
               </span>
             </p>
           </div>
 
-          {/* Nav links */}
           <ul className="px-2 py-2">
             {[
-              { href: "/", label: "Home" },
-              { href: "/projects", label: "Projects" },
-              { href: "/services", label: "Services" },
+              { href: "/", label: labels.homeLabel },
+              { href: "/projects", label: labels.projects },
+              { href: "/services", label: labels.services },
             ].map((item) => (
               <li key={item.href}>
                 <Link
@@ -266,9 +264,18 @@ function MobileMenuSheet({
             ))}
           </ul>
 
-          {/* Primary CTA — duplicates the bar's Book CTA at full
-              width so the menu has a clear conversion call regardless
-              of the visitor's position in the bar. */}
+          {/* Language toggle row — only mounted for BG visitors. Sits
+              above the primary CTA so the visitor sees it without
+              scrolling. */}
+          {showLanguageToggle && (
+            <div className="border-t border-neutral-100 px-3 pt-3 pb-1 dark:border-neutral-800">
+              <LanguageToggleMobile
+                currentLocale={locale}
+                onSwitched={onClose}
+              />
+            </div>
+          )}
+
           <div className="border-t border-neutral-100 p-3 dark:border-neutral-800">
             <a
               href={CALENDLY_URL}
@@ -290,7 +297,7 @@ function MobileMenuSheet({
                   clipRule="evenodd"
                 />
               </svg>
-              Book Discovery Call
+              {labels.bookFull}
             </a>
           </div>
         </div>

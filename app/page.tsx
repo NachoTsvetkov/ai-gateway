@@ -4,19 +4,21 @@ import { SalesAssistant } from "components/ai/sales-assistant";
 import { formatPrice, formatPriceK, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import {
-  getHookServices,
+  getLocalizedHookServices,
   renderServicePriceParts,
 } from "lib/services-data";
 import {
   type Bundle,
-  BUNDLES as bundles,
+  getLocalizedBundles,
 } from "lib/bundles-data";
+import { detectLocale } from "lib/i18n/locale.server";
+import { type Locale, createT } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 
-// SEO metadata for the homepage. Kept in EUR — search engines crawl
-// from various IPs and the SERP description should be stable. The
-// visible page content below is currency-aware (EUR for EU visitors,
-// USD for everyone else, derived from `detectCurrency()` at request
-// time).
+// SEO metadata for the homepage. Kept in EUR-English — search engines
+// crawl from various IPs and the SERP description should be stable.
+// The visible page content below is locale + currency-aware (BG copy
+// for Bulgarian visitors, EUR for EU, USD for everyone else).
 export const metadata = {
   title:
     "Nacho Tsvetkov – Money Generator for Small Businesses",
@@ -32,227 +34,203 @@ const EMAIL = "nacho.tsvetkov@gmail.com";
 const PHONE_E164 = "+359882700002";
 const PHONE_DISPLAY = "+359 882 700 002";
 
-// All prices below are stored as numeric EUR amounts and are formatted
-// at render-time via `formatPrice(eur, currency)` so EU visitors see
-// €-prices and non-EU visitors see the same numbers converted to USD.
-// Update prices here in ONE place — they propagate to the rendered
-// page and (via `buildSystemPrompt(currency)`) to the AI assistant.
-//
-// The 12-service catalogue + ServicePrice union now live in
-// `lib/services-data.ts` so they can be shared with `/services`. The
-// homepage only renders the 3 "hook" services as a teaser — see the
-// SERVICES TEASER section below and `getHookServices()`.
+// Locale-aware renderers for the bundle cards. Both the "pricing
+// note" (one-time vs one-time + retainer) and the "ROI" line carry
+// translated chrome strings around the formatted EUR/USD amount, so
+// we resolve the right phrasing from DICT before composing.
 
-// Bundle pricing data lives in `lib/bundles-data.ts` so it can be shared
-// with the dedicated `/bundles/[slug]` detail pages and the AI assistant
-// without duplicating the source-of-truth amounts. The renderers below
-// turn the structured bundle into the marketing-card copy used in the
-// homepage section.
-
-function renderBundlePricingNote(b: Bundle, currency: Currency): string {
-  if (!b.retainerEur) return "one-time";
-  return `one-time + ${formatPrice(b.retainerEur, currency)}/month retainer`;
+function renderBundlePricingNote(
+  b: Bundle,
+  currency: Currency,
+  locale: Locale,
+): string {
+  if (!b.retainerEur) return DICT.home.bundlesOneTime[locale];
+  return `${DICT.home.bundlesOneTimePlus[locale]}${formatPrice(b.retainerEur, currency)}${DICT.home.bundlesPerMonthRetainer[locale]}`;
 }
 
-function renderBundleRoi(b: Bundle, currency: Currency): string {
-  return `${b.roiHook}. Buying separately: ~${formatPrice(b.roiSavingsEur, currency)}+`;
+function renderBundleRoi(
+  b: Bundle,
+  currency: Currency,
+  locale: Locale,
+): string {
+  return `${b.roiHook}. ${DICT.home.bundlesRoiSuffix[locale]} ~${formatPrice(b.roiSavingsEur, currency)}+`;
 }
 
-// Homepage bundle cards still show the human-readable inclusions list
-// the way the marketing copy was originally written. The structured
-// `bundle.contents` is great for the detail page (we link each line to
-// its service page) but on the small card it would feel cluttered. So
-// we render a flattened, marketing-tuned copy of the same information
-// here — kept as a Map so adding a new bundle in `bundles-data.ts`
-// won't compile until we also write its homepage-card copy.
-const BUNDLE_CARD_INCLUDES: Record<Bundle["id"], ReadonlyArray<string>> = {
-  startup: [
-    "1-page custom website (mobile-first, SEO-optimized)",
-    "AI chatbot trained on your business",
-    "Online booking integration",
-    "Contact form + email capture",
-    "Google Analytics + Search Console setup",
-    "Hosted & deployed for you",
-  ],
-  scaleup: [
-    "Everything in Startup Bundle",
-    "Full redesign — up to 5 pages",
-    "E-commerce / payments ready",
-    "AI chatbot with lead qualification",
-    "Marketing automation (email + SMS sequences)",
-    "Custom lightweight CRM",
-    "Monthly: maintenance + content updates + 2h support",
-  ],
-  enterprise: [
-    "Everything in Scale-Up Bundle",
-    "Custom AI agent (autonomous virtual employee)",
-    "AI voice agent for leads & support",
-    "AI-powered personalization",
-    "Advanced API integrations (CRM, ERP, vendors)",
-    "Priority support + monthly strategy call",
-  ],
-};
+// Homepage bundle "what's included" lines. The full structured content
+// in `bundles-data.ts` is great for the detail page (each line links to
+// its service); on the small homepage card it would feel cluttered, so
+// we render a flattened, marketing-tuned copy. Built per-locale so BG
+// visitors get native phrasing without sacrificing the carefully
+// pruned line list.
+function buildBundleCardIncludes(
+  locale: Locale,
+): Record<Bundle["id"], ReadonlyArray<string>> {
+  if (locale === "bg") {
+    return {
+      startup: [
+        "1-странична custom уебсайт (mobile-first, оптимизиран за SEO)",
+        "AI чатбот, обучен на твоя бизнес",
+        "Интеграция за онлайн резервации",
+        "Форма за контакт + събиране на имейли",
+        "Настройка на Google Analytics + Search Console",
+        "Хоствано и пуснато на живо за теб",
+      ],
+      scaleup: [
+        "Всичко от Startup пакета",
+        "Пълен редизайн — до 5 страници",
+        "Готов за e-commerce / плащания",
+        "AI чатбот с квалификация на контакти",
+        "Маркетинг автоматизация (имейл + SMS поредици)",
+        "Custom лек CRM",
+        "Месечно: поддръжка + промени в съдържанието + 2ч поддръжка",
+      ],
+      enterprise: [
+        "Всичко от Scale-Up пакета",
+        "Custom AI агент (автономен виртуален служител)",
+        "AI гласов агент за продажби и поддръжка",
+        "Персонализация с AI",
+        "Сложни API интеграции (CRM, ERP, доставчици)",
+        "Приоритетна поддръжка + месечен стратегически разговор",
+      ],
+    };
+  }
+  return {
+    startup: [
+      "1-page custom website (mobile-first, SEO-optimized)",
+      "AI chatbot trained on your business",
+      "Online booking integration",
+      "Contact form + email capture",
+      "Google Analytics + Search Console setup",
+      "Hosted & deployed for you",
+    ],
+    scaleup: [
+      "Everything in Startup Bundle",
+      "Full redesign — up to 5 pages",
+      "E-commerce / payments ready",
+      "AI chatbot with lead qualification",
+      "Marketing automation (email + SMS sequences)",
+      "Custom lightweight CRM",
+      "Monthly: maintenance + content updates + 2h support",
+    ],
+    enterprise: [
+      "Everything in Scale-Up Bundle",
+      "Custom AI agent (autonomous virtual employee)",
+      "AI voice agent for leads & support",
+      "AI-powered personalization",
+      "Advanced API integrations (CRM, ERP, vendors)",
+      "Priority support + monthly strategy call",
+    ],
+  };
+}
 
 // Hero project (real) + 2 fictional-but-realistic mini case studies.
-//
 // Card order is deliberate: the Curated. shop sits in the MIDDLE so it
-// reads as the centerpiece of the trio (eye naturally lands on the
-// middle card in a 3-up grid). The `featured` flag on it triggers a
-// blue-bordered, gradient-haloed treatment in the rendering loop —
-// same visual language as the "Most popular" bundle pricing card.
-const caseStudies = [
-  {
-    title: "Local Fitness Studio",
-    summary:
-      "AI booking flow + chatbot replaced the front desk after hours. Members self-serve from any device.",
-    metric: "+340% bookings · 0 missed calls",
-    tech: "Next.js · Stripe · Calendar API · GPT-4o",
-    href: "/projects/local-fitness-studio",
-    cta: "See live demo",
-    badge: "Live demo",
-    real: true,
-    featured: false,
-  },
-  {
-    title: "AI-Powered Shopify Store",
-    summary:
-      "Headless Next.js storefront with real-time AI recommendations, intelligent chatbot with Add to Cart, and seamless Shopify integration.",
-    metric: "2× conversion rate · 4× faster page load",
-    tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
-    href: DEMO_URL,
-    cta: "Open the live shop",
-    badge: "Live demo",
-    real: true,
-    featured: true,
-  },
-  {
-    title: "Boutique Fashion Brand",
-    summary:
-      "AI personalization on product pages + abandoned-cart recovery sequences across email and SMS. Bulgarian-language demo.",
-    metric: "28% cart recovery · +19% AOV",
-    tech: "Shopify · AI Personalization · Klaviyo",
-    href: "/projects/boutique-fashion-brand",
-    cta: "See live demo",
-    badge: "Live demo",
-    real: true,
-    featured: false,
-  },
-];
-
-const steps = [
-  {
-    n: "01",
-    title: "Free 15-min discovery call",
-    body: "We map your goals, biggest leaks, and quickest wins. No pressure, no jargon.",
-  },
-  {
-    n: "02",
-    title: "Custom proposal in 24h",
-    body: "Fixed scope, fixed price, fixed timeline. You know exactly what you’re paying for.",
-  },
-  {
-    n: "03",
-    title: "Build & launch in days",
-    body: "Most projects ship in under 2 weeks. You see daily progress in a shared workspace.",
-  },
-  {
-    n: "04",
-    title: "Optional ongoing support",
-    body: "Stay on the retainer for maintenance, new features, or AI tuning. Cancel anytime.",
-  },
-];
-
-const testimonials = [
-  {
-    quote:
-      "Nacho rebuilt our site in 4 days. Lighthouse went from 32 to 98. Conversions doubled in the first week.",
-    name: "Maria K.",
-    role: "Owner, Local Bakery",
-  },
-  {
-    quote:
-      "The AI chatbot books client consultations while I sleep. It paid for itself in 2 weeks.",
-    name: "David T.",
-    role: "Founder, Coaching Studio",
-  },
-  // The agency-cost number is the only price-bearing testimonial; we
-  // wrap the array in a builder so the EUR amount converts to USD via
-  // the same FX rate used everywhere else.
-];
-
-function buildTestimonials(currency: Currency) {
+// reads as the centerpiece of the trio. The `featured` flag triggers
+// a blue-bordered, gradient-haloed treatment in the rendering loop.
+// Content lookup is keyed on the dict so each case study reads in
+// the visitor's language without spreading copy across the page.
+function buildCaseStudies(locale: Locale) {
   return [
-    ...testimonials,
     {
-      quote: `We stopped paying our agency ${formatPriceK(4000, currency)}/month. Nacho’s bundle does more for less than rent.`,
-      name: "Sofia M.",
-      role: "Fashion Boutique Owner",
+      title: DICT.caseStudies.fitnessTitle[locale],
+      summary: DICT.caseStudies.fitnessSummary[locale],
+      metric: DICT.caseStudies.fitnessMetric[locale],
+      tech: "Next.js · Stripe · Calendar API · GPT-4o",
+      href: "/projects/local-fitness-studio",
+      cta: DICT.caseStudies.fitnessCta[locale],
+      badge: DICT.caseStudies.badgeLive[locale],
+      real: true,
+      featured: false,
+    },
+    {
+      title: DICT.caseStudies.shopTitle[locale],
+      summary: DICT.caseStudies.shopSummary[locale],
+      metric: DICT.caseStudies.shopMetric[locale],
+      tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
+      href: DEMO_URL,
+      cta: DICT.caseStudies.shopCta[locale],
+      badge: DICT.caseStudies.badgeLive[locale],
+      real: true,
+      featured: true,
+    },
+    {
+      title: DICT.caseStudies.boutiqueTitle[locale],
+      summary: DICT.caseStudies.boutiqueSummary[locale],
+      metric: DICT.caseStudies.boutiqueMetric[locale],
+      tech: "Shopify · AI Personalization · Klaviyo",
+      href: "/projects/boutique-fashion-brand",
+      cta: DICT.caseStudies.boutiqueCta[locale],
+      badge: DICT.caseStudies.badgeLive[locale],
+      real: true,
+      featured: false,
     },
   ];
 }
 
-function buildFaqs(currency: Currency) {
-  const retainer = formatPrice(97, currency);
+function buildSteps(locale: Locale) {
+  return [
+    { n: "01", title: DICT.steps.s1Title[locale], body: DICT.steps.s1Body[locale] },
+    { n: "02", title: DICT.steps.s2Title[locale], body: DICT.steps.s2Body[locale] },
+    { n: "03", title: DICT.steps.s3Title[locale], body: DICT.steps.s3Body[locale] },
+    { n: "04", title: DICT.steps.s4Title[locale], body: DICT.steps.s4Body[locale] },
+  ];
+}
+
+function buildTestimonials(currency: Currency, locale: Locale) {
   return [
     {
-      q: "How fast can you start?",
-      a: "Most projects begin within 48 hours of the discovery call. Simple sites are live in 3–7 days.",
+      quote: DICT.testimonials.t1Quote[locale],
+      name: DICT.testimonials.t1Name[locale],
+      role: DICT.testimonials.t1Role[locale],
     },
     {
-      q: "Do you work with my existing website?",
-      a: "Absolutely. I can refactor, redesign, or layer AI features onto whatever stack you’re on — WordPress, Shopify, custom code, anything.",
+      quote: DICT.testimonials.t2Quote[locale],
+      name: DICT.testimonials.t2Name[locale],
+      role: DICT.testimonials.t2Role[locale],
     },
     {
-      q: "What if I’m not happy?",
-      a: "You get unlimited revisions during the build. If you’re still not happy after launch, I refund the difference. No drama.",
+      quote: `${DICT.testimonials.t3QuotePrefix[locale]}${formatPriceK(4000, currency)}${DICT.testimonials.t3QuoteSuffix[locale]}`,
+      name: DICT.testimonials.t3Name[locale],
+      role: DICT.testimonials.t3Role[locale],
     },
-    {
-      q: "Where is my site hosted?",
-      a: "Default is Vercel (free tier covers most small businesses). You own everything — code, domain, data.",
-    },
-    {
-      q: "How does the monthly retainer work?",
-      a: `${retainer}/month covers maintenance, security updates, content changes (up to 2 hours), priority support — and your domain name + hosting are on me for as long as you stay on the retainer. Cancel anytime; you keep ownership of everything.`,
-    },
-    {
-      q: "Do you sign NDAs?",
-      a: "Yes — standard mutual NDA before any code or data is exchanged.",
-    },
+  ];
+}
+
+function buildFaqs(currency: Currency, locale: Locale) {
+  const retainer = formatPrice(97, currency);
+  const a5 = `${retainer}${DICT.faq.a5Body[locale]}`;
+  return [
+    { q: DICT.faq.q1[locale], a: DICT.faq.a1[locale] },
+    { q: DICT.faq.q2[locale], a: DICT.faq.a2[locale] },
+    { q: DICT.faq.q3[locale], a: DICT.faq.a3[locale] },
+    { q: DICT.faq.q4[locale], a: DICT.faq.a4[locale] },
+    { q: DICT.faq.q5[locale], a: a5 },
+    { q: DICT.faq.q6[locale], a: DICT.faq.a6[locale] },
   ];
 }
 
 export default async function HomePage() {
-  // Resolve display currency from the request headers (Vercel/CF geo).
-  // EU visitors see EUR; everyone else sees USD converted at the fixed
-  // rate in `lib/currency.ts`. Local dev / unknown IPs fall back to EUR.
-  const currency = await detectCurrency();
-  // Currency-aware copies of the price-bearing testimonial / FAQ list —
-  // the rest of each list is fully static.
-  const renderedTestimonials = buildTestimonials(currency);
-  const renderedFaqs = buildFaqs(currency);
+  // Resolve display currency + locale from request headers (Vercel/CF
+  // geo + cookie). EU visitors see EUR; everyone else sees USD. BG
+  // visitors see Bulgarian copy; the rest see English.
+  const [currency, locale] = await Promise.all([
+    detectCurrency(),
+    detectLocale(),
+  ]);
+  const t = createT(locale);
+  const bundles = getLocalizedBundles(locale);
+  const hookServices = getLocalizedHookServices(locale);
+  const caseStudies = buildCaseStudies(locale);
+  const steps = buildSteps(locale);
+  const renderedTestimonials = buildTestimonials(currency, locale);
+  const renderedFaqs = buildFaqs(currency, locale);
+  const bundleCardIncludes = buildBundleCardIncludes(locale);
 
   return (
     <>
-      {/* ---------------------------------------------------------------- */}
-      {/* Floating AI sales assistant — chat + 1-tap booking in one CTA   */}
-      {/* ---------------------------------------------------------------- */}
-      <SalesAssistant currency={currency} />
+      <SalesAssistant currency={currency} locale={locale} />
 
-      {/* ---------------------------------------------------------------- */}
-      {/* HERO — sales-first framing, no "AI" framing in the headline       */}
-      {/* ---------------------------------------------------------------- */}
-      {/*
-        Layer order (bottom → top):
-          1. `bg-neutral-950` on the section so the area is solid black
-             before the artwork loads (no flash on slow connections).
-          2. `<Image>` with `fill priority` — the homepage's LCP image.
-          3. Vertical darkening gradient so the body copy sits on a
-             calm surface even where the artwork is bright.
-          4. Existing blue/violet radial blobs — they bleed colour
-             back onto the darkened artwork.
-          5. Content (`relative`) — naturally on top thanks to `isolate`
-             on the parent + `-z-10` on the background layers.
-      */}
+      {/* HERO --------------------------------------------------------- */}
       <section
         aria-labelledby="hero-heading"
         className="relative isolate overflow-hidden bg-neutral-950"
@@ -270,54 +248,39 @@ export default async function HomePage() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
-          {/* Status pill — kept from the original site as a credibility marker */}
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm text-green-300">
             <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
-            Available for new projects
+            {t(DICT.status.availableForProjects)}
           </div>
 
-          {/*
-            The first line ("I Turn Small Businesses Into") is forced to
-            stay together via `whitespace-nowrap` on its wrapper span on
-            screens wide enough to fit it (≥sm). Below that breakpoint we
-            allow it to wrap naturally so it never overflows the viewport.
-            The gradient span is `block` so "Money Generators" always sits
-            on its own line regardless of viewport width. We deliberately
-            do NOT use `text-balance` here — that's what was pushing
-            "Into" onto the second line on desktop.
-          */}
           <h1
             id="hero-heading"
             className="mx-auto max-w-5xl text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
           >
             <span className="sm:whitespace-nowrap">
-              I Turn Small Businesses Into
+              {t(DICT.home.heroLine1)}
             </span>{" "}
             <span className="block bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
-              Money Generators
+              {t(DICT.home.heroLine2)}
             </span>
           </h1>
 
           <div className="mx-auto mt-7 max-w-2xl space-y-1 text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
-            <p>No more missed leads at 2 AM.</p>
-            <p>No more manual work killing your evenings.</p>
-            <p>No more watching competitors scale while you stay stuck.</p>
+            <p>{t(DICT.home.heroBullet1)}</p>
+            <p>{t(DICT.home.heroBullet2)}</p>
+            <p>{t(DICT.home.heroBullet3)}</p>
           </div>
 
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
-            Get a professional website + smart automation that works 24/7 —
-            starting at{" "}
-            {/* "just €59" links to the website product page since the
-                €59 in the catalogue is the 1-page Custom Website tier.
-                Subtle underline + hover tint signals it's interactive
-                without competing with the hero CTAs below. */}
+            {t(DICT.home.heroSubBefore)}{" "}
             <Link
               href="/services/website"
               className="font-semibold text-white underline decoration-blue-400/40 decoration-2 underline-offset-4 transition-colors hover:text-blue-200 hover:decoration-blue-300"
             >
-              just {formatPrice(59, currency)}
+              {t(DICT.home.heroSubJustPrefix)}
+              {formatPrice(59, currency)}
             </Link>
-            .
+            {t(DICT.home.heroSubAfter)}
           </p>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -325,7 +288,7 @@ export default async function HomePage() {
               href="#bundles"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
-              See the Bundles That Make Money
+              {t(DICT.cta.seeMoneyBundles)}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -346,21 +309,19 @@ export default async function HomePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              Book 15-min Discovery Call
+              {t(DICT.cta.book15MinTalk)}
             </a>
           </div>
 
-          {/* Micro-copy: 60-second preview of the rest of the page so the
-              visitor knows what they get if they keep scrolling. */}
           <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-700/50 bg-neutral-900/40 p-5 text-left backdrop-blur-sm">
             <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
-              In the next 60 seconds you’ll see
+              {t(DICT.home.heroPreviewKicker)}
             </p>
             <ul className="mt-3 space-y-2 text-sm text-neutral-200">
               {[
-                "The exact services that grow your revenue",
-                "3 done-for-you bundles (Startup → Enterprise)",
-                "Live proof that this actually works",
+                t(DICT.home.heroPreviewItem1),
+                t(DICT.home.heroPreviewItem2),
+                t(DICT.home.heroPreviewItem3),
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <svg
@@ -383,15 +344,12 @@ export default async function HomePage() {
           </div>
 
           <p className="mt-8 text-xs text-neutral-400 sm:text-sm">
-            Sofia, Bulgaria · remote worldwide · usually delivering in under 2
-            weeks
+            {t(DICT.home.heroFooter)}
           </p>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* ABOUT                                                            */}
-      {/* ---------------------------------------------------------------- */}
+      {/* ABOUT -------------------------------------------------------- */}
       <section
         aria-labelledby="about-heading"
         className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
@@ -415,41 +373,33 @@ export default async function HomePage() {
               id="about-heading"
               className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400"
             >
-              About
+              {t(DICT.home.aboutKicker)}
             </h2>
             <p className="mt-3 text-2xl font-bold leading-tight tracking-tight text-neutral-900 dark:text-white sm:text-3xl">
-              I’m Nacho Tsvetkov, Full-Stack Software Engineer with 20+ years
-              building production systems for e-commerce, fintech, and
-              startups.
+              {t(DICT.home.aboutHeadline)}
             </p>
             <p className="mt-5 text-base leading-relaxed text-neutral-600 dark:text-neutral-300">
-              I used to build complex enterprise tools. Now I focus
-              exclusively on small business owners and early-stage startups
-              who are tired of wasting time on manual tasks, losing sales to
-              slow websites, and watching competitors automate while they
-              stay stuck.
+              {t(DICT.home.aboutP1)}
             </p>
             <p className="mt-4 text-base leading-relaxed text-neutral-600 dark:text-neutral-300">
               <span className="font-semibold text-neutral-900 dark:text-white">
-                My specialty:
+                {t(DICT.home.aboutSpecialtyLabel)}
               </span>{" "}
-              fast, affordable solutions that combine modern web tech with
-              smart automation — so you get 24/7 revenue systems, higher
-              conversions, and real time back in your day.
+              {t(DICT.home.aboutSpecialty)}
             </p>
 
             <dl className="mt-8 grid grid-cols-3 gap-4 border-t border-neutral-200 pt-6 dark:border-neutral-800">
               <div>
                 <dt className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                  Experience
+                  {t(DICT.home.statExperience)}
                 </dt>
                 <dd className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
-                  20+ yrs
+                  {t(DICT.home.statExperienceValue)}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                  Projects
+                  {t(DICT.home.statProjects)}
                 </dt>
                 <dd className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
                   50+
@@ -457,10 +407,10 @@ export default async function HomePage() {
               </div>
               <div>
                 <dt className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                  Avg. delivery
+                  {t(DICT.home.statAvgDelivery)}
                 </dt>
                 <dd className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">
-                  &lt; 2 wks
+                  {t(DICT.home.statAvgDeliveryValue)}
                 </dd>
               </div>
             </dl>
@@ -468,9 +418,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* BUNDLES (the money section)                                      */}
-      {/* ---------------------------------------------------------------- */}
+      {/* BUNDLES ------------------------------------------------------ */}
       <section
         id="bundles"
         aria-labelledby="bundles-heading"
@@ -479,47 +427,29 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
-              Bundles
+              {t(DICT.home.bundlesKicker)}
             </p>
             <h2
               id="bundles-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl"
             >
-              Pick the Bundle That Pays for Itself
+              {t(DICT.home.bundlesHeadline)}
             </h2>
             <p className="mt-4 text-base text-neutral-400">
-              Each bundle costs roughly{" "}
+              {t(DICT.home.bundlesIntro1)}{" "}
               <span className="font-semibold text-white">
-                1/3 of buying everything separately
+                {t(DICT.home.bundlesIntroMid)}
               </span>
-              . The retainer keeps everything alive, secure, and improving
-              every month.
+              {t(DICT.home.bundlesIntroEnd)}
             </p>
           </div>
 
-          {/*
-            Bottom-anchored layout: cards are flex columns, the includes
-            list grows (`flex-1`) to absorb any vertical slack, and
-            everything below the list is pinned tight against the bottom
-            of the card. Result:
-              - All buttons sit at the same Y across cards (grid stretch).
-              - The ROI box sits directly above the button on every card
-                — no orphan empty row when a card has no "nudge".
-              - The Enterprise "Most clients choose…" nudge appears just
-                above its ROI box, eating from its own list space.
-          */}
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {bundles.map((b) => {
               const highlighted = !!b.highlight;
               return (
                 <div
                   key={b.name}
-                  // The highlighted card is emphasised purely with border
-                  // + gradient + glow + badge. We deliberately do NOT use
-                  // `transform: scale()` here — it visually inflates the
-                  // card 3% and pushes its rendered button ~10px lower
-                  // than the other two, breaking horizontal alignment of
-                  // the ROI/CTA rows across the three columns.
                   className={`relative flex flex-col gap-6 rounded-2xl p-8 ${
                     highlighted
                       ? "border-2 border-blue-500 bg-gradient-to-b from-blue-950/60 to-neutral-900 shadow-2xl shadow-blue-600/30 ring-1 ring-blue-500/40"
@@ -528,7 +458,7 @@ export default async function HomePage() {
                 >
                   {highlighted && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                      Most popular
+                      {t(DICT.home.bundlesMostPopular)}
                     </span>
                   )}
 
@@ -542,18 +472,12 @@ export default async function HomePage() {
                       {formatPrice(b.oneTimeEur, currency)}
                     </span>
                     <p className="mt-1 text-sm text-neutral-400">
-                      {renderBundlePricingNote(b, currency)}
+                      {renderBundlePricingNote(b, currency, locale)}
                     </p>
                   </div>
 
                   <p className="text-sm italic text-neutral-300">{b.pain}</p>
 
-                  {/* Includes list. Freebies (when present) render FIRST
-                      with green checks + a "FREE" badge so the visitor
-                      immediately registers them as bonus value before
-                      reading the regular line items. The list takes
-                      `flex-1` so cards align bottom-up regardless of
-                      how many items each bundle ships with. */}
                   <ul className="flex-1 space-y-3 text-sm text-neutral-300">
                     {b.freebies?.map((item) => (
                       <li key={`free:${item}`} className="flex gap-2">
@@ -572,13 +496,13 @@ export default async function HomePage() {
                         </svg>
                         <span>
                           <span className="mr-1.5 inline-flex items-center rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                            Free
+                            {t(DICT.home.bundlesFreeBadge)}
                           </span>
                           {item}
                         </span>
                       </li>
                     ))}
-                    {BUNDLE_CARD_INCLUDES[b.id].map((item) => (
+                    {bundleCardIncludes[b.id].map((item) => (
                       <li key={item} className="flex gap-2">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -603,16 +527,12 @@ export default async function HomePage() {
                   )}
 
                   <p className="rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 text-xs text-neutral-300">
-                    <span className="font-semibold text-white">ROI:</span>{" "}
-                    {renderBundleRoi(b, currency)}
+                    <span className="font-semibold text-white">
+                      {t(DICT.home.bundlesRoiLabel)}
+                    </span>{" "}
+                    {renderBundleRoi(b, currency, locale)}
                   </p>
 
-                  {/* Each bundle CTA uses its own action verb (Get /
-                      Start the process / Buy) so the three cards feel
-                      like distinct commitments rather than three flavours
-                      of "click here". The href routes to the dedicated
-                      bundle detail page where the visitor can pick
-                      upsells before checkout. */}
                   <Link
                     href={`/bundles/${b.id}`}
                     prefetch={true}
@@ -643,22 +563,20 @@ export default async function HomePage() {
           </div>
 
           <p className="mt-10 text-center text-sm text-neutral-400">
-            Need something custom?{" "}
+            {t(DICT.home.bundlesCustomNeed)}{" "}
             <a
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-blue-400 transition-colors hover:text-blue-300"
             >
-              Tell me on a 15-min call →
+              {t(DICT.home.bundlesCustomCta)}
             </a>
           </p>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* SERVICES TEASER — 3 hooks; full catalogue lives at /services      */}
-      {/* ---------------------------------------------------------------- */}
+      {/* SERVICES TEASER --------------------------------------------- */}
       <section
         id="services"
         aria-labelledby="services-heading"
@@ -667,44 +585,22 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              À la carte
+              {t(DICT.home.servicesKicker)}
             </p>
             <h2
               id="services-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
             >
-              Don&apos;t want a bundle? Start with one of these.
+              {t(DICT.home.servicesHeadline)}
             </h2>
             <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-              The three single services most small businesses pick first.
-              Every line item is fixed-price, fixed-scope, and ships in days.
+              {t(DICT.home.servicesIntro)}
             </p>
           </div>
 
-          {/* 3-card hook grid (`getHookServices()` → exactly 3 services).
-              Each card is a Link to its product page so the entire card
-              surface is clickable, not just a corner CTA.
-
-              Card body intentionally shows ONLY the pain text — the
-              solution is one click away on the product page, and
-              keeping the body short makes the card scannable.
-
-              Price + "See details →" share the bottom row: price is
-              left-aligned, CTA is right-aligned and pinned to the
-              bottom edge with `items-end`. For "from" prices we
-              collapse the kicker ("Starting at") into the same line
-              as the amount ("€197") so simple prices read as one
-              tight string instead of two awkward stacked lines. For
-              "tiered" and "addon" prices, both lines carry distinct
-              info (e.g. "Add-on +€50" / "Full site with chatbot:
-              €323"), so we keep them stacked — and the right column
-              still bottom-aligns cleanly thanks to `items-end`. */}
           <ul className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {getHookServices().map((s) => {
-              const price = renderServicePriceParts(s.price, currency);
-              // "Starting at" is a kicker label, not standalone information,
-              // so for `from` prices we render it as a single combined
-              // line. Same idea for `monthly` (kicker → "€/month").
+            {hookServices.map((s) => {
+              const price = renderServicePriceParts(s.price, currency, locale);
               const singleLine =
                 s.price.kind === "from"
                   ? `${price.primary} ${price.secondary}`
@@ -722,7 +618,7 @@ export default async function HomePage() {
                     </h3>
                     <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
                       <span className="font-semibold text-neutral-900 dark:text-white">
-                        Pain:
+                        {t(DICT.home.servicesPainLabel)}
                       </span>{" "}
                       {s.pain}
                     </p>
@@ -741,7 +637,7 @@ export default async function HomePage() {
                         aria-hidden="true"
                         className="inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-neutral-500 transition-all group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-neutral-500 dark:group-hover:text-blue-400"
                       >
-                        See details
+                        {t(DICT.cta.seeDetails)}
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 20 20"
@@ -762,13 +658,12 @@ export default async function HomePage() {
             })}
           </ul>
 
-          {/* Full-catalogue CTA — links to the dedicated /services page. */}
           <div className="mt-10 text-center">
             <Link
               href="/services"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:border-blue-500"
             >
-              Browse all 12 services
+              {t(DICT.home.servicesBrowseAll)}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -784,15 +679,13 @@ export default async function HomePage() {
               </svg>
             </Link>
             <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
-              Grouped by the pain they solve — find yours in seconds.
+              {t(DICT.home.servicesGroupedBy)}
             </p>
           </div>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* PROVEN RESULTS                                                   */}
-      {/* ---------------------------------------------------------------- */}
+      {/* RESULTS ------------------------------------------------------ */}
       <section
         aria-labelledby="results-heading"
         className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
@@ -800,24 +693,16 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              Proven Results
+              {t(DICT.home.resultsKicker)}
             </p>
             <h2
               id="results-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
             >
-              Real Projects, Real Numbers
+              {t(DICT.home.resultsHeadline)}
             </h2>
           </div>
 
-          {/* 3-up grid. The middle card is the flagship Curated. shop —
-              `featured: true` in the array drives a stronger visual
-              treatment (blue border, soft halo, gradient backplate, top
-              ribbon) so the eye lands on it first. Same pattern we use
-              on the bundle-pricing "Most popular" card; we deliberately
-              do NOT scale-transform the featured card because that
-              breaks horizontal alignment of the CTA row across the
-              three columns. */}
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
             {caseStudies.map((c) => (
               <article
@@ -869,21 +754,16 @@ export default async function HomePage() {
                 {c.href && (
                   <Link
                     href={c.href}
-                    // Each demo lives behind its own brand chrome (KORE,
-                    // ROZÉ, Curated.) and the global navbar is hidden on
-                    // those routes. Opening in a new tab keeps the
-                    // visitor anchored on the portfolio so they can come
-                    // back without "where am I?" confusion.
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label={`${c.cta || "Read more"} (opens in a new tab)`}
+                    aria-label={`${c.cta} (opens in a new tab)`}
                     className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
                       c.featured
                         ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
                         : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
                     }`}
                   >
-                    {c.cta || "Read more"}
+                    {c.cta}
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 20 20"
@@ -908,17 +788,12 @@ export default async function HomePage() {
             ))}
           </div>
 
-          {/* Full-portfolio CTA — links to the dedicated /projects page.
-              Mirrors the services-section CTA below for visual rhythm:
-              outlined pill + arrow icon + subtitle clarifying what's
-              behind the link. Stays in-tab (same domain, no demo
-              chrome) so visitors can browse and come straight back. */}
           <div className="mt-12 text-center">
             <Link
               href="/projects"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:border-blue-500"
             >
-              See all 9 projects
+              {t(DICT.home.resultsSeeAll)}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -934,15 +809,13 @@ export default async function HomePage() {
               </svg>
             </Link>
             <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
-              + 6 more demos: voice shopping, visual styling, autonomous commerce, and more.
+              {t(DICT.home.resultsSeeAllNote)}
             </p>
           </div>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* HOW IT WORKS                                                     */}
-      {/* ---------------------------------------------------------------- */}
+      {/* HOW IT WORKS ------------------------------------------------- */}
       <section
         aria-labelledby="process-heading"
         className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
@@ -950,13 +823,13 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              Process
+              {t(DICT.home.processKicker)}
             </p>
             <h2
               id="process-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
             >
-              How It Works
+              {t(DICT.home.processHeadline)}
             </h2>
           </div>
 
@@ -981,9 +854,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* TESTIMONIALS                                                     */}
-      {/* ---------------------------------------------------------------- */}
+      {/* TESTIMONIALS ------------------------------------------------- */}
       <section
         aria-labelledby="testimonials-heading"
         className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
@@ -991,20 +862,20 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              Clients
+              {t(DICT.home.testimonialsKicker)}
             </p>
             <h2
               id="testimonials-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
             >
-              What People Say
+              {t(DICT.home.testimonialsHeadline)}
             </h2>
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {renderedTestimonials.map((t) => (
+            {renderedTestimonials.map((tm) => (
               <figure
-                key={t.name}
+                key={tm.name}
                 className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950"
               >
                 <svg
@@ -1017,14 +888,14 @@ export default async function HomePage() {
                   <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
                 </svg>
                 <blockquote className="mt-4 text-base leading-relaxed text-neutral-700 dark:text-neutral-200">
-                  “{t.quote}”
+                  “{tm.quote}”
                 </blockquote>
                 <figcaption className="mt-auto pt-6 text-sm">
                   <div className="font-semibold text-neutral-900 dark:text-white">
-                    {t.name}
+                    {tm.name}
                   </div>
                   <div className="text-neutral-500 dark:text-neutral-400">
-                    {t.role}
+                    {tm.role}
                   </div>
                 </figcaption>
               </figure>
@@ -1033,9 +904,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* FAQ                                                              */}
-      {/* ---------------------------------------------------------------- */}
+      {/* FAQ ---------------------------------------------------------- */}
       <section
         aria-labelledby="faq-heading"
         className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
@@ -1043,17 +912,16 @@ export default async function HomePage() {
         <div className="mx-auto max-w-3xl px-6">
           <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              FAQ
+              {t(DICT.home.faqKicker)}
             </p>
             <h2
               id="faq-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
             >
-              Quick Answers
+              {t(DICT.home.faqHeadline)}
             </h2>
           </div>
 
-          {/* <details>/<summary> keeps this accordion 0-JS for max Lighthouse */}
           <dl className="mt-12 space-y-4">
             {renderedFaqs.map((f) => (
               <details
@@ -1081,9 +949,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* FINAL CTA                                                        */}
-      {/* ---------------------------------------------------------------- */}
+      {/* FINAL CTA ---------------------------------------------------- */}
       <section
         id="contact"
         aria-labelledby="cta-heading"
@@ -1094,12 +960,10 @@ export default async function HomePage() {
             id="cta-heading"
             className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl"
           >
-            Stop losing money to slow tech and manual work.
+            {t(DICT.home.finalHeadline)}
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-blue-100 sm:text-lg">
-            Book a free 15-minute discovery call. I’ll map your biggest leak,
-            quote it on the spot, and you’ll know within 24 hours whether
-            we’re a fit.
+            {t(DICT.home.finalSub)}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
@@ -1108,7 +972,7 @@ export default async function HomePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-blue-700 shadow-lg transition-all hover:scale-[1.02] hover:bg-blue-50"
             >
-              Book Discovery Call
+              {t(DICT.cta.bookDiscoveryCall)}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -1127,18 +991,16 @@ export default async function HomePage() {
               href={`mailto:${EMAIL}`}
               className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
             >
-              Or email me directly
+              {t(DICT.cta.emailMe)}
             </a>
           </div>
           <p className="mt-6 text-xs text-blue-100">
-            Most calls booked today get a proposal back tomorrow.
+            {t(DICT.home.finalNote)}
           </p>
         </div>
       </section>
 
-      {/* ---------------------------------------------------------------- */}
-      {/* PAGE FOOTER                                                      */}
-      {/* ---------------------------------------------------------------- */}
+      {/* FOOTER ------------------------------------------------------- */}
       <footer className="border-t border-neutral-800 bg-neutral-950 py-10">
         <div className="mx-auto max-w-7xl px-6 text-center text-sm text-neutral-400">
           <div className="mb-5 flex items-center justify-center gap-4">
@@ -1195,8 +1057,8 @@ export default async function HomePage() {
             </a>
           </div>
           <p>
-            &copy; {new Date().getFullYear()} Nacho Tsvetkov. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} Nacho Tsvetkov.{" "}
+            {t(DICT.home.footerRights)}
           </p>
           <p className="mt-2 text-xs text-neutral-600">
             <a
@@ -1212,7 +1074,7 @@ export default async function HomePage() {
             >
               {PHONE_DISPLAY}
             </a>{" "}
-            · Sofia, Bulgaria
+            · {t(DICT.home.footerLocation)}
           </p>
         </div>
       </footer>

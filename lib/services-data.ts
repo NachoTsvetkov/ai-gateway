@@ -8,6 +8,9 @@
 // If you change a price here it propagates everywhere automatically.
 
 import { formatPrice, type Currency } from "./currency";
+import { type Locale } from "./i18n/locale";
+import { DICT } from "./i18n/dict";
+import { PAIN_CATEGORIES_BG, SERVICES_BG } from "./services-data.bg";
 
 // ----------------------------------------------------------------------
 // Service pricing — discriminated union to capture the few different
@@ -28,19 +31,48 @@ export type ServicePrice =
 export function renderServicePrice(
   p: ServicePrice,
   currency: Currency,
+  locale: Locale = "en",
 ): string {
+  // Localised renderer: "Starting at €59 (1-page)" → "От €59 (1 страница)".
+  // Pulls every label out of the central dict so price lines read in
+  // the visitor's language without each call site having to thread
+  // strings through manually.
+  const startingAt = locale === "bg" ? DICT.pricing.startingAt.bg : DICT.pricing.startingAt.en;
+  const addonPrefix = locale === "bg" ? DICT.pricing.addonPrefix.bg : DICT.pricing.addonPrefix.en;
+  const addonFullSitePrefix =
+    locale === "bg" ? DICT.pricing.addonFullSitePrefix.bg : DICT.pricing.addonFullSitePrefix.en;
+  const perMonth = locale === "bg" ? DICT.pricing.perMonth.bg : DICT.pricing.perMonth.en;
   switch (p.kind) {
     case "from":
-      return `Starting at ${formatPrice(p.eur, currency)}${p.trail ? ` ${p.trail}` : ""}`;
+      return `${startingAt} ${formatPrice(p.eur, currency)}${p.trail ? ` ${localizeTierTrail(p.trail, locale)}` : ""}`;
     case "addon":
-      return `Add-on +${formatPrice(p.addonEur, currency)} (full site with chatbot: ${formatPrice(p.combinedEur, currency)})`;
+      return `${addonPrefix}${formatPrice(p.addonEur, currency)} (${addonFullSitePrefix}${formatPrice(p.combinedEur, currency)})`;
     case "monthly":
-      return `${formatPrice(p.eur, currency)}/month`;
+      return `${formatPrice(p.eur, currency)}${perMonth}`;
     case "tiered":
-      return `Starting at ${p.tiers
-        .map((t) => `${formatPrice(t.eur, currency)} (${t.label})`)
+      return `${startingAt} ${p.tiers
+        .map((t) => `${formatPrice(t.eur, currency)} (${localizeTierLabel(t.label, locale)})`)
         .join(" / ")}`;
   }
+}
+
+// Tier labels live next to the price data ("1-page" / "3-page") rather
+// than in the central dict because they're tied to specific tier
+// indices on specific services. Map them to their BG equivalents at
+// render time so we don't have to duplicate the tier list per locale.
+function localizeTierLabel(label: string, locale: Locale): string {
+  if (locale === "en") return label;
+  if (label === "1-page") return DICT.pricing.tier1Page.bg;
+  if (label === "3-page") return DICT.pricing.tier3Page.bg;
+  return label;
+}
+
+// Same idea for the parenthetical "trail" string on `from` prices —
+// e.g. "(full payments-ready site)" → "(пълен сайт, готов за плащания)".
+function localizeTierTrail(trail: string, locale: Locale): string {
+  if (locale === "en") return trail;
+  if (trail === "(full payments-ready site)") return DICT.pricing.fullPaymentsReady.bg;
+  return trail;
 }
 
 // Two-line variant of `renderServicePrice` used by the homepage teaser
@@ -61,29 +93,37 @@ export function renderServicePrice(
 export function renderServicePriceParts(
   p: ServicePrice,
   currency: Currency,
+  locale: Locale = "en",
 ): { primary: string; secondary: string } {
+  const startingAt = locale === "bg" ? DICT.pricing.startingAt.bg : DICT.pricing.startingAt.en;
+  const addonPrefix = locale === "bg" ? DICT.pricing.addonPrefix.bg : DICT.pricing.addonPrefix.en;
+  const monthlyRetainer =
+    locale === "bg" ? DICT.pricing.monthlyRetainer.bg : DICT.pricing.monthlyRetainer.en;
+  const perMonth = locale === "bg" ? DICT.pricing.perMonth.bg : DICT.pricing.perMonth.en;
+  const fullSiteWithChatbot =
+    locale === "bg" ? DICT.pricing.fullSiteWithChatbot.bg : DICT.pricing.fullSiteWithChatbot.en;
   switch (p.kind) {
     case "from":
       return {
-        primary: "Starting at",
-        secondary: `${formatPrice(p.eur, currency)}${p.trail ? ` ${p.trail}` : ""}`,
+        primary: startingAt,
+        secondary: `${formatPrice(p.eur, currency)}${p.trail ? ` ${localizeTierTrail(p.trail, locale)}` : ""}`,
       };
     case "addon":
       return {
-        primary: `Add-on +${formatPrice(p.addonEur, currency)}`,
-        secondary: `Full site with chatbot: ${formatPrice(p.combinedEur, currency)}`,
+        primary: `${addonPrefix}${formatPrice(p.addonEur, currency)}`,
+        secondary: `${fullSiteWithChatbot}: ${formatPrice(p.combinedEur, currency)}`,
       };
     case "monthly":
       return {
-        primary: "Monthly retainer",
-        secondary: `${formatPrice(p.eur, currency)}/month`,
+        primary: monthlyRetainer,
+        secondary: `${formatPrice(p.eur, currency)}${perMonth}`,
       };
     case "tiered": {
       const [first, ...rest] = p.tiers;
       return {
-        primary: `Starting at ${formatPrice(first.eur, currency)} (${first.label})`,
+        primary: `${startingAt} ${formatPrice(first.eur, currency)} (${localizeTierLabel(first.label, locale)})`,
         secondary: rest
-          .map((t) => `${formatPrice(t.eur, currency)} (${t.label})`)
+          .map((t) => `${formatPrice(t.eur, currency)} (${localizeTierLabel(t.label, locale)})`)
           .join(" / "),
       };
     }
@@ -353,4 +393,67 @@ export const GETTING_STARTED_SERVICE_IDS: ReadonlyArray<ServiceId> = [
 
 export function getGettingStartedServices(): ReadonlyArray<Service> {
   return GETTING_STARTED_SERVICE_IDS.map(getServiceById);
+}
+
+// ----------------------------------------------------------------------
+// Localised accessors. The English data above is the source of truth;
+// these wrap each accessor with a locale-aware overlay so call sites
+// can ask for content in the visitor's language without knowing where
+// the BG file lives.
+// ----------------------------------------------------------------------
+
+function localizeService(svc: Service, locale: Locale): Service {
+  if (locale === "en") return svc;
+  const overrides = SERVICES_BG[svc.id];
+  if (!overrides) return svc;
+  return { ...svc, ...overrides };
+}
+
+function localizePainCategory(cat: PainCategory, locale: Locale): PainCategory {
+  if (locale === "en") return cat;
+  const overrides = PAIN_CATEGORIES_BG[cat.id];
+  if (!overrides) return cat;
+  return { ...cat, ...overrides };
+}
+
+export function getLocalizedServices(locale: Locale): ReadonlyArray<Service> {
+  if (locale === "en") return services;
+  return services.map((s) => localizeService(s, locale));
+}
+
+export function getLocalizedServiceById(
+  id: ServiceId,
+  locale: Locale,
+): Service {
+  return localizeService(getServiceById(id), locale);
+}
+
+export function getLocalizedHookServices(
+  locale: Locale,
+): ReadonlyArray<Service> {
+  return HOOK_SERVICE_IDS.map((id) => getLocalizedServiceById(id, locale));
+}
+
+export function getLocalizedGettingStartedServices(
+  locale: Locale,
+): ReadonlyArray<Service> {
+  return GETTING_STARTED_SERVICE_IDS.map((id) =>
+    getLocalizedServiceById(id, locale),
+  );
+}
+
+export function getLocalizedServicesByCategory(
+  categoryId: PainCategoryId,
+  locale: Locale,
+): ReadonlyArray<Service> {
+  return services
+    .filter((s) => s.painCategoryId === categoryId)
+    .map((s) => localizeService(s, locale));
+}
+
+export function getLocalizedPainCategories(
+  locale: Locale,
+): ReadonlyArray<PainCategory> {
+  if (locale === "en") return PAIN_CATEGORIES;
+  return PAIN_CATEGORIES.map((c) => localizePainCategory(c, locale));
 }

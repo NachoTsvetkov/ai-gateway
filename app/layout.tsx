@@ -1,5 +1,5 @@
 import { CartProvider } from "components/cart/cart-context";
-import { Navbar } from "components/layout/navbar";
+import { Navbar, type NavbarLabels } from "components/layout/navbar";
 import { NavbarGate } from "components/layout/navbar/navbar-gate";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
@@ -7,6 +7,9 @@ import { ReactNode } from "react";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { baseUrl } from "lib/utils";
+import { detectLocaleAndCountry } from "lib/i18n/locale.server";
+import { BG_COUNTRY } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 
 // Routes where the global marketing navbar should NOT render. Each of
 // these is a standalone "live demo" with its own brand chrome (its
@@ -50,12 +53,42 @@ export default async function RootLayout({
   // Don't await the fetch, pass the Promise to the context provider
   const cart = getCart();
 
+  // Resolve the visitor's locale (cookie wins, geo fallback) and
+  // country in one pass so we can:
+  //   - set the html `lang` attribute correctly for screen readers + SEO
+  //   - thread translated chrome strings into the navbar
+  //   - decide whether to mount the language toggle (BG traffic only)
+  const { locale, country } = await detectLocaleAndCountry();
+  const showLanguageToggle = country === BG_COUNTRY;
+
+  // Pull every navbar string from the central dictionary in the
+  // resolved locale. Keeps the navbar component itself fully
+  // locale-agnostic — it just renders whatever copy it's handed.
+  const labels: NavbarLabels = {
+    wordmark: "Nacho Tsvetkov",
+    taglineLead: DICT.nav.moneyGenerator[locale],
+    taglineHighlight: DICT.nav.forSmallBusinesses[locale],
+    projects: DICT.nav.projects[locale],
+    services: DICT.nav.services[locale],
+    bookFull: DICT.nav.bookCall[locale],
+    bookMid: DICT.nav.bookCallShort[locale],
+    bookShort: DICT.nav.bookCallTiny[locale],
+    homeLabel: DICT.nav.home[locale],
+    ariaSiteNav: DICT.nav.siteNavigation[locale],
+    ariaOpenMenu: DICT.nav.openMenu[locale],
+    ariaCloseMenu: DICT.nav.closeMenu[locale],
+  };
+
   return (
-    <html lang="en" className={`${GeistSans.variable} scroll-smooth`}>
+    <html lang={locale} className={`${GeistSans.variable} scroll-smooth`}>
       <body suppressHydrationWarning className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
           <NavbarGate hideOnPrefix={HIDE_NAVBAR_ON}>
-            <Navbar />
+            <Navbar
+              labels={labels}
+              locale={locale}
+              showLanguageToggle={showLanguageToggle}
+            />
           </NavbarGate>
           <main>
             {children}

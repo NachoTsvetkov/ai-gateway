@@ -2,10 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import { detectLocale } from "lib/i18n/locale.server";
+import { createT, type Locale } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 import {
-  PAIN_CATEGORIES,
-  getGettingStartedServices,
-  getServicesByCategory,
+  getLocalizedGettingStartedServices,
+  getLocalizedPainCategories,
+  getLocalizedServicesByCategory,
   renderServicePrice,
   type PainCategory,
   type Service,
@@ -13,12 +16,27 @@ import {
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
-export const metadata = {
-  title: "Services — Built Around Your Biggest Business Pains",
-  description:
-    "Browse the full catalogue of websites, smart automation, and revenue systems — grouped by the pain they solve. Fixed-price, fixed-scope, ships in days.",
-  openGraph: { type: "website" },
-};
+// Locale-aware so the <title> + <meta description> match the body copy
+// for a BG visitor who set the toggle. Static metadata exports leak
+// English into BG renders (visible in social-share previews + browser
+// tab title). Same pattern as /bundles/[slug] + /services/[serviceId]
+// which already use generateMetadata.
+export async function generateMetadata() {
+  const locale = await detectLocale();
+  return locale === "bg"
+    ? {
+        title: "Услуги — създадени около най-болезнените ти проблеми",
+        description:
+          "Разгледай пълния каталог от сайтове, smart automation и системи за приход — групирани по проблема, който решават. Фиксирана цена, фиксиран обхват, готово за дни.",
+        openGraph: { type: "website" as const },
+      }
+    : {
+        title: "Services — Built Around Your Biggest Business Pains",
+        description:
+          "Browse the full catalogue of websites, smart automation, and revenue systems — grouped by the pain they solve. Fixed-price, fixed-scope, ships in days.",
+        openGraph: { type: "website" as const },
+      };
+}
 
 // Accent palette is keyed by `PainCategory["accent"]` PLUS a special
 // `cyan` variant used by the "Getting Started" launch sequence. Adding
@@ -59,19 +77,82 @@ const ACCENT_BG_SOFT: Record<Accent, string> = {
   cyan: "bg-cyan-50 dark:bg-cyan-500/5",
 };
 
-// Getting Started section metadata — kept inline because it's a
-// one-off section and doesn't need to live in the shared data module.
-const GETTING_STARTED_META = {
-  id: "getting-started",
-  hook: "I'm just getting online for the first time",
-  title: "Getting Started",
-  description:
-    "Brand new business or first-time online? This is the natural launch sequence — pick the pieces that fit your business model and skip the rest.",
-  accent: "cyan" as const,
-};
+// Getting Started section accent. The hook/title/description text comes
+// from DICT so it follows the locale; only the accent + DOM id stay
+// fixed here.
+const GETTING_STARTED_ID = "getting-started";
+const GETTING_STARTED_ACCENT: Accent = "cyan";
+
+// Localized strings used directly inside the hero / section labels that
+// don't fit the existing DICT.servicesPage shape. We keep them inline
+// (rather than balloon DICT for one-off literals) but only EN+BG forms
+// — never raw strings — leak into the JSX.
+const HERO = {
+  eyebrow: { en: "Full services catalogue", bg: "Пълен каталог услуги" },
+  headlineTop: {
+    en: "Built around the problems that actually keep",
+    bg: "Изградено около проблемите, които наистина не дават мира на",
+  },
+  headlineHighlight: {
+    en: "small-business owners up at night",
+    bg: "собствениците на малки бизнеси",
+  },
+  sub: {
+    en: "Pick by the pain you feel today. Every service is fixed-price, fixed-scope, and ships in days — not months. Save more by grabbing the matching",
+    bg: "Избери по проблема, който те боли днес. Всяка услуга е с фиксирана цена, фиксиран обхват и се доставя за дни — не месеци. Спести още, като вземеш съответния",
+  },
+  bundleLink: { en: "bundle", bg: "пакет" },
+  ctaSeeBundles: { en: "See the bundles", bg: "Виж пакетите" },
+  sectionsAriaLabel: { en: "Sections", bg: "Раздели" },
+} as const;
+
+const CLOSING = {
+  headline: {
+    en: "Not sure which service fits?",
+    bg: "Не си сигурен коя услуга ти трябва?",
+  },
+  introPrefix: { en: "Save", bg: "Спести" },
+  introMid: {
+    en: "by grabbing a bundle, or jump on a free 15-minute call and I'll tell you in plain English which option pays for itself fastest.",
+    bg: "като вземеш пакет, или запази безплатен 15-минутен разговор и ще ти кажа на ясен език кое решение се изплаща най-бързо.",
+  },
+  ctaSeeBundles: { en: "See the bundles", bg: "Виж пакетите" },
+  ctaBookCall: {
+    en: "Book 15-min discovery call",
+    bg: "Запази 15-минутен разговор",
+  },
+} as const;
+
+// Service-card chrome strings. The card renders inside both the
+// Getting Started section and every pain category, so we localize the
+// shared labels once.
+const CARD = {
+  painLabel: { en: "Pain:", bg: "Проблем:" },
+  solutionLabel: { en: "Solution:", bg: "Решение:" },
+  seeDetails: { en: "See details", bg: "Виж детайли" },
+} as const;
 
 export default async function ServicesPage() {
-  const currency = await detectCurrency();
+  // Both detections fire in parallel — the page is a server component
+  // so we want the slowest of (currency cookie/header lookup,
+  // locale cookie/header lookup) and not their sum.
+  const [currency, locale] = await Promise.all([
+    detectCurrency(),
+    detectLocale(),
+  ]);
+  const t = createT(locale);
+
+  // Localized data accessors merge the EN base with BG overrides where
+  // available, falling back to EN on a per-field basis. Cheaper than
+  // duplicating the entire dataset.
+  const painCategories = getLocalizedPainCategories(locale);
+  const gettingStartedServices = getLocalizedGettingStartedServices(locale);
+
+  // The Getting Started block reuses translations from DICT so the
+  // copy stays in lockstep with the homepage teaser hooks.
+  const gettingStartedHook = t(DICT.servicesPage.gettingStartedKicker);
+  const gettingStartedTitle = t(DICT.servicesPage.gettingStartedHeadline);
+  const gettingStartedDescription = t(DICT.servicesPage.gettingStartedSub);
 
   return (
     <main className="bg-white dark:bg-neutral-900">
@@ -123,45 +204,36 @@ export default async function ServicesPage() {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        {/* Layer 1: uniform dark scrim — drops the entire hero brightness
-            so the floating UI cards in the corners stop competing for
-            attention with the headline. Without this, a radial-only
-            vignette leaves the edges bright and the eye keeps dancing
-            between the headline and the cards. */}
+        {/* Layer 1: uniform dark scrim. */}
         <div className="absolute inset-0 -z-10 bg-neutral-950/70" />
-        {/* Layer 2: radial vignette on top of the scrim — punches the
-            centre even darker so the white headline + body copy sit on
-            a calm surface. */}
+        {/* Layer 2: radial vignette on top of the scrim. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/85 via-neutral-950/55 to-transparent" />
-        {/* Layer 3: bottom fade — sells the transition into the lighter
-            content section below. */}
+        {/* Layer 3: bottom fade. */}
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-neutral-950" />
-        {/* Layer 4: subtle blue glow above the eyebrow, brand hint. */}
+        {/* Layer 4: subtle blue glow. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-400">
-            Full services catalogue
+            {t(HERO.eyebrow)}
           </p>
           <h1
             id="services-heading"
             className="mt-3 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl"
           >
-            Built around the problems that actually keep
+            {t(HERO.headlineTop)}
             <br className="hidden sm:block" />{" "}
             <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
-              small-business owners up at night
+              {t(HERO.headlineHighlight)}
             </span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
-            Pick by the pain you feel today. Every service is fixed-price,
-            fixed-scope, and ships in days — not months. Save more by grabbing
-            the matching{" "}
+            {t(HERO.sub)}{" "}
             <Link
               href="/#bundles"
               className="font-semibold text-blue-300 underline decoration-blue-300/40 underline-offset-2 transition-colors hover:text-blue-200"
             >
-              bundle
+              {t(HERO.bundleLink)}
             </Link>
             .
           </p>
@@ -173,32 +245,32 @@ export default async function ServicesPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
-              Book a free 15-min call
+              {t(DICT.cta.bookFree15Min)}
             </a>
             <Link
               href="/#bundles"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-7 py-3 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              See the bundles
+              {t(HERO.ctaSeeBundles)}
             </Link>
           </div>
 
           {/* Quick-jump nav: Getting Started first, then the four pain
               categories. Smooth-scroll to the matching section below. */}
           <nav
-            aria-label="Sections"
+            aria-label={t(HERO.sectionsAriaLabel)}
             className="mt-10 flex flex-wrap items-center justify-center gap-2"
           >
             <a
-              href={`#${GETTING_STARTED_META.id}`}
+              href={`#${GETTING_STARTED_ID}`}
               className="inline-flex items-center gap-2 rounded-full border border-neutral-700/70 bg-neutral-900/40 px-4 py-1.5 text-xs font-medium text-neutral-300 backdrop-blur-sm transition-all hover:border-neutral-500 hover:text-white"
             >
               <span
-                className={`h-1.5 w-1.5 rounded-full ${ACCENT_DOT[GETTING_STARTED_META.accent]}`}
+                className={`h-1.5 w-1.5 rounded-full ${ACCENT_DOT[GETTING_STARTED_ACCENT]}`}
               />
-              {GETTING_STARTED_META.title}
+              {gettingStartedTitle}
             </a>
-            {PAIN_CATEGORIES.map((c) => (
+            {painCategories.map((c) => (
               <a
                 key={c.id}
                 href={`#${c.id}`}
@@ -222,56 +294,52 @@ export default async function ServicesPage() {
              Rendered FIRST because newcomers don't have a specific pain
              yet — they need a clear "start here" path. Same card layout
              as pain categories, with numbered "01/02/03" step badges to
-             reinforce the launch order. Services intentionally overlap
-             with the pain categories below (Website + E-commerce +
-             Maintenance also live in "Build a professional online
-             presence", Booking also lives in "Stop wasting time"); the
-             numbering and section header reframe them as launch steps
-             rather than pain solutions. */}
+             reinforce the launch order. */}
         <section
-          id={GETTING_STARTED_META.id}
-          aria-labelledby={`${GETTING_STARTED_META.id}-heading`}
+          id={GETTING_STARTED_ID}
+          aria-labelledby={`${GETTING_STARTED_ID}-heading`}
           className="scroll-mt-24 pb-14"
         >
           <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_2fr]">
             <header
-              className={`rounded-2xl p-6 ${ACCENT_BG_SOFT[GETTING_STARTED_META.accent]}`}
+              className={`rounded-2xl p-6 ${ACCENT_BG_SOFT[GETTING_STARTED_ACCENT]}`}
             >
               <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 <span
-                  className={`h-1.5 w-1.5 rounded-full ${ACCENT_DOT[GETTING_STARTED_META.accent]}`}
+                  className={`h-1.5 w-1.5 rounded-full ${ACCENT_DOT[GETTING_STARTED_ACCENT]}`}
                 />
-                {GETTING_STARTED_META.hook}
+                {gettingStartedHook}
               </p>
               <h2
-                id={`${GETTING_STARTED_META.id}-heading`}
-                className={`mt-3 text-2xl font-bold tracking-tight sm:text-3xl ${ACCENT_TEXT[GETTING_STARTED_META.accent]}`}
+                id={`${GETTING_STARTED_ID}-heading`}
+                className={`mt-3 text-2xl font-bold tracking-tight sm:text-3xl ${ACCENT_TEXT[GETTING_STARTED_ACCENT]}`}
               >
-                {GETTING_STARTED_META.title}
+                {gettingStartedTitle}
               </h2>
               <p className="mt-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-                {GETTING_STARTED_META.description}
+                {gettingStartedDescription}
               </p>
             </header>
 
             <ul className="grid gap-5 sm:grid-cols-2">
-              {getGettingStartedServices().map((service, index) => (
+              {gettingStartedServices.map((service, index) => (
                 <ServiceCard
                   key={service.id}
                   service={service}
-                  priceText={renderServicePrice(service.price, currency)}
-                  borderHover={ACCENT_BORDER[GETTING_STARTED_META.accent]}
-                  priceText_color={ACCENT_TEXT[GETTING_STARTED_META.accent]}
+                  locale={locale}
+                  priceText={renderServicePrice(service.price, currency, locale)}
+                  borderHover={ACCENT_BORDER[GETTING_STARTED_ACCENT]}
+                  priceText_color={ACCENT_TEXT[GETTING_STARTED_ACCENT]}
                   stepLabel={String(index + 1).padStart(2, "0")}
-                  stepAccent={ACCENT_TEXT[GETTING_STARTED_META.accent]}
+                  stepAccent={ACCENT_TEXT[GETTING_STARTED_ACCENT]}
                 />
               ))}
             </ul>
           </div>
         </section>
 
-        {PAIN_CATEGORIES.map((category) => {
-          const items = getServicesByCategory(category.id);
+        {painCategories.map((category) => {
+          const items = getLocalizedServicesByCategory(category.id, locale);
           if (items.length === 0) return null;
 
           return (
@@ -307,15 +375,17 @@ export default async function ServicesPage() {
                     <ServiceCard
                       key={service.id}
                       service={service}
-                      priceText={renderServicePrice(service.price, currency)}
+                      locale={locale}
+                      priceText={renderServicePrice(
+                        service.price,
+                        currency,
+                        locale,
+                      )}
                       borderHover={ACCENT_BORDER[category.accent]}
                       priceText_color={ACCENT_TEXT[category.accent]}
                       // Per-section numbering: every card in every
                       // section gets a "01/02/03..." badge that resets
-                      // at the start of each pain category. Same
-                      // treatment as Getting Started above — the badge
-                      // colour follows the section accent, so the card
-                      // still visually belongs to its section.
+                      // at the start of each pain category.
                       stepLabel={String(index + 1).padStart(2, "0")}
                       stepAccent={ACCENT_TEXT[category.accent]}
                     />
@@ -339,22 +409,21 @@ export default async function ServicesPage() {
             id="services-cta-heading"
             className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl"
           >
-            Not sure which service fits?
+            {t(CLOSING.headline)}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
-            Save{" "}
+            {t(CLOSING.introPrefix)}{" "}
             <span className="font-semibold text-neutral-900 dark:text-white">
               {formatPrice(800, currency)}+
             </span>{" "}
-            by grabbing a bundle, or jump on a free 15-minute call and I&apos;ll
-            tell you in plain English which option pays for itself fastest.
+            {t(CLOSING.introMid)}
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/#bundles"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
-              See the bundles
+              {t(CLOSING.ctaSeeBundles)}
             </Link>
             <a
               href={CALENDLY_URL}
@@ -362,7 +431,7 @@ export default async function ServicesPage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-7 py-3 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-white"
             >
-              Book 15-min discovery call
+              {t(CLOSING.ctaBookCall)}
             </a>
           </div>
         </div>
@@ -373,6 +442,7 @@ export default async function ServicesPage() {
 
 function ServiceCard({
   service,
+  locale,
   priceText,
   borderHover,
   priceText_color,
@@ -380,6 +450,7 @@ function ServiceCard({
   stepAccent,
 }: {
   service: Service;
+  locale: Locale;
   priceText: string;
   borderHover: string;
   priceText_color: string;
@@ -393,6 +464,8 @@ function ServiceCard({
    *  section's accent so the card visually belongs to its section). */
   stepAccent?: string;
 }) {
+  const t = createT(locale);
+
   // The card is wrapped in a Link so the entire surface is clickable
   // — better than a tiny "learn more" link in the corner. The
   // pain/solution + price layout stays exactly the same; only the
@@ -422,13 +495,13 @@ function ServiceCard({
         <div className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
           <p>
             <span className="font-semibold text-neutral-900 dark:text-white">
-              Pain:
+              {t(CARD.painLabel)}
             </span>{" "}
             {service.pain}
           </p>
           <p>
             <span className="font-semibold text-neutral-900 dark:text-white">
-              Solution:
+              {t(CARD.solutionLabel)}
             </span>{" "}
             {service.solution}
           </p>
@@ -441,7 +514,7 @@ function ServiceCard({
             aria-hidden="true"
             className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-all group-hover:text-neutral-900 group-hover:translate-x-0.5 dark:text-neutral-500 dark:group-hover:text-white"
           >
-            See details
+            {t(CARD.seeDetails)}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"

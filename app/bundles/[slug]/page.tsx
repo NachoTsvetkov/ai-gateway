@@ -25,16 +25,21 @@ import {
   type Bundle,
   type BundleId,
   BUNDLES,
-  getBundle,
+  getBundleFaqBg,
   getBundleSavingsEur,
   getBundleSeparatePriceEur,
+  getLocalizedBundle,
 } from "lib/bundles-data";
 import {
   type ServiceId,
+  getLocalizedServiceById,
   getServiceById,
 } from "lib/services-data";
 import { type Currency, formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import { detectLocale } from "lib/i18n/locale.server";
+import { type Locale, createT } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 import {
   buyableFromBundle,
   getApplicableUpsells,
@@ -62,7 +67,8 @@ export async function generateMetadata({
 }) {
   const { slug } = await params;
   if (!VALID_SLUGS.has(slug)) return { title: "Bundle not found" };
-  const b = getBundle(slug as BundleId);
+  const locale = await detectLocale();
+  const b = getLocalizedBundle(slug as BundleId, locale);
   return {
     title: `${b.name} — Nacho Tsvetkov`,
     description: `${b.tagline}. ${b.pain}`,
@@ -81,8 +87,13 @@ export default async function BundleDetailPage({
 }) {
   const { slug } = await params;
   if (!VALID_SLUGS.has(slug)) notFound();
-  const bundle = getBundle(slug as BundleId);
-  const currency = await detectCurrency();
+  // Currency + locale lookups don't depend on each other — fan out so
+  // the page's TTFB is bound by the slower of the two, not their sum.
+  const [currency, locale] = await Promise.all([
+    detectCurrency(),
+    detectLocale(),
+  ]);
+  const bundle = getLocalizedBundle(slug as BundleId, locale);
 
   const separateEur = getBundleSeparatePriceEur(bundle);
   const savingsEur = getBundleSavingsEur(bundle);
@@ -91,24 +102,30 @@ export default async function BundleDetailPage({
   // and the interactive CheckoutIsland sidebar — keeps both views
   // anchored to the same price + reference id.
   const buyable = buyableFromBundle(bundle);
-  const upsells = getApplicableUpsells(buyable);
+  const upsells = getApplicableUpsells(buyable, locale);
 
   return (
     <main className="bg-white dark:bg-neutral-950">
-      <Hero bundle={bundle} currency={currency} savingsEur={savingsEur} />
+      <Hero
+        bundle={bundle}
+        currency={currency}
+        savingsEur={savingsEur}
+        locale={locale}
+      />
 
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1fr_minmax(360px,420px)] lg:gap-10 lg:py-20">
         <div className="space-y-12">
-          <Inclusions bundle={bundle} currency={currency} />
+          <Inclusions bundle={bundle} currency={currency} locale={locale} />
           {showsSavings && (
             <ValueComparison
               bundle={bundle}
               currency={currency}
               separateEur={separateEur}
               savingsEur={savingsEur}
+              locale={locale}
             />
           )}
-          <FAQ bundle={bundle} />
+          <FAQ bundle={bundle} locale={locale} />
         </div>
 
         {/* Sidebar (sticky on desktop) — the interactive upsell + total
@@ -125,11 +142,12 @@ export default async function BundleDetailPage({
             buyable={buyable}
             upsells={upsells}
             currency={currency}
+            locale={locale}
           />
         </aside>
       </div>
 
-      <FooterCTA />
+      <FooterCTA locale={locale} />
     </main>
   );
 }
@@ -142,11 +160,27 @@ function Hero({
   bundle,
   currency,
   savingsEur,
+  locale,
 }: {
   bundle: Bundle;
   currency: Currency;
   savingsEur: number;
+  locale: Locale;
 }) {
+  const t = createT(locale);
+  // Two short retainer-line variants in BG/EN. Inlined here because
+  // they're both grammatically tied to the surrounding parentheses
+  // and adding a `/` separator was simpler than carving four entries
+  // into DICT.
+  const oneTimeNote = bundle.retainerEur
+    ? locale === "bg"
+      ? `еднократно + ${formatPrice(bundle.retainerEur, currency)}/месец абонамент`
+      : `one-time + ${formatPrice(bundle.retainerEur, currency)}/month retainer`
+    : locale === "bg"
+      ? "еднократно плащане"
+      : "one-time payment";
+  const allBundlesLabel = locale === "bg" ? "Всички пакети" : "All bundles";
+  const saveLabel = locale === "bg" ? "Спести" : "Save";
   return (
     <section
       aria-labelledby="bundle-hero-heading"
@@ -174,7 +208,7 @@ function Hero({
                 clipRule="evenodd"
               />
             </svg>
-            All bundles
+            {allBundlesLabel}
           </Link>
         </div>
 
@@ -210,15 +244,11 @@ function Hero({
               </span>
               {savingsEur > 0 && (
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-300">
-                  Save {formatPrice(savingsEur, currency)}
+                  {saveLabel} {formatPrice(savingsEur, currency)}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-sm text-neutral-400">
-              {bundle.retainerEur
-                ? `one-time + ${formatPrice(bundle.retainerEur, currency)}/month retainer`
-                : "one-time payment"}
-            </p>
+            <p className="mt-1 text-sm text-neutral-400">{oneTimeNote}</p>
 
             <a
               href="#upsells"
@@ -245,7 +275,7 @@ function Hero({
               rel="noopener noreferrer"
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-neutral-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-neutral-500"
             >
-              Or talk to me first — book a free 15-min call
+              {t(DICT.cta.talkFirst)}
             </a>
           </div>
         </div>
@@ -261,10 +291,13 @@ function Hero({
 function Inclusions({
   bundle,
   currency,
+  locale,
 }: {
   bundle: Bundle;
   currency: Currency;
+  locale: Locale;
 }) {
+  const t = createT(locale);
   // Resolve every line into a render-friendly shape upfront so the JSX
   // below stays declarative. Rules:
   //   - service line  → name (override-able), link, line-item EUR price
@@ -303,7 +336,11 @@ function Inclusions({
     if (line.kind === "bonus") {
       rows.push({ kind: "bonus", label: line.label });
     } else if (line.kind === "service") {
-      const svc = getServiceById(line.serviceId);
+      // Pull the localised service so the row label + sub-text follow
+      // the active locale. For services with a `note` override on the
+      // bundle line, the note already comes from the localised bundle
+      // record (see getLocalizedBundle), so no extra work needed.
+      const svc = getLocalizedServiceById(line.serviceId, locale);
       const price = serviceLineEur(line.serviceId, line.tier);
       rows.push({
         kind: "service",
@@ -313,11 +350,12 @@ function Inclusions({
         sub: svc.solution,
       });
     } else {
-      // inherit
-      const parent = getBundle(line.from);
+      // Inherited bundle content — also localised so the BG version of
+      // a Scale-Up reading "Всичко от Startup пакета" gets the BG name.
+      const parent = getLocalizedBundle(line.from, locale);
       rows.push({
         kind: "inherit",
-        label: `Everything in ${parent.name}`,
+        label: `${t(DICT.bundleDetail.inheritFromPrefix)}${parent.name}`,
         href: `/bundles/${parent.id}`,
         priceEur: getBundleSeparatePriceEur(parent),
       });
@@ -330,13 +368,10 @@ function Inclusions({
         id="includes-heading"
         className="text-2xl font-bold text-neutral-900 sm:text-3xl dark:text-white"
       >
-        What's included
+        {t(DICT.bundleDetail.inclusionsHeadline)}
       </h2>
       <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400">
-        Click any line to read the full deliverables, timeline, and
-        deliverables for that piece on its own page. Prices on the right
-        show what each piece costs individually — they all add up to the
-        crossed-out "buying separately" total below.
+        {t(DICT.bundleDetail.inclusionsSub)}
       </p>
 
       <ul className="mt-6 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
@@ -355,7 +390,7 @@ function Inclusions({
               {r.kind === "freebie" ? (
                 <p className="text-sm font-medium text-neutral-900 dark:text-white">
                   <span className="mr-2 inline-flex items-center rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                    Free
+                    {t(DICT.bundleDetail.freebieBadge)}
                   </span>
                   {r.label}
                 </p>
@@ -408,13 +443,28 @@ function ValueComparison({
   currency,
   separateEur,
   savingsEur,
+  locale,
 }: {
   bundle: Bundle;
   currency: Currency;
   separateEur: number;
   savingsEur: number;
+  locale: Locale;
 }) {
+  const t = createT(locale);
   const savingsPct = Math.round((savingsEur / separateEur) * 100);
+  // Headline is a sentence with a price embedded in the middle, so we
+  // pre-compose it here from two language-specific halves rather than
+  // a single localised string with placeholder syntax.
+  const valueHeadline =
+    locale === "bg"
+      ? `Защо пакетът ти спестява ${formatPrice(savingsEur, currency)}`
+      : `Why the bundle saves you ${formatPrice(savingsEur, currency)}`;
+  const retainerNote = bundle.retainerEur
+    ? locale === "bg"
+      ? `Месечният абонамент от ${formatPrice(bundle.retainerEur, currency)} замества това, което иначе би плащал отделно за хостинг + договор за поддръжка. Отказваш по всяко време; всичко остава твое.`
+      : `The ${formatPrice(bundle.retainerEur, currency)}/month retainer replaces what you'd otherwise pay separately for hosting + a maintenance contract. Cancel anytime; you keep ownership of everything.`
+    : null;
   return (
     <section
       aria-labelledby="value-heading"
@@ -424,13 +474,13 @@ function ValueComparison({
         id="value-heading"
         className="text-xl font-bold text-emerald-900 dark:text-emerald-200"
       >
-        Why the bundle saves you {formatPrice(savingsEur, currency)}
+        {valueHeadline}
       </h2>
 
       <dl className="mt-5 grid gap-4 sm:grid-cols-3">
         <div>
           <dt className="text-xs font-semibold uppercase tracking-widest text-emerald-800/70 dark:text-emerald-200/70">
-            Buying separately
+            {t(DICT.bundleDetail.valueSeparate)}
           </dt>
           <dd className="mt-1 font-mono text-2xl font-bold text-emerald-900 line-through dark:text-emerald-200">
             {formatPrice(separateEur, currency)}
@@ -446,7 +496,7 @@ function ValueComparison({
         </div>
         <div>
           <dt className="text-xs font-semibold uppercase tracking-widest text-emerald-800/70 dark:text-emerald-200/70">
-            You save
+            {t(DICT.bundleDetail.valueSavings)}
           </dt>
           <dd className="mt-1 font-mono text-2xl font-extrabold text-emerald-900 dark:text-emerald-200">
             {formatPrice(savingsEur, currency)}{" "}
@@ -455,12 +505,9 @@ function ValueComparison({
         </div>
       </dl>
 
-      {bundle.retainerEur && (
+      {retainerNote && (
         <p className="mt-5 text-sm text-emerald-900/80 dark:text-emerald-200/80">
-          The {formatPrice(bundle.retainerEur, currency)}/month retainer
-          replaces what you'd otherwise pay separately for hosting + a
-          maintenance contract. Cancel anytime; you keep ownership of
-          everything.
+          {retainerNote}
         </p>
       )}
     </section>
@@ -471,38 +518,45 @@ function ValueComparison({
 // FAQ
 // ---------------------------------------------------------------------
 
-function FAQ({ bundle }: { bundle: Bundle }) {
-  // Keep the bundle FAQ lean — bundle-level questions only. Service-
-  // level questions ("which email platform should I use?") live on the
-  // /services/<id> pages so they're not duplicated.
-  const faq: ReadonlyArray<{ q: string; a: string }> = [
-    {
-      q: `What if I already have something from the ${bundle.name}'s list?`,
-      a: "Tell me on the kickoff call — I'll subtract the redundant piece and either credit it as upgrade time on something else (e.g. extra design polish, a 4th flow, deeper integration) or refund pro rata. No fight, ever.",
-    },
-    {
-      q: "How fast does this ship?",
-      a: bundle.id === "startup"
-        ? "Startup typically goes live in 5–7 business days from kickoff. Add 'Express delivery' from the upgrades to compress to 3–4 days."
-        : bundle.id === "scaleup"
-          ? "Scale-Up ships the website + automation pieces in 2 weeks. CRM follows in week 3. Express delivery cuts the first deliverable to ~7 days."
-          : "Enterprise rolls out in 3 phases over 4–6 weeks (foundation → automation → AI agents). You start using each piece as it's delivered — no big-bang go-live.",
-    },
-    {
-      q: "Can I cancel the monthly retainer later?",
-      a: bundle.retainerEur
-        ? "Yes — month-to-month, no contract. You keep ownership of the code, design, and data. The freebies that came with the retainer (domain + hosting) revert to you at cost (€10–15/yr typically) when you cancel."
-        : "There's no recurring component on this bundle — it's a one-time payment. Add the maintenance retainer separately if you'd like it.",
-    },
-    {
-      q: "What if I need something not on the list?",
-      a: "Tell me. Most things outside the bundle are available as a-la-carte add-ons — pricing on /services. If it's a small ask (an extra page, a copy tweak, a new flow), I just include it. If it's bigger, I quote it before doing the work.",
-    },
-    {
-      q: "Do you offer refunds?",
-      a: "Yes — if I haven't shipped any work yet, full refund, no questions. After we kick off, I refund the unspent portion if you decide to bail. Zero hostage situations.",
-    },
-  ];
+function FAQ({ bundle, locale }: { bundle: Bundle; locale: Locale }) {
+  const t = createT(locale);
+  // BG visitors get a hand-tuned FAQ from `bundles-data.bg.ts` — the
+  // questions are deliberately different from the EN list (different
+  // concerns surface in BG conversations, like domains and hidden
+  // monthly fees), so we don't try to translate the EN entries
+  // 1-for-1. EN visitors keep the inline EN array. The two arrays
+  // share the same `{ q, a }` shape so the JSX below is identical.
+  const bgFaq = locale === "bg" ? getBundleFaqBg(bundle.id) : undefined;
+  const faq: ReadonlyArray<{ q: string; a: string }> =
+    bgFaq ?? [
+      {
+        q: `What if I already have something from the ${bundle.name}'s list?`,
+        a: "Tell me on the kickoff call — I'll subtract the redundant piece and either credit it as upgrade time on something else (e.g. extra design polish, a 4th flow, deeper integration) or refund pro rata. No fight, ever.",
+      },
+      {
+        q: "How fast does this ship?",
+        a:
+          bundle.id === "startup"
+            ? "Startup typically goes live in 5–7 business days from kickoff. Add 'Express delivery' from the upgrades to compress to 3–4 days."
+            : bundle.id === "scaleup"
+              ? "Scale-Up ships the website + automation pieces in 2 weeks. CRM follows in week 3. Express delivery cuts the first deliverable to ~7 days."
+              : "Enterprise rolls out in 3 phases over 4–6 weeks (foundation → automation → AI agents). You start using each piece as it's delivered — no big-bang go-live.",
+      },
+      {
+        q: "Can I cancel the monthly retainer later?",
+        a: bundle.retainerEur
+          ? "Yes — month-to-month, no contract. You keep ownership of the code, design, and data. The freebies that came with the retainer (domain + hosting) revert to you at cost (€10–15/yr typically) when you cancel."
+          : "There's no recurring component on this bundle — it's a one-time payment. Add the maintenance retainer separately if you'd like it.",
+      },
+      {
+        q: "What if I need something not on the list?",
+        a: "Tell me. Most things outside the bundle are available as a-la-carte add-ons — pricing on /services. If it's a small ask (an extra page, a copy tweak, a new flow), I just include it. If it's bigger, I quote it before doing the work.",
+      },
+      {
+        q: "Do you offer refunds?",
+        a: "Yes — if I haven't shipped any work yet, full refund, no questions. After we kick off, I refund the unspent portion if you decide to bail. Zero hostage situations.",
+      },
+    ];
 
   return (
     <section aria-labelledby="faq-heading">
@@ -510,7 +564,7 @@ function FAQ({ bundle }: { bundle: Bundle }) {
         id="faq-heading"
         className="text-2xl font-bold text-neutral-900 sm:text-3xl dark:text-white"
       >
-        Common questions
+        {t(DICT.bundleDetail.bundleFaqHeadline)}
       </h2>
       <div className="mt-6 space-y-2">
         {faq.map((f, i) => (
@@ -541,17 +595,30 @@ function FAQ({ bundle }: { bundle: Bundle }) {
 // Footer CTA
 // ---------------------------------------------------------------------
 
-function FooterCTA() {
+function FooterCTA({ locale }: { locale: Locale }) {
+  const t = createT(locale);
+  // The "not sure?" framing copy is bundle-page-only and benefits
+  // from full BG rewrites (translating "no pitch" word-for-word
+  // sounds robotic). Inlined here in both locales rather than added
+  // to DICT for one-off copy.
+  const headline =
+    locale === "bg"
+      ? "Не си сигурен кой пакет ти трябва?"
+      : "Not sure which bundle fits?";
+  const sub =
+    locale === "bg"
+      ? "15 минути, без рекламни приказки — слушам, задавам 3 въпроса и ти казвам най-малкия пакет, който ще ти свърши работа. Ако не е пакет, ти препоръчвам отделна услуга."
+      : "15 minutes, no pitch — I'll listen, ask 3 questions, and tell you the smallest fit. If a bundle isn't it, I'll send you to the single service that solves your problem instead.";
+  const browseServices =
+    locale === "bg" ? "Разгледай отделните услуги" : "Browse single services";
   return (
     <section className="border-t border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mx-auto max-w-3xl px-6 text-center">
         <h2 className="text-2xl font-bold text-neutral-900 sm:text-3xl dark:text-white">
-          Not sure which bundle fits?
+          {headline}
         </h2>
         <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
-          15 minutes, no pitch — I'll listen, ask 3 questions, and tell
-          you the smallest fit. If a bundle isn't it, I'll send you to
-          the single service that solves your problem instead.
+          {sub}
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
@@ -560,13 +627,13 @@ function FooterCTA() {
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500"
           >
-            Book a free 15-min call
+            {t(DICT.cta.bookFree15Min)}
           </a>
           <Link
             href="/services"
             className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-800 transition-colors hover:border-neutral-400 hover:bg-white dark:border-neutral-700 dark:text-neutral-200 dark:hover:border-neutral-600 dark:hover:bg-neutral-900"
           >
-            Browse single services
+            {browseServices}
           </Link>
         </div>
       </div>

@@ -1,19 +1,23 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import { detectLocale } from "lib/i18n/locale.server";
+import { createT } from "lib/i18n/locale";
+import { DICT } from "lib/i18n/dict";
 import {
-  PAIN_CATEGORIES,
-  getServiceById,
+  getLocalizedPainCategories,
+  getLocalizedServiceById,
   renderServicePrice,
   services,
   type PainCategory,
   type Service,
   type ServiceId,
 } from "lib/services-data";
-import { getServiceDetail, type ServiceDetail } from "lib/service-details";
 import {
-  type Buyable,
+  getLocalizedServiceDetail,
+  type ServiceDetail,
+} from "lib/service-details";
+import {
   buyableFromService,
   getApplicableUpsells,
 } from "lib/buyable";
@@ -44,10 +48,14 @@ export async function generateMetadata({
   const { serviceId } = await params;
   const service = findService(serviceId);
   if (!service) return { title: "Service not found" };
-  const detail = getServiceDetail(service.id);
+  // Metadata is locale-aware so search-engine snippets in BG markets
+  // surface the BG tagline instead of the EN baseline.
+  const locale = await detectLocale();
+  const localizedService = getLocalizedServiceById(service.id, locale);
+  const detail = getLocalizedServiceDetail(service.id, locale);
   return {
-    title: `${service.name} — Nacho Tsvetkov`,
-    description: detail?.tagline ?? service.solution,
+    title: `${localizedService.name} — Nacho Tsvetkov`,
+    description: detail?.tagline ?? localizedService.solution,
     openGraph: { type: "website" },
   };
 }
@@ -62,10 +70,6 @@ export async function generateMetadata({
 // notFound() cleanly.
 function findService(id: string): Service | undefined {
   return services.find((s) => s.id === id);
-}
-
-function findCategory(id: string): PainCategory | undefined {
-  return PAIN_CATEGORIES.find((c) => c.id === id);
 }
 
 // For tiered services, surface the tier list as a radio picker inside
@@ -133,14 +137,29 @@ export default async function ServiceDetailPage({
   params: Promise<RouteParams>;
 }) {
   const { serviceId } = await params;
-  const service = findService(serviceId);
-  if (!service) notFound();
+  const baseService = findService(serviceId);
+  if (!baseService) notFound();
+  // Resolve locale + currency in parallel — both are server-side
+  // header/cookie reads with no inter-dependency.
+  const [currency, locale] = await Promise.all([
+    detectCurrency(),
+    detectLocale(),
+  ]);
+  const t = createT(locale);
   // Type assertion is safe — we just verified this id is in the catalogue.
-  const id: ServiceId = service.id;
-  const detail = getServiceDetail(id);
-  const category = findCategory(service.painCategoryId);
-  const currency = await detectCurrency();
-  const priceText = renderServicePrice(service.price, currency);
+  const id: ServiceId = baseService.id;
+  // Localised projections of the catalogue + detail blocks. The
+  // base record (`baseService`) is only used for category lookups
+  // and for the tier picker (whose label/price come straight from
+  // the catalogue and need to stay numerically identical for the
+  // URL to round-trip).
+  const service = getLocalizedServiceById(id, locale);
+  const detail = getLocalizedServiceDetail(id, locale);
+  const painCategories = getLocalizedPainCategories(locale);
+  const category = painCategories.find(
+    (c) => c.id === baseService.painCategoryId,
+  );
+  const priceText = renderServicePrice(service.price, currency, locale);
 
   // The `bestFor`, `faq` and rich content fields are optional on the
   // detail object — pages without a detail block still render the
@@ -152,8 +171,8 @@ export default async function ServiceDetailPage({
   // here unchanged. For tiered services we surface the tiers as a
   // radio picker inside the island; the picker rebuilds the buyable
   // client-side as the visitor toggles between tiers.
-  const buyable = buyableFromService(service, undefined);
-  const tiers = buildTierOptions(service);
+  const buyable = buyableFromService(service, undefined, locale);
+  const tiers = buildTierOptions(baseService);
   const upsells = getApplicableUpsells(buyable);
 
   return (
@@ -170,14 +189,14 @@ export default async function ServiceDetailPage({
         <div className="relative mx-auto max-w-4xl px-6">
           {/* Breadcrumb back to the catalogue. Plain text, low-key. */}
           <nav
-            aria-label="Breadcrumb"
+            aria-label={locale === "bg" ? "Навигация" : "Breadcrumb"}
             className="mb-6 flex items-center gap-2 text-xs text-neutral-400"
           >
             <Link
               href="/services"
               className="transition-colors hover:text-white"
             >
-              Services
+              {t(DICT.serviceDetail.breadcrumbServices)}
             </Link>
             <span aria-hidden="true">›</span>
             {category && (
@@ -232,7 +251,7 @@ export default async function ServiceDetailPage({
               {priceText}
             </span>
             <span className="text-sm text-neutral-400">
-              · fixed-price · ships in days
+              {t(DICT.serviceDetail.pricedFixedShipsInDays)}
             </span>
           </div>
 
@@ -267,7 +286,7 @@ export default async function ServiceDetailPage({
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              Or talk first — book a 15-min call
+              {t(DICT.cta.talkFirst)}
             </a>
           </div>
         </div>
@@ -286,11 +305,10 @@ export default async function ServiceDetailPage({
               id="pain-heading"
               className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-white"
             >
-              If this is you, you&apos;re losing money right now
+              {t(DICT.serviceDetail.painSectionHeadline)}
             </h2>
             <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
-              Every one of these is a measurable cost. Most clients
-              recognise at least three before booking.
+              {t(DICT.serviceDetail.painSectionSub)}
             </p>
             <ul className="mt-8 space-y-4">
               {detail.painPoints.map((point, i) => (
@@ -318,10 +336,10 @@ export default async function ServiceDetailPage({
             >
               <div className="text-center sm:text-left">
                 <p className="text-base font-bold text-red-900 sm:text-lg dark:text-red-200">
-                  Recognise three of these?
+                  {t(DICT.serviceDetail.painCtaTitle)}
                 </p>
                 <p className="mt-1 text-sm text-red-800/80 dark:text-red-300/80">
-                  Stop the bleeding — every week you wait is money lost.
+                  {t(DICT.serviceDetail.painCtaSub)}
                 </p>
               </div>
               <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-red-700">
@@ -357,13 +375,13 @@ export default async function ServiceDetailPage({
             <p
               className={`text-xs font-semibold uppercase tracking-widest ${ACCENT_TEXT[accent]}`}
             >
-              The fix
+              {t(DICT.serviceDetail.solutionKicker)}
             </p>
             <h2
               id="solution-heading"
               className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-white"
             >
-              Here&apos;s what you get
+              {t(DICT.serviceDetail.solutionHeadline)}
             </h2>
             <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
               {service.solution}
@@ -417,11 +435,10 @@ export default async function ServiceDetailPage({
                   </span>
                   <div>
                     <p className="text-base font-bold text-neutral-900 sm:text-lg dark:text-white">
-                      Every box above — ticked. Yours in days.
+                      {t(DICT.serviceDetail.solutionCtaTitle)}
                     </p>
                     <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                      No back-and-forth. Fixed scope, fixed price, no
-                      surprises.
+                      {t(DICT.serviceDetail.solutionCtaSub)}
                     </p>
                   </div>
                 </div>
@@ -462,17 +479,16 @@ export default async function ServiceDetailPage({
             <p
               className={`text-xs font-semibold uppercase tracking-widest ${ACCENT_TEXT[accent]}`}
             >
-              How it ships
+              {t(DICT.serviceDetail.implKicker)}
             </p>
             <h2
               id="implementation-heading"
               className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-white"
             >
-              Implementation in {detail.timeline.toLowerCase()}
+              {t(DICT.serviceDetail.implHeadline)} {detail.timeline.toLowerCase()}
             </h2>
             <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
-              No surprises. You see daily progress in a shared workspace and
-              can call &quot;done&quot; whenever you&apos;re happy.
+              {t(DICT.serviceDetail.implSub)}
             </p>
 
             <ol className="mt-10 space-y-6">
@@ -530,10 +546,10 @@ export default async function ServiceDetailPage({
               </span>
               <div className="flex-1">
                 <p className="text-base font-bold text-neutral-900 dark:text-white">
-                  Kickoff within 48h of payment.
+                  {t(DICT.serviceDetail.implCtaTitle)}
                 </p>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                  Lock in your slot — the queue moves fast.
+                  {t(DICT.serviceDetail.implCtaSub)}
                 </p>
               </div>
               <span
@@ -561,13 +577,13 @@ export default async function ServiceDetailPage({
                 <p
                   className={`text-xs font-semibold uppercase tracking-widest ${ACCENT_TEXT[accent]}`}
                 >
-                  What you walk away with
+                  {t(DICT.serviceDetail.deliverablesKicker)}
                 </p>
                 <h2
                   id="deliverables-heading"
                   className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-white"
                 >
-                  Deliverables
+                  {t(DICT.serviceDetail.deliverablesHeadline)}
                 </h2>
                 <ul className="mt-6 space-y-3 text-sm text-neutral-700 sm:text-base dark:text-neutral-300">
                   {detail.deliverables.map((d) => (
@@ -594,7 +610,7 @@ export default async function ServiceDetailPage({
               <div className="space-y-6">
                 <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
                   <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-                    Best for
+                    {t(DICT.serviceDetail.bestForLabel)}
                   </p>
                   <p className="mt-2 text-base text-neutral-800 dark:text-neutral-200">
                     {detail.bestFor}
@@ -602,7 +618,7 @@ export default async function ServiceDetailPage({
                 </div>
                 <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900">
                   <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-                    Investment
+                    {t(DICT.serviceDetail.investmentLabel)}
                   </p>
                   <p
                     className={`mt-2 text-2xl font-bold tracking-tight ${ACCENT_TEXT[accent]}`}
@@ -617,14 +633,14 @@ export default async function ServiceDetailPage({
                     <span aria-hidden="true">→</span>
                   </a>
                   <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                    Or save 60%+ by grabbing it inside a{" "}
+                    {t(DICT.serviceDetail.investmentSavePrefix)}
                     <Link
                       href="/#bundles"
                       className="font-semibold text-blue-600 underline decoration-blue-300/40 underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      bundle
+                      {t(DICT.serviceDetail.investmentSaveBundleLink)}
                     </Link>
-                    .
+                    {t(DICT.serviceDetail.investmentSaveSuffix)}
                   </p>
                 </div>
               </div>
@@ -640,16 +656,16 @@ export default async function ServiceDetailPage({
             >
               <div className="flex-1 text-center sm:text-left">
                 <p className="text-xl font-bold tracking-tight text-neutral-900 sm:text-2xl dark:text-white">
-                  Skip the back-and-forth.
+                  {t(DICT.serviceDetail.deliverablesCtaTitle)}
                 </p>
                 <p className="mt-2 text-base text-neutral-700 dark:text-neutral-300">
-                  Get all of this for{" "}
+                  {t(DICT.serviceDetail.deliverablesCtaPrefix)}
                   <span
                     className={`bg-gradient-to-r bg-clip-text font-bold text-transparent ${ACCENT_GRADIENT[accent]}`}
                   >
                     {priceText}
-                  </span>{" "}
-                  — fixed scope, fixed price, no surprises.
+                  </span>
+                  {t(DICT.serviceDetail.deliverablesCtaSuffix)}
                 </p>
               </div>
               <span className="inline-flex shrink-0 items-center gap-2 rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 hover:bg-neutral-800 sm:text-base dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100">
@@ -686,7 +702,7 @@ export default async function ServiceDetailPage({
               id="service-faq-heading"
               className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl dark:text-white"
             >
-              Quick questions
+              {t(DICT.serviceDetail.faqHeadline)}
             </h2>
             <dl className="mt-8 space-y-3">
               {detail.faq.map((item) => (
@@ -719,7 +735,7 @@ export default async function ServiceDetailPage({
                 buy; still unsure → talk first. */}
             <div className="mt-10 border-t border-neutral-200 pt-8 text-center dark:border-neutral-800">
               <p className="text-base font-semibold text-neutral-900 dark:text-white">
-                Out of questions?
+                {t(DICT.serviceDetail.faqCtaTitle)}
               </p>
               <div className="mt-4 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
                 <a
@@ -747,7 +763,7 @@ export default async function ServiceDetailPage({
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-neutral-600 underline-offset-4 transition-colors hover:text-blue-600 hover:underline dark:text-neutral-400 dark:hover:text-blue-400"
                 >
-                  Still unsure? Book a 15-min call instead
+                  {t(DICT.serviceDetail.faqCtaUnsure)}
                 </a>
               </div>
             </div>
@@ -779,17 +795,17 @@ export default async function ServiceDetailPage({
             <p
               className={`text-xs font-semibold uppercase tracking-widest ${ACCENT_TEXT[accent]}`}
             >
-              Ready when you are
+              {t(DICT.serviceDetail.buyKicker)}
             </p>
             <h2
               id="service-buy-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl"
             >
-              Buy {service.name.toLowerCase()}
+              {t(DICT.serviceDetail.buyHeadlinePrefix)}
+              {service.name.toLowerCase()}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-300">
-              Fixed scope. Fixed price. Ships in days. Cancel for a full
-              refund any time before kickoff.
+              {t(DICT.serviceDetail.buySub)}
             </p>
           </div>
 
@@ -799,6 +815,7 @@ export default async function ServiceDetailPage({
               upsells={upsells}
               currency={currency}
               tiers={tiers}
+              locale={locale}
             />
           </div>
 
@@ -812,18 +829,18 @@ export default async function ServiceDetailPage({
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-6 py-3 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              Or talk first — book a free 15-min call
+              {t(DICT.cta.talkFirst)}
             </a>
             <Link
               href="/services"
               className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-neutral-400 transition-colors hover:text-white"
             >
-              ← Back to all services
+              {t(DICT.cta.backToServices)}
             </Link>
           </div>
 
           <p className="mt-6 text-center text-xs text-neutral-500">
-            Prefer email or phone?{" "}
+            {t(DICT.serviceDetail.closingPrefix)}{" "}
             <a
               href="mailto:nacho.tsvetkov@gmail.com"
               className="text-neutral-300 underline decoration-neutral-600 underline-offset-2 hover:text-white"

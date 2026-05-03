@@ -5,6 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatPrice, type Currency } from "lib/currency";
+import { type Locale } from "lib/i18n/locale";
 
 // Keep these in sync with app/page.tsx and the system prompt in
 // app/api/sales-assistant/chat/route.ts.
@@ -12,16 +13,97 @@ const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 const EMAIL = "nacho.tsvetkov@gmail.com";
 const PHONE_E164 = "+359882700002";
 
-// Exact quick-reply set from the sales script ("frame control" opener).
-// Order matters — the first option is the strongest revenue framing.
-const SUGGESTIONS = [
-  "I want to grow my sales",
-  "I want to set up initial cashflow / get online fast",
-  "I'm losing leads and need automation",
-  "I already have a website but it's not converting",
-  "Help me pick the right bundle",
-  "Book a discovery call",
-];
+// Quick-reply prompts for the empty-state suggestion column. Order is
+// intentional: the first option is the strongest revenue framing
+// ("grow my sales") because it doubles as the visitor's most likely
+// goal. Translated per locale so the BG visitor never sees a chip in
+// English next to the rest of their localised UI.
+const SUGGESTIONS: Record<Locale, ReadonlyArray<string>> = {
+  en: [
+    "I want to grow my sales",
+    "I want to set up initial cashflow / get online fast",
+    "I'm losing leads and need automation",
+    "I already have a website but it's not converting",
+    "Help me pick the right bundle",
+    "Book a discovery call",
+  ],
+  bg: [
+    "Искам да увелича продажбите си",
+    "Искам бързо да съм онлайн и да започнат да идват пари",
+    "Губя контакти и ми трябва автоматизация",
+    "Имам сайт, но не конвертира",
+    "Помогни ми да избера правилния пакет",
+    "Запази безплатен разговор",
+  ],
+};
+
+// Localised UI chrome for the chat widget itself. Kept inline (rather
+// than in `lib/i18n/dict.ts`) because none of these strings are
+// reused outside the assistant — keeping them next to the component
+// avoids the round-trip through the dict file when reading the
+// assistant in isolation.
+const ASSISTANT_UI = {
+  launcherFull: { en: "Chat · Book a Call", bg: "Чат · Запази разговор" },
+  launcherShort: { en: "Chat · Book", bg: "Чат · Запази" },
+  launcherAria: {
+    en: "Chat with Nacho's assistant or book a discovery call",
+    bg: "Разговаряй с асистента на Начо или запази безплатен разговор",
+  },
+  headerTitle: {
+    en: "Nacho's Assistant",
+    bg: "Асистентът на Начо",
+  },
+  headerSub: {
+    en: "Build a Money Generator · Book in 15 min",
+    bg: "Изгради машина за пари · Запази за 15 минути",
+  },
+  closeAria: { en: "Close chat", bg: "Затвори чата" },
+  bookCallShort: { en: "Book a Call", bg: "Запази разговор" },
+  callAria: { en: "Call Nacho", bg: "Обади се на Начо" },
+  emptyHello: {
+    en: "Hey — I'm Nacho's Assistant.",
+    bg: "Здрасти — аз съм асистентът на Начо.",
+  },
+  emptyBodyBefore: {
+    en: "I help small business owners turn their business into a ",
+    bg: "Помагам на малки бизнеси да се превърнат в ",
+  },
+  emptyBodyEmphasis: {
+    en: "Money Generator",
+    bg: "машина за пари",
+  },
+  emptyBodyAfter: {
+    en: ". Tell me your goal in one sentence and I'll point you to the right bundle — or book the call straight away.",
+    bg: ". Кажи ми целта си с едно изречение и ще те насоча към правилния пакет — или направо запиши разговор.",
+  },
+  inputPlaceholder: {
+    en: "Tell me what you need…",
+    bg: "Кажи ми от какво имаш нужда…",
+  },
+  sendAria: { en: "Send message", bg: "Изпрати съобщение" },
+  errorPrefix: {
+    en: "Something went wrong. Try again or ",
+    bg: "Нещо се обърка. Опитай пак или ",
+  },
+  errorBookLink: {
+    en: "book a call directly",
+    bg: "запиши разговор директно",
+  },
+  errorSuffix: { en: ".", bg: "." },
+  footer: {
+    en: "Powered by OpenAI · Replies may be wrong — book a call to confirm.",
+    bg: "Powered by OpenAI · Отговорите може да грешат — запиши разговор за потвърждение.",
+  },
+  // BundleCard chrome
+  recommendedKicker: {
+    en: "Recommended bundle",
+    bg: "Препоръчан пакет",
+  },
+  seeWhatsIncluded: {
+    en: "See what's included →",
+    bg: "Виж какво включва →",
+  },
+} as const;
 
 type BundleId = "startup" | "scaleup" | "enterprise";
 
@@ -33,16 +115,41 @@ type BundleInfo = {
   cta: string;
 };
 
-// Bundle info is computed per-currency. The numeric source-of-truth
-// EUR amounts here MUST match `app/page.tsx` and the system prompt in
-// `app/api/sales-assistant/chat/route.ts`.
-function getBundleInfo(currency: Currency): Record<BundleId, BundleInfo> {
+// Bundle info is computed per-currency AND per-locale. The numeric
+// source-of-truth EUR amounts MUST match `app/page.tsx` and the system
+// prompt in `app/api/sales-assistant/chat/route.ts`. The text chrome
+// is locale-aware so a Bulgarian visitor sees Bulgarian bundle names,
+// taglines, sub-text, and CTA verbs in chat cards.
+function getBundleInfo(
+  currency: Currency,
+  locale: Locale,
+): Record<BundleId, BundleInfo> {
   const retainer = formatPrice(97, currency);
-  // CTA verbs match the bundle's `cta.primary` wording in
-  // lib/bundles-data.ts but compressed for the chat card pill (small
-  // pill, no room for the full sentence). Keep the verb consistent so
-  // the user sees the same "Get / Start / Buy" framing across the
-  // homepage card → chat card → bundle detail page.
+  if (locale === "bg") {
+    return {
+      startup: {
+        name: "Startup пакет",
+        tagline: "Стартирай бързо и евтино",
+        price: formatPrice(173, currency),
+        sub: "еднократно",
+        cta: "Вземи Startup",
+      },
+      scaleup: {
+        name: "Scale-Up пакет",
+        tagline: "Надстрой и автоматизирай",
+        price: formatPrice(354, currency),
+        sub: `еднократно + ${retainer}/м.`,
+        cta: "Започни Scale-Up",
+      },
+      enterprise: {
+        name: "Enterprise пакет",
+        tagline: "Пълна AI трансформация",
+        price: formatPrice(971, currency),
+        sub: `еднократно + ${retainer}/м.`,
+        cta: "Купи Enterprise",
+      },
+    };
+  }
   return {
     startup: {
       name: "Startup Bundle",
@@ -168,10 +275,12 @@ function BundleCard({
   bundleId,
   info,
   note,
+  locale,
 }: {
   bundleId: BundleId;
   info: BundleInfo;
   note?: string;
+  locale: Locale;
 }) {
   const b = info;
   // Bundle cards used to forward to Calendly with the note as the
@@ -192,7 +301,7 @@ function BundleCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-            Recommended bundle
+            {ASSISTANT_UI.recommendedKicker[locale]}
           </p>
           <p className="mt-1 truncate text-sm font-bold text-neutral-900 dark:text-white">
             {b.name}
@@ -212,7 +321,7 @@ function BundleCard({
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-          See what's included →
+          {ASSISTANT_UI.seeWhatsIncluded[locale]}
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white shadow-sm">
           {b.cta}
@@ -239,10 +348,12 @@ function ChatMessage({
   role,
   parts,
   bundleInfo,
+  locale,
 }: {
   role: string;
   parts: Array<{ type: string; text?: string; [key: string]: unknown }>;
   bundleInfo: Record<BundleId, BundleInfo>;
+  locale: Locale;
 }) {
   const text = parts
     .filter((p) => p.type === "text" && p.text)
@@ -288,6 +399,7 @@ function ChatMessage({
               bundleId={r.id}
               info={bundleInfo[r.id]}
               note={r.note}
+              locale={locale}
             />
           ))}
         </div>
@@ -319,7 +431,13 @@ function TypingIndicator() {
   );
 }
 
-export function SalesAssistant({ currency }: { currency: Currency }) {
+export function SalesAssistant({
+  currency,
+  locale = "en",
+}: {
+  currency: Currency;
+  locale?: Locale;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -327,18 +445,23 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
 
   // Bundle prices on rendered cards must match the displayed currency.
   // Memoised so we don't rebuild the formatter map on every render.
-  const bundleInfo = useMemo(() => getBundleInfo(currency), [currency]);
+  const bundleInfo = useMemo(
+    () => getBundleInfo(currency, locale),
+    [currency, locale],
+  );
 
-  // Currency is sent on every chat request so the API can build a
-  // price-correct system prompt — the AI must never quote EUR while
+  // Currency + locale are sent on every chat request so the API can
+  // build a price-correct AND language-correct system prompt — the AI
+  // must never reply in English while the visitor sees Bulgarian
+  // surrounding chrome (or vice versa), and must never quote EUR while
   // the visitor sees USD on the page.
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/sales-assistant/chat",
-        body: { currency },
+        body: { currency, locale },
       }),
-    [currency],
+    [currency, locale],
   );
 
   const { messages, sendMessage, error, status } = useChat({ transport });
@@ -433,7 +556,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
           type="button"
           onClick={() => setIsOpen((v) => !v)}
           className="relative inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-blue-600 to-violet-600 px-5 py-3 text-sm font-semibold text-white shadow-xl shadow-blue-600/30 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 sm:px-6 sm:py-3.5"
-          aria-label="Chat with Nacho's assistant or book a discovery call"
+          aria-label={ASSISTANT_UI.launcherAria[locale]}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -444,8 +567,12 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
           >
             <path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
           </svg>
-          <span className="hidden sm:inline">Chat · Book a Call</span>
-          <span className="sm:hidden">Chat · Book</span>
+          <span className="hidden sm:inline">
+            {ASSISTANT_UI.launcherFull[locale]}
+          </span>
+          <span className="sm:hidden">
+            {ASSISTANT_UI.launcherShort[locale]}
+          </span>
         </button>
       </div>
 
@@ -469,17 +596,17 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white">
-                Nacho&apos;s Assistant
+                {ASSISTANT_UI.headerTitle[locale]}
               </p>
               <p className="truncate text-xs text-blue-100">
-                Build a Money Generator · Book in 15 min
+                {ASSISTANT_UI.headerSub[locale]}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               className="rounded-full p-1 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Close chat"
+              aria-label={ASSISTANT_UI.closeAria[locale]}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -514,7 +641,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
                   clipRule="evenodd"
                 />
               </svg>
-              Book a Call
+              {ASSISTANT_UI.bookCallShort[locale]}
             </a>
             <a
               href={`mailto:${EMAIL}`}
@@ -535,7 +662,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
             <a
               href={`tel:${PHONE_E164}`}
               className="inline-flex items-center justify-center rounded-full border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-400 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-300 dark:hover:border-neutral-500 dark:hover:text-white"
-              aria-label="Call Nacho"
+              aria-label={ASSISTANT_UI.callAria[locale]}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -574,19 +701,18 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
                   </svg>
                 </div>
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                  Hey — I&apos;m Nacho&apos;s Assistant.
+                  {ASSISTANT_UI.emptyHello[locale]}
                 </p>
                 <p className="mt-1 max-w-[300px] text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-                  I help small business owners turn their business into a{" "}
+                  {ASSISTANT_UI.emptyBodyBefore[locale]}
                   <span className="font-semibold text-neutral-700 dark:text-neutral-200">
-                    Money Generator
+                    {ASSISTANT_UI.emptyBodyEmphasis[locale]}
                   </span>
-                  . Tell me your goal in one sentence and I&apos;ll point you
-                  to the right bundle — or book the call straight away.
+                  {ASSISTANT_UI.emptyBodyAfter[locale]}
                 </p>
 
                 <div className="mt-5 flex w-full max-w-[300px] flex-col gap-2">
-                  {SUGGESTIONS.map((s) => (
+                  {SUGGESTIONS[locale].map((s) => (
                     <button
                       key={s}
                       type="button"
@@ -626,6 +752,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
                   }>
                 }
                 bundleInfo={bundleInfo}
+                locale={locale}
               />
             ))}
 
@@ -635,16 +762,16 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
 
             {error && (
               <div className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-600 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
-                Something went wrong. Try again or{" "}
+                {ASSISTANT_UI.errorPrefix[locale]}
                 <a
                   href={CALENDLY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold underline"
                 >
-                  book a call directly
+                  {ASSISTANT_UI.errorBookLink[locale]}
                 </a>
-                .
+                {ASSISTANT_UI.errorSuffix[locale]}
               </div>
             )}
 
@@ -661,7 +788,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
                 ref={inputRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Tell me what you need…"
+                placeholder={ASSISTANT_UI.inputPlaceholder[locale]}
                 className="flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500"
                 disabled={pending}
               />
@@ -669,7 +796,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
                 type="submit"
                 disabled={pending || !inputValue.trim()}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-violet-600 text-white transition-all hover:from-blue-500 hover:to-violet-500 disabled:opacity-50"
-                aria-label="Send message"
+                aria-label={ASSISTANT_UI.sendAria[locale]}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -683,8 +810,7 @@ export function SalesAssistant({ currency }: { currency: Currency }) {
               </button>
             </div>
             <p className="mt-1.5 text-center text-[10px] text-neutral-400 dark:text-neutral-500">
-              Powered by OpenAI · Replies may be wrong — book a call to
-              confirm.
+              {ASSISTANT_UI.footer[locale]}
             </p>
           </form>
         </div>
