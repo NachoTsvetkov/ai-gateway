@@ -123,8 +123,20 @@ export default async function ServicesPage() {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/95 via-neutral-950/80 to-neutral-950/55" />
+        {/* Layer 1: uniform dark scrim — drops the entire hero brightness
+            so the floating UI cards in the corners stop competing for
+            attention with the headline. Without this, a radial-only
+            vignette leaves the edges bright and the eye keeps dancing
+            between the headline and the cards. */}
+        <div className="absolute inset-0 -z-10 bg-neutral-950/70" />
+        {/* Layer 2: radial vignette on top of the scrim — punches the
+            centre even darker so the white headline + body copy sit on
+            a calm surface. */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-950/85 via-neutral-950/55 to-transparent" />
+        {/* Layer 3: bottom fade — sells the transition into the lighter
+            content section below. */}
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-neutral-950" />
+        {/* Layer 4: subtle blue glow above the eyebrow, brand hint. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
