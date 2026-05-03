@@ -30,13 +30,16 @@ export function isLocale(value: string | undefined | null): value is Locale {
  * in `lib/i18n/dict.ts` and the bilingual data files (services, bundles)
  * — all share this shape so the same getter handles them all.
  *
- * Falls back to English if a Bulgarian value is missing rather than
- * rendering blanks: a half-translated page is still better than a hole.
+ * No falsy-fallback to EN: an empty string is a perfectly valid
+ * translation choice (e.g. omitting an English filler word that BG
+ * doesn't need), and the type already requires both fields, so the
+ * old `entry[locale] || entry.en` was silently flipping intentional
+ * empty BG segments back to English.
  */
 export type LocalizedString = { readonly en: string; readonly bg: string };
 
 export function tr(entry: LocalizedString, locale: Locale): string {
-  return entry[locale] || entry.en;
+  return entry[locale];
 }
 
 /**

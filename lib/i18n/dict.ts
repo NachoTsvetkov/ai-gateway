@@ -115,21 +115,21 @@ export const DICT = {
     heroLine2: s("Money Generators", "машини за пари"),
     heroBullet1: s(
       "No more missed leads at 2 AM.",
-      "Никакви пропуснати клиенти в 2 през нощта.",
+      "Без пропуснати клиенти в 2 през нощта.",
     ),
     heroBullet2: s(
       "No more manual work killing your evenings.",
-      "Никаква ръчна работа, която ти изяжда вечерите.",
+      "Без скучна повтаряема ръчна работа",
     ),
     heroBullet3: s(
       "No more watching competitors scale while you stay stuck.",
-      "Никакво гледане как конкурентите растат, а ти стоиш на едно място.",
+      "Без гледане как конкурентите растат, докато ти стоиш на едно място.",
     ),
     heroSubBefore: s(
       "Get a professional website + smart automation that works 24/7 — starting at",
       "Получаваш професионален уебсайт + умна автоматизация, която работи 24/7 — от",
     ),
-    heroSubJustPrefix: s("just ", ""),
+    heroSubJustPrefix: s("just ", "само "),
     heroSubAfter: s(".", "."),
     heroPreviewKicker: s(
       "In the next 60 seconds you’ll see",
@@ -164,7 +164,7 @@ export const DICT = {
     aboutSpecialtyLabel: s("My specialty:", "Моята специалност:"),
     aboutSpecialty: s(
       "fast, affordable solutions that combine modern web tech with smart automation — so you get 24/7 revenue systems, higher conversions, and real time back in your day.",
-      "бързи и достъпни решения, които съчетават модерни уеб технологии с умна автоматизация — за да получиш 24/7 машина за приходи, по-висока конверсия и реално време обратно в деня си.",
+      "бързи и достъпни решения, които съчетават модерни уеб технологии с интелигентна автоматизация — за да получиш 24/7 машина за приходи, по-висока конверсия и реално време обратно в деня си.",
     ),
     statExperience: s("Experience", "Опит"),
     statExperienceValue: s("20+ yrs", "20+ г."),
