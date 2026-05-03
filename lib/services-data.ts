@@ -38,6 +38,53 @@ export function renderServicePrice(
   }
 }
 
+// Two-line variant of `renderServicePrice` used by the homepage teaser
+// cards. Each card has a fixed-height price block where the small/intro
+// offer goes on the first line and the larger/expanded offer goes on
+// the second — keeps all three cards visually balanced regardless of
+// price shape, and prevents long prices from squeezing the "See
+// details" affordance to the right.
+//
+// Mapping per kind:
+//  - tiered:  first tier on top, remaining tiers joined on the second
+//             (e.g. "Starting at €59 (1-page)" / "€97 (3-page)")
+//  - addon:   add-on price on top, bundled-site price on the second
+//             (e.g. "Add-on +€50" / "Full site with chatbot: €323")
+//  - from:    the "Starting at" kicker on top, the actual amount on the
+//             second so single-amount services still fill two rows
+//  - monthly: "Monthly retainer" kicker on top, "€97/month" below
+export function renderServicePriceParts(
+  p: ServicePrice,
+  currency: Currency,
+): { primary: string; secondary: string } {
+  switch (p.kind) {
+    case "from":
+      return {
+        primary: "Starting at",
+        secondary: `${formatPrice(p.eur, currency)}${p.trail ? ` ${p.trail}` : ""}`,
+      };
+    case "addon":
+      return {
+        primary: `Add-on +${formatPrice(p.addonEur, currency)}`,
+        secondary: `Full site with chatbot: ${formatPrice(p.combinedEur, currency)}`,
+      };
+    case "monthly":
+      return {
+        primary: "Monthly retainer",
+        secondary: `${formatPrice(p.eur, currency)}/month`,
+      };
+    case "tiered": {
+      const [first, ...rest] = p.tiers;
+      return {
+        primary: `Starting at ${formatPrice(first.eur, currency)} (${first.label})`,
+        secondary: rest
+          .map((t) => `${formatPrice(t.eur, currency)} (${t.label})`)
+          .join(" / "),
+      };
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 // Pain-point categories. Order is the order they appear on /services.
 // Top → bottom is roughly priority of pain in SMB owner research:

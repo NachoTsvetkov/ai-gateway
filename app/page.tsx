@@ -5,7 +5,7 @@ import { formatPrice, formatPriceK, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import {
   getHookServices,
-  renderServicePrice,
+  renderServicePriceParts,
 } from "lib/services-data";
 
 // SEO metadata for the homepage. Kept in EUR — search engines crawl
@@ -677,57 +677,70 @@ export default async function HomePage() {
 
           {/* 3-card hook grid (`getHookServices()` → exactly 3 services).
               Each card is a Link to its product page so the entire card
-              surface is clickable, not just a corner CTA. */}
+              surface is clickable, not just a corner CTA.
+
+              Card body intentionally shows ONLY the pain text — the
+              solution is one click away on the product page, and
+              keeping the body short makes the card scannable.
+
+              The price block always renders on TWO lines (primary
+              offer / larger offer) regardless of price shape — see
+              `renderServicePriceParts()`. This keeps all three cards
+              visually equal-height and prevents long prices from
+              squeezing the "See details" affordance.
+
+              "See details →" lives on its own row below the price so
+              it never has to fight long price strings for horizontal
+              space — and `whitespace-nowrap` is a belt-and-braces
+              guard against the icon orphaning on a second line. */}
           <ul className="mx-auto mt-12 grid max-w-5xl gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {getHookServices().map((s) => (
-              <li key={s.id}>
-                <Link
-                  href={`/services/${s.id}`}
-                  className="group flex h-full flex-col rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-                >
-                  <h3 className="text-base font-bold text-neutral-900 dark:text-white">
-                    {s.name}
-                  </h3>
-                  <div className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-300">
-                    <p>
+            {getHookServices().map((s) => {
+              const price = renderServicePriceParts(s.price, currency);
+              return (
+                <li key={s.id}>
+                  <Link
+                    href={`/services/${s.id}`}
+                    className="group flex h-full flex-col rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
+                  >
+                    <h3 className="text-base font-bold text-neutral-900 dark:text-white">
+                      {s.name}
+                    </h3>
+                    <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
                       <span className="font-semibold text-neutral-900 dark:text-white">
                         Pain:
                       </span>{" "}
                       {s.pain}
                     </p>
-                    <p>
-                      <span className="font-semibold text-neutral-900 dark:text-white">
-                        Solution:
-                      </span>{" "}
-                      {s.solution}
-                    </p>
-                  </div>
-                  <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-                    <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      {renderServicePrice(s.price, currency)}
-                    </p>
-                    <span
-                      aria-hidden="true"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-all group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-neutral-500 dark:group-hover:text-blue-400"
-                    >
-                      See details
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="h-3.5 w-3.5"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
+                    <div className="mt-auto pt-4">
+                      <div className="space-y-0.5 text-sm font-semibold text-blue-600 dark:text-blue-400">
+                        <p>{price.primary}</p>
+                        <p>{price.secondary}</p>
+                      </div>
+                      <div className="mt-3 flex justify-end">
+                        <span
+                          aria-hidden="true"
+                          className="inline-flex items-center gap-1 whitespace-nowrap text-xs font-semibold text-neutral-500 transition-all group-hover:translate-x-0.5 group-hover:text-blue-600 dark:text-neutral-500 dark:group-hover:text-blue-400"
+                        >
+                          See details
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            className="h-3.5 w-3.5"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
 
           {/* Full-catalogue CTA — links to the dedicated /services page. */}
