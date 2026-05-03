@@ -19,9 +19,15 @@
 
 import {
   getServiceById,
+  type Service,
   type ServiceId,
   type ServicePrice,
 } from "./services-data";
+
+// Re-export so consumers (e.g. the buyable adapter, the checkout
+// island, the checkout page) can import everything they need from one
+// module rather than two.
+export type { Service, ServiceId, ServicePrice } from "./services-data";
 
 // ----------------------------------------------------------------------
 // Bundle types
@@ -322,8 +328,19 @@ export type Upsell = {
   /** 1–2 sentence value framing shown next to the checkbox. */
   description: string;
   eur: number;
-  /** Bundle ids where this upsell shines (renders a "Recommended" badge). */
+  /** Bundle ids where this upsell shines (renders a "Recommended"
+   *  badge + pre-checks the box on those bundles' pages). */
   recommendedFor?: ReadonlyArray<BundleId>;
+  /** Service ids where this upsell shines. Same UX as
+   *  `recommendedFor` but on `/services/<id>` pages. */
+  recommendedForServices?: ReadonlyArray<ServiceId>;
+  /** Whitelist of service ids the upsell is OFFERED on at all. Leave
+   *  undefined to expose the upsell to every service. Used to hide
+   *  irrelevant options (e.g. "+5 design revisions" on a maintenance
+   *  retainer) from the service detail pages. Bundles always see
+   *  every upsell — bundles are bigger purchases and we want to
+   *  show breadth there. */
+  applicableToServiceIds?: ReadonlyArray<ServiceId>;
 };
 
 export const UPSELLS: ReadonlyArray<Upsell> = [
@@ -334,6 +351,21 @@ export const UPSELLS: ReadonlyArray<Upsell> = [
       "Cut delivery time roughly in half — front of the queue, weekend work included. Typical: 14 days → 7 days, 7 days → 3 days.",
     eur: 99,
     recommendedFor: ["startup", "scaleup"],
+    recommendedForServices: ["website", "ecommerce"],
+    // Maintenance is recurring (no "delivery" to compress); personalization
+    // is iterative tuning rather than a one-shot ship.
+    applicableToServiceIds: [
+      "website",
+      "ecommerce",
+      "chatbot",
+      "marketing-automation",
+      "crm",
+      "booking",
+      "integrations",
+      "seo",
+      "ai-agents",
+      "voice-agents",
+    ],
   },
   {
     id: "white-glove-onboarding",
@@ -341,6 +373,9 @@ export const UPSELLS: ReadonlyArray<Upsell> = [
     description:
       "1-hour 1:1 walkthrough where I screen-share through every system with your team. Get them confident on day 1 instead of week 2.",
     eur: 49,
+    recommendedForServices: ["ecommerce", "crm", "ai-agents", "voice-agents"],
+    // Available for every service — every kickoff benefits from a
+    // proper handoff.
   },
   {
     id: "extra-revisions",
@@ -348,6 +383,10 @@ export const UPSELLS: ReadonlyArray<Upsell> = [
     description:
       "Most clients are happy with the standard 2 rounds. Pick this if you're particular about pixel-perfect details or have multiple stakeholders.",
     eur: 49,
+    recommendedForServices: ["website"],
+    // Only design-heavy services have meaningful "rounds" of design
+    // to revise. Hidden everywhere else so the checkout stays focused.
+    applicableToServiceIds: ["website", "ecommerce"],
   },
   {
     id: "priority-support-90d",
@@ -356,6 +395,22 @@ export const UPSELLS: ReadonlyArray<Upsell> = [
       "Skip the queue for 3 months post-launch. 4-hour response on weekdays, same-day on outages. Normally retainer-only.",
     eur: 79,
     recommendedFor: ["startup"],
+    recommendedForServices: ["voice-agents", "ai-agents"],
+    // Maintenance retainer already includes priority support, so this
+    // would double-bill there.
+    applicableToServiceIds: [
+      "website",
+      "ecommerce",
+      "chatbot",
+      "marketing-automation",
+      "crm",
+      "booking",
+      "integrations",
+      "seo",
+      "personalization",
+      "ai-agents",
+      "voice-agents",
+    ],
   },
   {
     id: "seo-content-sprint",
@@ -364,6 +419,14 @@ export const UPSELLS: ReadonlyArray<Upsell> = [
       "3 keyword-targeted blog articles written + published in your first month. Bring in organic traffic before launch even finishes paying for itself.",
     eur: 149,
     recommendedFor: ["scaleup", "enterprise"],
+    recommendedForServices: ["seo", "marketing-automation"],
+    applicableToServiceIds: [
+      "website",
+      "ecommerce",
+      "marketing-automation",
+      "seo",
+      "personalization",
+    ],
   },
   {
     id: "analytics-dashboard",
@@ -372,6 +435,16 @@ export const UPSELLS: ReadonlyArray<Upsell> = [
       "Live dashboard wiring GA4 + Stripe + your CRM into a single revenue + funnel view. Update by phone, screenshot to investors.",
     eur: 199,
     recommendedFor: ["scaleup", "enterprise"],
+    recommendedForServices: ["ecommerce", "marketing-automation"],
+    applicableToServiceIds: [
+      "website",
+      "ecommerce",
+      "marketing-automation",
+      "crm",
+      "integrations",
+      "ai-agents",
+      "voice-agents",
+    ],
   },
 ];
 

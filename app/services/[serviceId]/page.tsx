@@ -12,6 +12,15 @@ import {
   type ServiceId,
 } from "lib/services-data";
 import { getServiceDetail, type ServiceDetail } from "lib/service-details";
+import {
+  type Buyable,
+  buyableFromService,
+  getApplicableUpsells,
+} from "lib/buyable";
+import {
+  CheckoutIsland,
+  type TierOption,
+} from "components/checkout/checkout-island";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -59,6 +68,20 @@ function findCategory(id: string): PainCategory | undefined {
   return PAIN_CATEGORIES.find((c) => c.id === id);
 }
 
+// For tiered services, surface the tier list as a radio picker inside
+// the CheckoutIsland. Returns undefined for non-tiered services (the
+// island then renders without a picker). The labels and prices come
+// directly from the service's catalogue entry so changing one place
+// (services-data.ts) keeps the buy box in sync.
+function buildTierOptions(service: Service): TierOption[] | undefined {
+  if (service.price.kind !== "tiered") return undefined;
+  return service.price.tiers.map((t, i) => ({
+    index: i,
+    label: t.label,
+    oneTimeEur: t.eur,
+  }));
+}
+
 // Static accent maps — same idea as on /services. Tailwind JIT needs
 // to see every class spelled out somewhere or it'll prune them.
 const ACCENT_DOT: Record<PainCategory["accent"], string> = {
@@ -103,6 +126,15 @@ export default async function ServiceDetailPage({
   // detail object — pages without a detail block still render the
   // hero, price, and CTAs from the catalogue alone.
   const accent = category?.accent ?? "blue";
+
+  // Buy section: project the service into a Buyable so the same
+  // checkout island/checkout page that powers /bundles/<slug> works
+  // here unchanged. For tiered services we surface the tiers as a
+  // radio picker inside the island; the picker rebuilds the buyable
+  // client-side as the visitor toggles between tiers.
+  const buyable = buyableFromService(service, undefined);
+  const tiers = buildTierOptions(service);
+  const upsells = getApplicableUpsells(buyable);
 
   return (
     <main className="bg-white dark:bg-neutral-900">
@@ -185,13 +217,14 @@ export default async function ServiceDetailPage({
           </div>
 
           <div className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
+            {/* Primary: jump to the Buy box at the bottom of the page.
+                The buyable.cta.primary verb is service-specific
+                ("Build my site", "Launch my store", etc.). */}
             <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#buy"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
-              Book a free 15-min call
+              {buyable.cta.primary}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -201,17 +234,21 @@ export default async function ServiceDetailPage({
               >
                 <path
                   fillRule="evenodd"
-                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
+                  d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
                   clipRule="evenodd"
                 />
               </svg>
             </a>
-            <Link
-              href="/#bundles"
+            {/* Secondary: still offer the discovery call for visitors
+                who want to talk first. */}
+            <a
+              href={CALENDLY_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              See bundles (save 60%+)
-            </Link>
+              Or talk first — book a 15-min call
+            </a>
           </div>
         </div>
       </section>
@@ -423,7 +460,14 @@ export default async function ServiceDetailPage({
                   >
                     {priceText}
                   </p>
-                  <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+                  <a
+                    href="#buy"
+                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    {buyable.cta.primary}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                  <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
                     Or save 60%+ by grabbing it inside a{" "}
                     <Link
                       href="/#bundles"
@@ -484,41 +528,73 @@ export default async function ServiceDetailPage({
       )}
 
       {/* ---------------------------------------------------------------- */}
-      {/* CLOSING CTA                                                      */}
+      {/* BUY THIS SERVICE — the actual conversion point                   */}
       {/* ---------------------------------------------------------------- */}
+      {/*
+        Anchor target for the hero "{cta.primary}" button + the small
+        "Investment" card's CTA. `scroll-mt-24` keeps the section's top
+        below the sticky navbar when the visitor smooth-scrolls in.
+
+        We use a centred single-column layout (max-w-2xl) on every
+        breakpoint — the buy box is the dominant element and a sticky
+        sidebar treatment (like /bundles/[slug]) doesn't add value
+        when the page only sells ONE thing. The CheckoutIsland already
+        contains everything the visitor needs to commit.
+      */}
       <section
-        aria-labelledby="service-cta-heading"
-        className="border-t border-neutral-200 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 py-16 dark:border-neutral-800"
+        id="buy"
+        aria-labelledby="service-buy-heading"
+        className="scroll-mt-24 border-t border-neutral-200 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 py-16 dark:border-neutral-800"
       >
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2
-            id="service-cta-heading"
-            className="text-2xl font-bold tracking-tight text-white sm:text-3xl"
-          >
-            Ready to ship {service.name.toLowerCase()}?
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-300">
-            Free 15-minute discovery call. We map your specific situation,
-            confirm fixed scope + price, and you decide. No pressure,
-            no jargon.
-          </p>
+        <div className="mx-auto max-w-2xl px-6">
+          <div className="text-center">
+            <p
+              className={`text-xs font-semibold uppercase tracking-widest ${ACCENT_TEXT[accent]}`}
+            >
+              Ready when you are
+            </p>
+            <h2
+              id="service-buy-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            >
+              Buy {service.name.toLowerCase()}
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-300">
+              Fixed scope. Fixed price. Ships in days. Cancel for a full
+              refund any time before kickoff.
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <CheckoutIsland
+              buyable={buyable}
+              upsells={upsells}
+              currency={currency}
+              tiers={tiers}
+            />
+          </div>
+
+          {/* Alt path for visitors who'd rather scope before paying.
+              Kept compact and below-the-fold so the buy box is the
+              clear primary action. */}
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <a
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-6 py-3 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
             >
-              Book the discovery call
+              Or talk first — book a free 15-min call
             </a>
             <Link
               href="/services"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-7 py-3 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-neutral-400 transition-colors hover:text-white"
             >
               ← Back to all services
             </Link>
           </div>
-          <p className="mt-6 text-xs text-neutral-500">
+
+          <p className="mt-6 text-center text-xs text-neutral-500">
             Prefer email or phone?{" "}
             <a
               href="mailto:nacho.tsvetkov@gmail.com"

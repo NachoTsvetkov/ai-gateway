@@ -25,7 +25,6 @@ import {
   type Bundle,
   type BundleId,
   BUNDLES,
-  UPSELLS,
   getBundle,
   getBundleSavingsEur,
   getBundleSeparatePriceEur,
@@ -36,7 +35,11 @@ import {
 } from "lib/services-data";
 import { type Currency, formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
-import { BundleCheckoutIsland } from "components/bundles/bundle-checkout-island";
+import {
+  buyableFromBundle,
+  getApplicableUpsells,
+} from "lib/buyable";
+import { CheckoutIsland } from "components/checkout/checkout-island";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -84,6 +87,11 @@ export default async function BundleDetailPage({
   const separateEur = getBundleSeparatePriceEur(bundle);
   const savingsEur = getBundleSavingsEur(bundle);
   const showsSavings = savingsEur > 0;
+  // Single normalized buyable shared between the order-summary helpers
+  // and the interactive CheckoutIsland sidebar — keeps both views
+  // anchored to the same price + reference id.
+  const buyable = buyableFromBundle(bundle);
+  const upsells = getApplicableUpsells(buyable);
 
   return (
     <main className="bg-white dark:bg-neutral-950">
@@ -113,9 +121,9 @@ export default async function BundleDetailPage({
           id="upsells"
           className="scroll-mt-24 lg:sticky lg:top-24 lg:self-start"
         >
-          <BundleCheckoutIsland
-            bundle={bundle}
-            upsells={UPSELLS}
+          <CheckoutIsland
+            buyable={buyable}
+            upsells={upsells}
             currency={currency}
           />
         </aside>

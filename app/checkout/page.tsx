@@ -1,35 +1,37 @@
-// /checkout — order summary + payment form.
+// /checkout — order summary + payment form. Generic over bundles AND
+// services because both are projected through the `Buyable` shape in
+// `lib/buyable.ts`. The visitor lands here from any of:
 //
-// Reads `?bundle=<id>&upsells=<csv>` from the search params, resolves
-// the line items into the bundle catalogue, and renders:
+//   /bundles/<slug>            via the bundle's checkout island
+//   /services/<id>             via the service's checkout island
 //
-//   - a left/top column with the line-by-line summary + grand total
-//   - a right/bottom column with the contact form (`<CheckoutForm>`)
+// URL conventions:
+//   ?bundle=<id>                                  — bundle purchase
+//   ?service=<id>&tier=<n>                        — service purchase
+//   ?<...>&upsells=<csv>                          — selected upgrades
 //
-// Unknown / missing bundle ids return a friendly "pick a bundle"
-// landing screen instead of a 404 — visitors land here from any number
-// of bundle CTAs and we never want them to bounce off a hard error.
+// Unknown / missing buyables fall back to a friendly "pick a bundle"
+// landing screen instead of a 404.
 
 import Link from "next/link";
 import {
-  type BundleId,
-  BUNDLES,
-  getBundle,
-  resolveUpsells,
-} from "lib/bundles-data";
+  type Buyable,
+  resolveBuyableFromSearchParams,
+} from "lib/buyable";
+import { BUNDLES, getBundle, resolveUpsells } from "lib/bundles-data";
 import { type Currency, formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
-import { CheckoutForm } from "components/bundles/checkout-form";
+import { CheckoutForm } from "components/checkout/checkout-form";
 
 export const metadata = {
   title: "Checkout — Nacho Tsvetkov",
-  description: "Review your bundle + upgrades and complete your order.",
+  description: "Review your order and pay securely.",
 };
-
-const VALID_BUNDLE_IDS: ReadonlySet<string> = new Set(BUNDLES.map((b) => b.id));
 
 type SearchParams = {
   bundle?: string;
+  service?: string;
+  tier?: string;
   upsells?: string;
 };
 
@@ -39,23 +41,32 @@ export default async function CheckoutPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-  const bundleSlug = sp.bundle;
+  const buyable = resolveBuyableFromSearchParams(sp);
   const currency = await detectCurrency();
 
-  if (!bundleSlug || !VALID_BUNDLE_IDS.has(bundleSlug)) {
+  if (!buyable) {
     return <PickBundleFallback />;
   }
 
-  const bundle = getBundle(bundleSlug as BundleId);
   const selectedUpsells = resolveUpsells(sp.upsells);
-
   const upsellTotal = selectedUpsells.reduce((sum, u) => sum + u.eur, 0);
-  const oneTimeTotal = bundle.oneTimeEur + upsellTotal;
+  const oneTimeTotal = buyable.oneTimeEur + upsellTotal;
+
+  // Hosted-payment URL — bundles can carry a `stripePaymentLink`. For
+  // services there's no equivalent today; if Nacho later configures
+  // per-service Payment Links, surfacing them through `Buyable` is a
+  // small additive change (extend the Buyable shape + populate from
+  // bundles-data / services-data).
+  const paymentLink =
+    buyable.kind === "bundle"
+      ? getBundle(buyable.id as Parameters<typeof getBundle>[0])
+          .stripePaymentLink
+      : undefined;
 
   return (
     <main className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
-        <BackLink href={`/bundles/${bundle.id}`} label="Back to the bundle" />
+        <BackLink href={buyable.detailsUrl} label="Back" />
 
         <header className="mt-6">
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
@@ -73,16 +84,17 @@ export default async function CheckoutPage({
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[1.05fr_1fr]">
           <OrderSummary
-            bundle={bundle}
+            buyable={buyable}
             upsells={selectedUpsells}
             oneTimeTotal={oneTimeTotal}
             currency={currency}
           />
           <CheckoutForm
-            bundle={bundle}
+            buyable={buyable}
             upsells={selectedUpsells}
             oneTimeTotalEur={oneTimeTotal}
             currency={currency}
+            paymentLink={paymentLink}
           />
         </div>
       </div>
@@ -95,16 +107,19 @@ export default async function CheckoutPage({
 // ---------------------------------------------------------------------
 
 function OrderSummary({
-  bundle,
+  buyable,
   upsells,
   oneTimeTotal,
   currency,
 }: {
-  bundle: ReturnType<typeof getBundle>;
+  buyable: Buyable;
   upsells: ReturnType<typeof resolveUpsells>;
   oneTimeTotal: number;
   currency: Currency;
 }) {
+  const isPureMonthly =
+    buyable.retainerEur !== undefined &&
+    buyable.retainerEur === buyable.oneTimeEur;
   return (
     <section
       aria-labelledby="summary-heading"
@@ -121,20 +136,27 @@ function OrderSummary({
         <li className="flex items-start justify-between gap-4 py-4">
           <div className="min-w-0">
             <p className="text-sm font-semibold text-neutral-900 dark:text-white">
-              {bundle.name}
+              {buyable.name}
             </p>
             <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-              {bundle.tagline}
+              {buyable.tagline}
             </p>
             <Link
-              href={`/bundles/${bundle.id}`}
+              href={buyable.detailsUrl}
               className="mt-1 inline-block text-xs font-semibold text-blue-600 hover:text-blue-500 dark:text-blue-400"
             >
-              View what's included →
+              {buyable.kind === "bundle"
+                ? "View what's included →"
+                : "View service details →"}
             </Link>
           </div>
           <p className="flex-none whitespace-nowrap font-mono text-sm font-semibold text-neutral-900 dark:text-white">
-            {formatPrice(bundle.oneTimeEur, currency)}
+            {formatPrice(buyable.oneTimeEur, currency)}
+            {isPureMonthly && (
+              <span className="ml-1 text-xs font-normal text-neutral-500">
+                (1st mo)
+              </span>
+            )}
           </p>
         </li>
 
@@ -161,17 +183,25 @@ function OrderSummary({
       <div className="mt-2 space-y-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
         <div className="flex items-baseline justify-between">
           <span className="text-base font-bold text-neutral-900 dark:text-white">
-            Total due today
+            {isPureMonthly ? "First month" : "Total due today"}
           </span>
           <span className="font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
             {formatPrice(oneTimeTotal, currency)}
           </span>
         </div>
-        {bundle.retainerEur && (
+        {buyable.retainerEur && !isPureMonthly && (
           <div className="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
             <span>Then monthly retainer</span>
             <span className="font-mono">
-              {formatPrice(bundle.retainerEur, currency)}/month
+              {formatPrice(buyable.retainerEur, currency)}/month
+            </span>
+          </div>
+        )}
+        {isPureMonthly && (
+          <div className="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
+            <span>Recurring monthly</span>
+            <span className="font-mono">
+              {formatPrice(buyable.retainerEur ?? 0, currency)}/month
             </span>
           </div>
         )}
@@ -185,7 +215,7 @@ function OrderSummary({
 }
 
 // ---------------------------------------------------------------------
-// Fallback when no valid bundle is in the URL
+// Fallback when no valid buyable is in the URL
 // ---------------------------------------------------------------------
 
 function PickBundleFallback() {
@@ -193,11 +223,11 @@ function PickBundleFallback() {
     <main className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
-          Pick a bundle to check out
+          Pick something to check out
         </h1>
         <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-          Looks like the link didn't carry a bundle through. Pick one
-          below and you'll be back here in two clicks.
+          Looks like the link didn't carry an order through. Pick a
+          bundle below to get back on track, or browse single services.
         </p>
         <div className="mt-10 grid gap-4 sm:grid-cols-3">
           {BUNDLES.map((b) => (
@@ -222,6 +252,15 @@ function PickBundleFallback() {
             </Link>
           ))}
         </div>
+        <p className="mt-8 text-sm text-neutral-600 dark:text-neutral-400">
+          Or{" "}
+          <Link
+            href="/services"
+            className="font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
+          >
+            browse single services →
+          </Link>
+        </p>
       </div>
     </main>
   );

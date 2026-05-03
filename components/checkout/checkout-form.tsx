@@ -1,36 +1,51 @@
 "use client";
 
-// Checkout form — collects the visitor's contact + business name and
-// either redirects to a hosted Stripe Payment Link (if the bundle has
-// one) or composes a `mailto:` to Nacho with the full order details so
-// he can send a real Stripe invoice within the hour.
+// Generic checkout form. Works for both bundles and single services
+// because everything it needs is on the `Buyable` shape: a name, a
+// "due today" amount, an optional recurring retainer, and a stable
+// payment-provider reference string.
 //
-// The `mailto:` path is intentional, not a placeholder: most small-
-// business buyers expect a human in the loop on a €173–€1k+ purchase,
-// and a 1-touch invoice flow ("you sent details → I send invoice → you
-// pay → we kick off") converts well at this price band. When Nacho
-// sets up Stripe Payment Links, populating `bundle.stripePaymentLink`
-// flips this form to a hosted-checkout redirect with no other change.
+// Two payment paths:
+//
+//   1. If the buyable carries a `paymentLink` (set on bundles via
+//      `bundle.stripePaymentLink`, currently undefined for services
+//      until Nacho wires one up per service tier), redirect the
+//      visitor straight there with `prefilled_email` and
+//      `client_reference_id` populated. The reference string is
+//      shaped like `bundle:startup` or
+//      `service:website:tier1:upsells=express-delivery,white-glove-onboarding`
+//      so the eventual webhook can reconstruct the order.
+//
+//   2. Otherwise (the current default), open the visitor's email
+//      client with the full order details so Nacho receives a request
+//      and can send back a real Stripe invoice within the hour. The
+//      mailto path is intentional, not a placeholder — at this price
+//      band buyers expect a human in the loop.
 
 import { useMemo, useState, type FormEvent } from "react";
 import { type Currency, formatPrice } from "lib/currency";
-import type { Bundle, Upsell } from "lib/bundles-data";
+import type { Buyable } from "lib/buyable";
+import type { Upsell } from "lib/bundles-data";
 
 const NACHO_EMAIL = "nacho.tsvetkov@gmail.com";
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
 type Props = {
-  bundle: Bundle;
+  buyable: Buyable;
   upsells: ReadonlyArray<Upsell>;
   oneTimeTotalEur: number;
   currency: Currency;
+  /** Optional hosted-payment URL. Threaded through the buyable so the
+   *  same form serves bundle / service alike. */
+  paymentLink?: string;
 };
 
 export function CheckoutForm({
-  bundle,
+  buyable,
   upsells,
   oneTimeTotalEur,
   currency,
+  paymentLink,
 }: Props) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -40,16 +55,25 @@ export function CheckoutForm({
   const [submitted, setSubmitted] = useState(false);
 
   const total = formatPrice(oneTimeTotalEur, currency);
-  const retainer = bundle.retainerEur
-    ? formatPrice(bundle.retainerEur, currency)
+  const retainer = buyable.retainerEur
+    ? formatPrice(buyable.retainerEur, currency)
     : null;
+
+  const isPureMonthly =
+    buyable.retainerEur !== undefined &&
+    buyable.retainerEur === buyable.oneTimeEur;
 
   // Pre-build the mailto so the form can fall back gracefully if the
   // visitor's mail client takes an extra second to open.
   const mailtoHref = useMemo(() => {
     const lines: string[] = [];
-    lines.push(`Order: ${bundle.name}`);
-    lines.push(`Bundle one-time: ${formatPrice(bundle.oneTimeEur, currency)}`);
+    lines.push(`Order: ${buyable.name}`);
+    if (isPureMonthly) {
+      lines.push(`First month: ${formatPrice(buyable.oneTimeEur, currency)}`);
+      lines.push(`Then: ${retainer}/mo recurring`);
+    } else {
+      lines.push(`Base price: ${formatPrice(buyable.oneTimeEur, currency)}`);
+    }
     if (upsells.length > 0) {
       lines.push("");
       lines.push("Upgrades:");
@@ -59,7 +83,11 @@ export function CheckoutForm({
     }
     lines.push("");
     lines.push(`Total due today: ${total}`);
-    if (retainer) lines.push(`Then ${retainer}/month retainer`);
+    if (retainer && !isPureMonthly) {
+      lines.push(`Then ${retainer}/month retainer`);
+    }
+    lines.push("");
+    lines.push(`Reference: ${buyable.reference}`);
     lines.push("");
     lines.push("Buyer:");
     if (name) lines.push(`  Name: ${name}`);
@@ -73,15 +101,17 @@ export function CheckoutForm({
     }
     const body = encodeURIComponent(lines.join("\n"));
     const subject = encodeURIComponent(
-      `Buying the ${bundle.name} — ${total}${retainer ? ` + ${retainer}/mo` : ""}`,
+      `Buying ${buyable.name} — ${total}${retainer && !isPureMonthly ? ` + ${retainer}/mo` : ""}`,
     );
     return `mailto:${NACHO_EMAIL}?subject=${subject}&body=${body}`;
   }, [
-    bundle.name,
-    bundle.oneTimeEur,
     business,
+    buyable.name,
+    buyable.oneTimeEur,
+    buyable.reference,
     currency,
     email,
+    isPureMonthly,
     name,
     notes,
     phone,
@@ -92,23 +122,17 @@ export function CheckoutForm({
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    // If Stripe Payment Link is configured, prefer it. The link can
-    // accept `prefilled_email` and `client_reference_id` query params
-    // — Stripe uses `client_reference_id` to thread the order ID into
-    // the resulting subscription, which is how Nacho would later
-    // reconcile the upsell selection against what the visitor paid.
-    if (bundle.stripePaymentLink) {
-      const url = new URL(bundle.stripePaymentLink);
+    if (paymentLink) {
+      const url = new URL(paymentLink);
       if (email) url.searchParams.set("prefilled_email", email);
-      const ref = `${bundle.id}:${upsells.map((u) => u.id).join(",") || "no-upsells"}`;
-      url.searchParams.set("client_reference_id", ref);
+      const upsellRef = upsells.map((u) => u.id).join(",") || "no-upsells";
+      url.searchParams.set(
+        "client_reference_id",
+        `${buyable.reference}|upsells=${upsellRef}`,
+      );
       window.location.href = url.toString();
       return;
     }
-    // Fallback: open the visitor's mail client with the order details.
-    // We also flip into a "submitted" view so they have something to
-    // see while their mail client opens (and a backup link in case it
-    // didn't).
     window.location.href = mailtoHref;
     setSubmitted(true);
   }
@@ -238,17 +262,20 @@ export function CheckoutForm({
         className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-600/40 sm:text-lg"
       >
         Pay {total}
-        {retainer && (
+        {retainer && !isPureMonthly && (
           <span className="text-sm font-medium opacity-90">
             + {retainer}/mo
           </span>
         )}
+        {isPureMonthly && (
+          <span className="text-sm font-medium opacity-90">first month</span>
+        )}
       </button>
 
       <p className="text-center text-xs text-neutral-500 dark:text-neutral-500">
-        Submitting forwards your details so I can send a secure Stripe
-        invoice — no card info enters this page. Most invoices arrive
-        within an hour.
+        {paymentLink
+          ? "Submitting takes you to a secure hosted checkout — no card info enters this page."
+          : "Submitting forwards your details so I can send a secure Stripe invoice — no card info enters this page. Most invoices arrive within an hour."}
       </p>
 
       <p className="text-center text-xs text-neutral-500 dark:text-neutral-500">
