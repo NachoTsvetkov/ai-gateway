@@ -77,15 +77,26 @@ export default async function HomePage() {
 
       {/* HERO --------------------------------------------------------- */}
       {/* Two hero photos, picked server-side from the theme cookie:
-            • light mode → /hero-background-light.png — a bright,
+            • light mode → /hero-background-light.png — a busy
               teal-tinted "BUILD → IMPROVE → SCALE → AI" composite
-              with the value-prop cards baked in. Scrim is a soft
-              bottom-fade only (light/55 → light) so the photo reads
-              through and the headline still has enough contrast at
-              the centre.
+              with code blocks, a website mockup, charts and the
+              value-prop cards. As pure art it's gorgeous, but used
+              raw it competes with the headline that overlays its
+              centre. Scrim therefore does THREE jobs in light mode:
+                1) backdrop-blur softens every element into an
+                   impressionistic shape so the eye doesn't get
+                   pulled into the mockup,
+                2) a uniform off-white wash flattens contrast across
+                   the whole frame, and
+                3) a centre radial spotlight pulls extra white in
+                   around the headline column so the gradient title
+                   reads cleanly while the cards at the edges stay
+                   visible.
             • dark mode → /hero-background.png — the original dark
-              cityscape. Scrim stays heavy (dark/55 → dark/95) so the
-              photo plays second fiddle to the white headline.
+              cityscape. Scrim stays a vertical dark gradient
+              (dark/55 → dark/95); no blur, no spotlight (the photo
+              is already low-contrast and a strong dark scrim is
+              enough on its own).
           Selecting the src on the server avoids loading both photos
           and prevents the flash-of-wrong-image when the page mounts. */}
       <section
@@ -100,8 +111,24 @@ export default async function HomePage() {
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/0 via-white/30 to-white/85 dark:from-neutral-950/55 dark:via-neutral-950/80 dark:to-neutral-950/95" />
+        {/* Layer 1: blur + uniform wash. backdrop-blur targets the
+            <Image> beneath; bg-white/55 sits on top of the blur so we
+            get a frosted-glass effect in light mode. Blur is dialled
+            to 3px (~25% of the previous backdrop-blur-md) so the
+            artwork stays recognisable while still being knocked back.
+            In dark mode we drop the blur and switch to the original
+            vertical dark gradient. */}
+        <div className="absolute inset-0 -z-10 bg-white/55 backdrop-blur-[3px] dark:bg-gradient-to-b dark:from-neutral-950/55 dark:via-neutral-950/80 dark:to-neutral-950/95 dark:backdrop-blur-0" />
+        {/* Layer 2: centre spotlight (light mode only). Pulls extra
+            opacity in around the headline column so the gradient text
+            never lands on a busy patch of the photo. */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_45%_at_center,_var(--tw-gradient-stops))] from-white/85 via-white/45 to-transparent dark:from-transparent dark:via-transparent dark:to-transparent" />
+        {/* Layer 3: bottom fade — sells the seam into the next
+            section on both themes. */}
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
+        {/* Layer 4: subtle blue glow (existing brand hint). */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent dark:from-blue-600/20" />
+        {/* Layer 5: subtle violet glow. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent dark:from-violet-600/10" />
 
         <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
@@ -117,7 +144,11 @@ export default async function HomePage() {
             <span className="sm:whitespace-nowrap">
               {t(DICT.home.heroLine1)}
             </span>{" "}
-            <span className="block bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-violet-400">
+            {/* Gradient span needs its OWN looser leading + pb so
+                descenders (y in "Money", g in "Generators") aren't
+                clipped by the bg-clip-text bounding box. The parent
+                h1's leading-[1.05] is too tight for clipped text. */}
+            <span className="block bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text pb-1 leading-[1.15] text-transparent dark:from-blue-400 dark:to-violet-400">
               {t(DICT.home.heroLine2)}
             </span>
           </h1>
