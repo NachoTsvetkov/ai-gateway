@@ -205,7 +205,7 @@ export const DICT = {
       "Кажи ми на 15-минутен разговор →",
     ),
 
-    servicesKicker: s("À la carte", "На избор"),
+    servicesKicker: s("À la carte", "По избор"),
     servicesHeadline: s(
       "Don't want a bundle? Start with one of these.",
       "Не искаш пакет? Започни с някоя от тези услуги.",

@@ -646,7 +646,7 @@ export default async function ServiceDetailPage({
                   <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
                     {t(DICT.serviceDetail.investmentSavePrefix)}
                     <Link
-                      href="/services#bundles"
+                      href="/#bundles"
                       className="font-semibold text-blue-600 underline decoration-blue-300/40 underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       {t(DICT.serviceDetail.investmentSaveBundleLink)}

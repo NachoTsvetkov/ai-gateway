@@ -13,7 +13,6 @@ import {
   type PainCategory,
   type Service,
 } from "lib/services-data";
-import { type Bundle, getLocalizedBundles } from "lib/bundles-data";
 import { detectTheme } from "lib/theme/theme.server";
 
 const DEMO_URL = "/projects/ai-shopify-store";
@@ -137,99 +136,15 @@ const CARD = {
 } as const;
 
 // ---------------------------------------------------------------------
-// Bundle / case-study / testimonial renderers.
+// Case-study / testimonial renderers.
 //
 // Originally lived on /projects but were relocated here so the services
-// catalogue gets its full proof + cross-sell narrative on a single
-// page (catalogue → results → clients → bundles → CTA). The /projects
-// page is now a focused gallery of demo sites.
+// catalogue gets its full proof narrative on a single page
+// (catalogue → results → clients → CTA). The Bundles section moved on
+// from here too — it now lives on the homepage right under the hero,
+// referenced via /#bundles. The /projects page is a focused gallery
+// of demo sites.
 // ---------------------------------------------------------------------
-
-// Locale-aware renderers for the bundle cards. Both the "pricing
-// note" (one-time vs one-time + retainer) and the "ROI" line carry
-// translated chrome strings around the formatted EUR/USD amount, so
-// we resolve the right phrasing from DICT before composing.
-function renderBundlePricingNote(
-  b: Bundle,
-  currency: Currency,
-  locale: Locale,
-): string {
-  if (!b.retainerEur) return DICT.home.bundlesOneTime[locale];
-  return `${DICT.home.bundlesOneTimePlus[locale]}${formatPrice(b.retainerEur, currency)}${DICT.home.bundlesPerMonthRetainer[locale]}`;
-}
-
-function renderBundleRoi(
-  b: Bundle,
-  currency: Currency,
-  locale: Locale,
-): string {
-  return `${b.roiHook}. ${DICT.home.bundlesRoiSuffix[locale]} ~${formatPrice(b.roiSavingsEur, currency)}+`;
-}
-
-// Per-bundle "what's included" lines, kept compact for the listing card.
-// The detail page (`/bundles/[slug]`) renders the full structured tree
-// where each line links to its underlying service; here we use a
-// flattened, marketing-tuned copy so the card stays scannable.
-function buildBundleCardIncludes(
-  locale: Locale,
-): Record<Bundle["id"], ReadonlyArray<string>> {
-  if (locale === "bg") {
-    return {
-      startup: [
-        "Custom уебсайт — до 5 страници (mobile-first, оптимизиран за SEO)",
-        "AI чатбот, обучен на твоя бизнес",
-        "Интеграция за онлайн резервации",
-        "Форма за контакт + събиране на имейли",
-        "Настройка на Google Analytics + Search Console",
-        "Хоствано и пуснато на живо за теб",
-      ],
-      scaleup: [
-        "Всичко от Startup пакета",
-        "Пълен редизайн — без лимит на страници",
-        "Готов за e-commerce / плащания",
-        "AI чатбот с квалификация на контакти",
-        "Маркетинг автоматизация (имейл + SMS поредици)",
-        "Custom лек CRM",
-        "Месечно: поддръжка + промени в съдържанието + 2ч поддръжка",
-      ],
-      enterprise: [
-        "Всичко от Scale-Up пакета",
-        "Custom AI агент (автономен виртуален служител)",
-        "AI гласов агент за продажби и поддръжка",
-        "Персонализация с AI",
-        "Сложни API интеграции (CRM, ERP, доставчици)",
-        "Приоритетна поддръжка + месечен стратегически разговор",
-      ],
-    };
-  }
-  return {
-    startup: [
-      "Custom website — up to 5 pages (mobile-first, SEO-optimized)",
-      "AI chatbot trained on your business",
-      "Online booking integration",
-      "Contact form + email capture",
-      "Google Analytics + Search Console setup",
-      "Hosted & deployed for you",
-    ],
-    scaleup: [
-      "Everything in Startup Bundle",
-      "Full redesign — no page limit",
-      "E-commerce / payments ready",
-      "AI chatbot with lead qualification",
-      "Marketing automation (email + SMS sequences)",
-      "Custom lightweight CRM",
-      "Monthly: maintenance + content updates + 2h support",
-    ],
-    enterprise: [
-      "Everything in Scale-Up Bundle",
-      "Custom AI agent (autonomous virtual employee)",
-      "AI voice agent for leads & support",
-      "AI-powered personalization",
-      "Advanced API integrations (CRM, ERP, vendors)",
-      "Priority support + monthly strategy call",
-    ],
-  };
-}
 
 // Three featured case studies — drilldowns into selected projects with
 // numeric outcomes. The Curated. shop sits in the MIDDLE so it reads
@@ -309,10 +224,8 @@ export default async function ServicesPage() {
   // duplicating the entire dataset.
   const painCategories = getLocalizedPainCategories(locale);
   const gettingStartedServices = getLocalizedGettingStartedServices(locale);
-  const bundles = getLocalizedBundles(locale);
   const caseStudies = buildCaseStudies(locale);
   const renderedTestimonials = buildTestimonials(currency, locale);
-  const bundleCardIncludes = buildBundleCardIncludes(locale);
 
   // Theme drives which hero photo we ship: a bright AI-generated
   // cityscape with the value-prop cards in light mode, the original
@@ -408,7 +321,7 @@ export default async function ServicesPage() {
           <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
             {t(HERO.sub)}{" "}
             <Link
-              href="#bundles"
+              href="/#bundles"
               className="font-semibold text-blue-700 underline decoration-blue-500/40 underline-offset-2 transition-colors hover:text-blue-800 dark:text-blue-300 dark:decoration-blue-300/40 dark:hover:text-blue-200"
             >
               {t(HERO.bundleLink)}
@@ -426,7 +339,7 @@ export default async function ServicesPage() {
               {t(DICT.cta.bookFree15Min)}
             </a>
             <Link
-              href="#bundles"
+              href="/#bundles"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-7 py-3 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
             >
               {t(HERO.ctaSeeBundles)}
@@ -739,179 +652,6 @@ export default async function ServicesPage() {
       </section>
 
       {/* ---------------------------------------------------------------- */}
-      {/* BUNDLES — the cross-sell. Visitors who scrolled this far        */}
-      {/* already saw 12 services + proof; bundles offer the same outcome */}
-      {/* at a lower per-piece price. The `id="bundles"` anchor is        */}
-      {/* referenced from the home hero CTA, /bundles/[slug] back link,  */}
-      {/* /services/[serviceId] "save with a bundle" hint, the sales-    */}
-      {/* assistant chat replies, and the closing CTA below.             */}
-      {/* ---------------------------------------------------------------- */}
-      <section
-        id="bundles"
-        aria-labelledby="bundles-heading"
-        className="scroll-mt-24 border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
-              {t(DICT.home.bundlesKicker)}
-            </p>
-            <h2
-              id="bundles-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white"
-            >
-              {t(DICT.home.bundlesHeadline)}
-            </h2>
-            <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-              {t(DICT.home.bundlesIntro1)}{" "}
-              <span className="font-semibold text-neutral-900 dark:text-white">
-                {t(DICT.home.bundlesIntroMid)}
-              </span>
-              {t(DICT.home.bundlesIntroEnd)}
-            </p>
-          </div>
-
-          <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {bundles.map((b) => {
-              const highlighted = !!b.highlight;
-              return (
-                <div
-                  key={b.name}
-                  className={`relative flex flex-col gap-6 rounded-2xl p-8 ${
-                    highlighted
-                      ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/20 ring-1 ring-blue-500/40 dark:from-blue-950/60 dark:to-neutral-900 dark:shadow-blue-600/30"
-                      : "border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900/60"
-                  }`}
-                >
-                  {highlighted && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                      {t(DICT.home.bundlesMostPopular)}
-                    </span>
-                  )}
-
-                  <header>
-                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white">
-                      {b.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-blue-700 dark:text-blue-400">
-                      {b.tagline}
-                    </p>
-                  </header>
-
-                  <div>
-                    <span className="text-5xl font-extrabold tracking-tight text-neutral-900 dark:text-white">
-                      {formatPrice(b.oneTimeEur, currency)}
-                    </span>
-                    <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                      {renderBundlePricingNote(b, currency, locale)}
-                    </p>
-                  </div>
-
-                  <p className="text-sm italic text-neutral-700 dark:text-neutral-300">
-                    {b.pain}
-                  </p>
-
-                  <ul className="flex-1 space-y-3 text-sm text-neutral-700 dark:text-neutral-300">
-                    {b.freebies?.map((item) => (
-                      <li key={`free:${item}`} className="flex gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>
-                          <span className="mr-1.5 inline-flex items-center rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
-                            {t(DICT.home.bundlesFreeBadge)}
-                          </span>
-                          {item}
-                        </span>
-                      </li>
-                    ))}
-                    {bundleCardIncludes[b.id].map((item) => (
-                      <li key={item} className="flex gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                          className="mt-0.5 h-4 w-4 shrink-0 text-blue-600 dark:text-blue-400"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {b.nudge && (
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
-                      {b.nudge}
-                    </p>
-                  )}
-
-                  <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950/60 dark:text-neutral-300">
-                    <span className="font-semibold text-neutral-900 dark:text-white">
-                      {t(DICT.home.bundlesRoiLabel)}
-                    </span>{" "}
-                    {renderBundleRoi(b, currency, locale)}
-                  </p>
-
-                  <Link
-                    href={`/bundles/${b.id}`}
-                    prefetch={true}
-                    className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all ${
-                      highlighted
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500"
-                        : "border border-neutral-300 text-neutral-900 hover:border-neutral-500 dark:border-neutral-700 dark:text-white dark:hover:border-neutral-500"
-                    }`}
-                  >
-                    {b.cta.primary}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-
-          <p className="mt-10 text-center text-sm text-neutral-600 dark:text-neutral-400">
-            {t(DICT.home.bundlesCustomNeed)}{" "}
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-blue-700 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              {t(DICT.home.bundlesCustomCta)}
-            </a>
-          </p>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
       {/* CLOSING CTA                                                      */}
       {/* ---------------------------------------------------------------- */}
       <section
@@ -934,7 +674,7 @@ export default async function ServicesPage() {
           </p>
           <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              href="#bundles"
+              href="/#bundles"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
               {t(CLOSING.ctaSeeBundles)}

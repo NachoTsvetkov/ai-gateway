@@ -192,7 +192,7 @@ function Hero({
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-4">
           <Link
-            href="/services#bundles"
+            href="/#bundles"
             className="inline-flex items-center gap-1.5 text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
             <svg
