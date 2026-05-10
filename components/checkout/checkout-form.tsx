@@ -279,7 +279,6 @@ export function CheckoutForm({
           {t(DICT.checkout.submittedOr)}
           <a
             href={CALENDLY_URL}
-          data-pixel-lead
             data-pixel-lead
             target="_blank"
             rel="noopener noreferrer"
@@ -462,7 +461,6 @@ export function CheckoutForm({
           {t(DICT.checkout.formBookFirstPrefix)}
           <a
             href={CALENDLY_URL}
-          data-pixel-lead
             data-pixel-lead
             target="_blank"
             rel="noopener noreferrer"

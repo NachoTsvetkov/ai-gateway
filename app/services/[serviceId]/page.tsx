@@ -784,7 +784,6 @@ export default async function ServiceDetailPage({
                 <a
                   href={CALENDLY_URL}
                   data-pixel-lead
-              data-pixel-lead
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-neutral-600 underline-offset-4 transition-colors hover:text-blue-600 hover:underline dark:text-neutral-400 dark:hover:text-blue-400"

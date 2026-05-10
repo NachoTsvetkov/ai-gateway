@@ -284,7 +284,6 @@ function Hero({
             </a>
             <a
               href={CALENDLY_URL}
-            data-pixel-lead
               data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
