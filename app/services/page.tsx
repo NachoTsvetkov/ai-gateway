@@ -160,22 +160,24 @@ export default async function ServicesPage() {
       {/* ---------------------------------------------------------------- */}
       <section
         aria-labelledby="services-heading"
-        className="relative isolate overflow-hidden bg-white py-20 sm:py-24 dark:bg-neutral-950"
+        className="relative isolate overflow-hidden bg-blue-500 py-20 sm:py-24"
       >
-        {/* Solid surface + soft brand glow. Earlier this hero shipped
-            a 600KB photo composite with the value-prop cards baked in
-            — striking but it competed with the headline + nav pills,
-            and forced theme-aware src switching that flashed on the
-            first paint. Now the surface is flat and the glow does the
-            work.
+        {/* Brand-blue surface + theme-aware translucent mask. The
+            section paints a saturated blue, then a heavy white
+            (light) / neutral-950 (dark) scrim knocks it back so the
+            headline and quick-jump pills read with easy contrast.
+            Glows below sit ON TOP of the mask in DOM order so the
+            brand accent stays visible.
 
             CRITICAL: the section MUST carry `isolate` so it creates
             its own stacking context. Without it, the `-z-10` layers
-            below fall BEHIND the section background and the glows
+            fall BEHIND the section background and the mask + glows
             disappear. `isolate` keeps -z-10 meaning "below content,
             above this section's own background". */}
-        {/* Top-centre blue glow — the page's brand accent, used here
-            as a tasteful mask behind the headline. */}
+        {/* Mask: per-theme veil. Tweak opacity here, not on the bg,
+            when adjusting how blue the section feels. */}
+        <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
+        {/* Top-centre blue glow — primary brand accent. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
         {/* Bottom-left violet glow — softer secondary tint. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />

@@ -228,25 +228,29 @@ export default async function HomePage() {
       <SalesAssistant currency={currency} locale={locale} />
 
       {/* HERO --------------------------------------------------------- */}
-      {/* Solid surface + two soft brand glows. The previous iteration
-          shipped a 600KB photo composite under a heavy scrim; the
-          scrim was knocking the artwork back so much that the visual
-          cost wasn't paying off (and it caused a flash-of-wrong-image
-          on hydration when the theme cookie changed). The headline
-          now lands on flat colour, with a top-right blue glow + a
-          bottom-left violet glow giving the surface gradient depth
-          without competing with the type. Both glows pick up the
-          --color-blue-* / --color-violet-* tokens, so they follow the
-          theme automatically. */}
+      {/* Brand-blue surface + theme-aware translucent mask + corner
+          glows. The section itself paints a saturated blue, then a
+          heavy white (light) / neutral-950 (dark) scrim knocks it
+          back to a calm ambient tint that doesn't compete with the
+          headline. Result:
+            • light → pale blue-grey (≈ rgb(226, 237, 254))
+            • dark  → blue-tinted navy (≈ rgb(20, 34, 57))
+          The two corner glows render ON TOP of the mask so the brand
+          accent colour stays visible. Mask order matters — mask
+          first in DOM order, glows after, otherwise the mask
+          flattens the glows out. */}
       <section
         aria-labelledby="hero-heading"
-        className="relative isolate overflow-hidden bg-white dark:bg-neutral-950"
+        className="relative isolate overflow-hidden bg-blue-500"
       >
+        {/* Mask: the per-theme veil that knocks the saturated bg back
+            to a usable hero surface. Tweak opacity here, not on the
+            bg, when adjusting how blue the section feels. */}
+        <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
         {/* Bottom fade — softens the seam into PROVEN RESULTS below
             on both themes. */}
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
-        {/* Top-right blue glow — primary brand accent, slightly
-            stronger now there's no photo to lift it off. */}
+        {/* Top-right blue glow — primary brand accent. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
         {/* Bottom-left violet glow — softer secondary tint. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
