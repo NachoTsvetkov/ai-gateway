@@ -60,7 +60,13 @@ export function renderServicePrice(
 // than in the central dict because they're tied to specific tier
 // indices on specific services. Map them to their BG equivalents at
 // render time so we don't have to duplicate the tier list per locale.
-function localizeTierLabel(label: string, locale: Locale): string {
+//
+// Exported so server pages building tier-picker UI (e.g. the radio
+// cards on /services/[serviceId]) can localise the visible label
+// without re-implementing the mapping. The BG glyph length is
+// noticeably wider than the EN one ("1 страница" vs "1-page"), so
+// having ONE place to tweak this list keeps copy edits painless.
+export function localizeTierLabel(label: string, locale: Locale): string {
   if (locale === "en") return label;
   if (label === "1-page") return DICT.pricing.tier1Page.bg;
   if (label === "3-page") return DICT.pricing.tier3Page.bg;

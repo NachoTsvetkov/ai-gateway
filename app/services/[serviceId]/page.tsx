@@ -2,11 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { detectCurrency } from "lib/currency.server";
 import { detectLocale } from "lib/i18n/locale.server";
-import { createT } from "lib/i18n/locale";
+import { type Locale, createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
 import {
   getLocalizedPainCategories,
   getLocalizedServiceById,
+  localizeTierLabel,
   renderServicePrice,
   services,
   type PainCategory,
@@ -74,14 +75,18 @@ function findService(id: string): Service | undefined {
 
 // For tiered services, surface the tier list as a radio picker inside
 // the CheckoutIsland. Returns undefined for non-tiered services (the
-// island then renders without a picker). The labels and prices come
-// directly from the service's catalogue entry so changing one place
-// (services-data.ts) keeps the buy box in sync.
-function buildTierOptions(service: Service): TierOption[] | undefined {
+// island then renders without a picker). The numeric prices come
+// straight from the catalogue (single source of truth) and the
+// canonical EN label is run through `localizeTierLabel` so BG visitors
+// see "1 страница" / "3 страници" instead of "1-page" / "3-page".
+function buildTierOptions(
+  service: Service,
+  locale: Locale,
+): TierOption[] | undefined {
   if (service.price.kind !== "tiered") return undefined;
   return service.price.tiers.map((t, i) => ({
     index: i,
-    label: t.label,
+    label: localizeTierLabel(t.label, locale),
     oneTimeEur: t.eur,
   }));
 }
@@ -172,7 +177,7 @@ export default async function ServiceDetailPage({
   // radio picker inside the island; the picker rebuilds the buyable
   // client-side as the visitor toggles between tiers.
   const buyable = buyableFromService(service, undefined, locale);
-  const tiers = buildTierOptions(baseService);
+  const tiers = buildTierOptions(baseService, locale);
   // Pass `locale` so the upsell labels + descriptions render through
   // the BG overlay. Without this the island falls back to EN copy
   // even on a fully translated page (the default for the optional
@@ -186,7 +191,7 @@ export default async function ServiceDetailPage({
       {/* ---------------------------------------------------------------- */}
       <section
         aria-labelledby="service-hero-heading"
-        className="relative isolate overflow-hidden bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 py-20 sm:py-24"
+        className="relative isolate overflow-hidden bg-gradient-to-br from-neutral-100 via-white to-neutral-100 py-20 sm:py-24 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950"
       >
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/15 via-transparent to-transparent" />
 
@@ -194,11 +199,11 @@ export default async function ServiceDetailPage({
           {/* Breadcrumb back to the catalogue. Plain text, low-key. */}
           <nav
             aria-label={locale === "bg" ? "Навигация" : "Breadcrumb"}
-            className="mb-6 flex items-center gap-2 text-xs text-neutral-400"
+            className="mb-6 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400"
           >
             <Link
               href="/services"
-              className="transition-colors hover:text-white"
+              className="transition-colors hover:text-neutral-900 dark:hover:text-white"
             >
               {t(DICT.serviceDetail.breadcrumbServices)}
             </Link>
@@ -207,20 +212,22 @@ export default async function ServiceDetailPage({
               <>
                 <Link
                   href={`/services#${category.id}`}
-                  className="transition-colors hover:text-white"
+                  className="transition-colors hover:text-neutral-900 dark:hover:text-white"
                 >
                   {category.title}
                 </Link>
                 <span aria-hidden="true">›</span>
               </>
             )}
-            <span className="text-neutral-200">{service.name}</span>
+            <span className="text-neutral-800 dark:text-neutral-200">
+              {service.name}
+            </span>
           </nav>
 
           {/* Pain category chip — visually anchors this service to the
               broader pain it solves on the catalogue page. */}
           {category && (
-            <p className="inline-flex items-center gap-2 rounded-full border border-neutral-700/70 bg-neutral-900/50 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-neutral-300 backdrop-blur-sm">
+            <p className="inline-flex items-center gap-2 rounded-full border border-neutral-300/80 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-neutral-700 backdrop-blur-sm dark:border-neutral-700/70 dark:bg-neutral-900/50 dark:text-neutral-300">
               <span
                 className={`h-1.5 w-1.5 rounded-full ${ACCENT_DOT[accent]}`}
               />
@@ -230,20 +237,20 @@ export default async function ServiceDetailPage({
 
           <h1
             id="service-hero-heading"
-            className="mt-5 text-balance text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="mt-5 text-balance text-4xl font-bold leading-[1.1] tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl dark:text-white"
           >
             {service.name}
           </h1>
 
           {detail && (
-            <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-neutral-300">
+            <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-neutral-700 dark:text-neutral-300">
               {detail.tagline}
             </p>
           )}
 
           {/* The catalogue's `pain` field — the core "you feel this" hook.
               Italicised + bordered to read like the visitor's own thought. */}
-          <blockquote className="mt-8 max-w-2xl border-l-2 border-neutral-700 pl-5 text-base italic text-neutral-200 sm:text-lg">
+          <blockquote className="mt-8 max-w-2xl border-l-2 border-neutral-300 pl-5 text-base italic text-neutral-700 sm:text-lg dark:border-neutral-700 dark:text-neutral-200">
             {service.pain}
           </blockquote>
 
@@ -254,7 +261,7 @@ export default async function ServiceDetailPage({
             >
               {priceText}
             </span>
-            <span className="text-sm text-neutral-400">
+            <span className="text-sm text-neutral-500 dark:text-neutral-400">
               {t(DICT.serviceDetail.pricedFixedShipsInDays)}
             </span>
           </div>
@@ -288,7 +295,7 @@ export default async function ServiceDetailPage({
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
             >
               {t(DICT.cta.talkFirst)}
             </a>
@@ -639,7 +646,7 @@ export default async function ServiceDetailPage({
                   <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
                     {t(DICT.serviceDetail.investmentSavePrefix)}
                     <Link
-                      href="/#bundles"
+                      href="/services#bundles"
                       className="font-semibold text-blue-600 underline decoration-blue-300/40 underline-offset-2 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       {t(DICT.serviceDetail.investmentSaveBundleLink)}
@@ -792,7 +799,7 @@ export default async function ServiceDetailPage({
       <section
         id="buy"
         aria-labelledby="service-buy-heading"
-        className="scroll-mt-24 border-t border-neutral-200 bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 py-16 dark:border-neutral-800"
+        className="scroll-mt-24 border-t border-neutral-200 bg-gradient-to-br from-neutral-100 via-white to-neutral-100 py-16 dark:border-neutral-800 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950"
       >
         <div className="mx-auto max-w-2xl px-6">
           <div className="text-center">
@@ -803,12 +810,12 @@ export default async function ServiceDetailPage({
             </p>
             <h2
               id="service-buy-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white"
             >
               {t(DICT.serviceDetail.buyHeadlinePrefix)}
               {service.name.toLowerCase()}
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-300">
+            <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
               {t(DICT.serviceDetail.buySub)}
             </p>
           </div>
@@ -831,30 +838,30 @@ export default async function ServiceDetailPage({
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-600 px-6 py-3 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
             >
               {t(DICT.cta.talkFirst)}
             </a>
             <Link
               href="/services"
-              className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-neutral-400 transition-colors hover:text-white"
+              className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
             >
               {t(DICT.cta.backToServices)}
             </Link>
           </div>
 
-          <p className="mt-6 text-center text-xs text-neutral-500">
+          <p className="mt-6 text-center text-xs text-neutral-500 dark:text-neutral-500">
             {t(DICT.serviceDetail.closingPrefix)}{" "}
             <a
               href="mailto:nacho.tsvetkov@gmail.com"
-              className="text-neutral-300 underline decoration-neutral-600 underline-offset-2 hover:text-white"
+              className="text-neutral-700 underline decoration-neutral-400 underline-offset-2 hover:text-neutral-900 dark:text-neutral-300 dark:decoration-neutral-600 dark:hover:text-white"
             >
               nacho.tsvetkov@gmail.com
             </a>{" "}
             ·{" "}
             <a
               href="tel:+359882700002"
-              className="text-neutral-300 underline decoration-neutral-600 underline-offset-2 hover:text-white"
+              className="text-neutral-700 underline decoration-neutral-400 underline-offset-2 hover:text-neutral-900 dark:text-neutral-300 dark:decoration-neutral-600 dark:hover:text-white"
             >
               +359 882 700 002
             </a>

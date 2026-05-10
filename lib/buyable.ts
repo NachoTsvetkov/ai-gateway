@@ -15,7 +15,6 @@
 
 import type { Currency } from "./currency";
 import { type Locale } from "./i18n/locale";
-import { DICT } from "./i18n/dict";
 import {
   type Bundle,
   type BundleId,
@@ -30,6 +29,7 @@ import {
   type ServiceId,
   type ServicePrice,
   getLocalizedServiceById,
+  localizeTierLabel,
   services,
 } from "./services-data";
 
@@ -178,17 +178,6 @@ function resolveServicePrice(
       return { oneTimeEur: t.eur, tierName: localizeTierLabel(t.label, locale) };
     }
   }
-}
-
-// Translate the canonical English tier label ("1-page" / "3-page") into
-// its BG equivalent. Keeps the tier IDs themselves stable while letting
-// the rendered UI feel native — the buyable's `tierName` flows into the
-// detail page header and the order summary.
-function localizeTierLabel(label: string, locale: Locale): string {
-  if (locale === "en") return label;
-  if (label === "1-page") return DICT.pricing.tier1Page.bg;
-  if (label === "3-page") return DICT.pricing.tier3Page.bg;
-  return label;
 }
 
 // ----------------------------------------------------------------------

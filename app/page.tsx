@@ -1,19 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SalesAssistant } from "components/ai/sales-assistant";
-import { formatPrice, formatPriceK, type Currency } from "lib/currency";
+import { formatPrice, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import {
   getLocalizedHookServices,
   renderServicePriceParts,
 } from "lib/services-data";
-import {
-  type Bundle,
-  getLocalizedBundles,
-} from "lib/bundles-data";
 import { detectLocale } from "lib/i18n/locale.server";
 import { type Locale, createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { detectTheme } from "lib/theme/theme.server";
 
 // SEO metadata for the homepage. Kept in EUR-English — search engines
 // crawl from various IPs and the SERP description should be stable.
@@ -29,143 +26,9 @@ export const metadata = {
 
 // Centralized links so the page is easy to repoint later.
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
-const DEMO_URL = "/projects/ai-shopify-store";
 const EMAIL = "nacho.tsvetkov@gmail.com";
 const PHONE_E164 = "+359882700002";
 const PHONE_DISPLAY = "+359 882 700 002";
-
-// Locale-aware renderers for the bundle cards. Both the "pricing
-// note" (one-time vs one-time + retainer) and the "ROI" line carry
-// translated chrome strings around the formatted EUR/USD amount, so
-// we resolve the right phrasing from DICT before composing.
-
-function renderBundlePricingNote(
-  b: Bundle,
-  currency: Currency,
-  locale: Locale,
-): string {
-  if (!b.retainerEur) return DICT.home.bundlesOneTime[locale];
-  return `${DICT.home.bundlesOneTimePlus[locale]}${formatPrice(b.retainerEur, currency)}${DICT.home.bundlesPerMonthRetainer[locale]}`;
-}
-
-function renderBundleRoi(
-  b: Bundle,
-  currency: Currency,
-  locale: Locale,
-): string {
-  return `${b.roiHook}. ${DICT.home.bundlesRoiSuffix[locale]} ~${formatPrice(b.roiSavingsEur, currency)}+`;
-}
-
-// Homepage bundle "what's included" lines. The full structured content
-// in `bundles-data.ts` is great for the detail page (each line links to
-// its service); on the small homepage card it would feel cluttered, so
-// we render a flattened, marketing-tuned copy. Built per-locale so BG
-// visitors get native phrasing without sacrificing the carefully
-// pruned line list.
-function buildBundleCardIncludes(
-  locale: Locale,
-): Record<Bundle["id"], ReadonlyArray<string>> {
-  if (locale === "bg") {
-    return {
-      startup: [
-        "1-странична custom уебсайт (mobile-first, оптимизиран за SEO)",
-        "AI чатбот, обучен на твоя бизнес",
-        "Интеграция за онлайн резервации",
-        "Форма за контакт + събиране на имейли",
-        "Настройка на Google Analytics + Search Console",
-        "Хоствано и пуснато на живо за теб",
-      ],
-      scaleup: [
-        "Всичко от Startup пакета",
-        "Пълен редизайн — до 5 страници",
-        "Готов за e-commerce / плащания",
-        "AI чатбот с квалификация на контакти",
-        "Маркетинг автоматизация (имейл + SMS поредици)",
-        "Custom лек CRM",
-        "Месечно: поддръжка + промени в съдържанието + 2ч поддръжка",
-      ],
-      enterprise: [
-        "Всичко от Scale-Up пакета",
-        "Custom AI агент (автономен виртуален служител)",
-        "AI гласов агент за продажби и поддръжка",
-        "Персонализация с AI",
-        "Сложни API интеграции (CRM, ERP, доставчици)",
-        "Приоритетна поддръжка + месечен стратегически разговор",
-      ],
-    };
-  }
-  return {
-    startup: [
-      "1-page custom website (mobile-first, SEO-optimized)",
-      "AI chatbot trained on your business",
-      "Online booking integration",
-      "Contact form + email capture",
-      "Google Analytics + Search Console setup",
-      "Hosted & deployed for you",
-    ],
-    scaleup: [
-      "Everything in Startup Bundle",
-      "Full redesign — up to 5 pages",
-      "E-commerce / payments ready",
-      "AI chatbot with lead qualification",
-      "Marketing automation (email + SMS sequences)",
-      "Custom lightweight CRM",
-      "Monthly: maintenance + content updates + 2h support",
-    ],
-    enterprise: [
-      "Everything in Scale-Up Bundle",
-      "Custom AI agent (autonomous virtual employee)",
-      "AI voice agent for leads & support",
-      "AI-powered personalization",
-      "Advanced API integrations (CRM, ERP, vendors)",
-      "Priority support + monthly strategy call",
-    ],
-  };
-}
-
-// Hero project (real) + 2 fictional-but-realistic mini case studies.
-// Card order is deliberate: the Curated. shop sits in the MIDDLE so it
-// reads as the centerpiece of the trio. The `featured` flag triggers
-// a blue-bordered, gradient-haloed treatment in the rendering loop.
-// Content lookup is keyed on the dict so each case study reads in
-// the visitor's language without spreading copy across the page.
-function buildCaseStudies(locale: Locale) {
-  return [
-    {
-      title: DICT.caseStudies.fitnessTitle[locale],
-      summary: DICT.caseStudies.fitnessSummary[locale],
-      metric: DICT.caseStudies.fitnessMetric[locale],
-      tech: "Next.js · Stripe · Calendar API · GPT-4o",
-      href: "/projects/local-fitness-studio",
-      cta: DICT.caseStudies.fitnessCta[locale],
-      badge: DICT.caseStudies.badgeLive[locale],
-      real: true,
-      featured: false,
-    },
-    {
-      title: DICT.caseStudies.shopTitle[locale],
-      summary: DICT.caseStudies.shopSummary[locale],
-      metric: DICT.caseStudies.shopMetric[locale],
-      tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
-      href: DEMO_URL,
-      cta: DICT.caseStudies.shopCta[locale],
-      badge: DICT.caseStudies.badgeLive[locale],
-      real: true,
-      featured: true,
-    },
-    {
-      title: DICT.caseStudies.boutiqueTitle[locale],
-      summary: DICT.caseStudies.boutiqueSummary[locale],
-      metric: DICT.caseStudies.boutiqueMetric[locale],
-      tech: "Shopify · AI Personalization · Klaviyo",
-      href: "/projects/boutique-fashion-brand",
-      cta: DICT.caseStudies.boutiqueCta[locale],
-      badge: DICT.caseStudies.badgeLive[locale],
-      real: true,
-      featured: false,
-    },
-  ];
-}
 
 function buildSteps(locale: Locale) {
   return [
@@ -173,26 +36,6 @@ function buildSteps(locale: Locale) {
     { n: "02", title: DICT.steps.s2Title[locale], body: DICT.steps.s2Body[locale] },
     { n: "03", title: DICT.steps.s3Title[locale], body: DICT.steps.s3Body[locale] },
     { n: "04", title: DICT.steps.s4Title[locale], body: DICT.steps.s4Body[locale] },
-  ];
-}
-
-function buildTestimonials(currency: Currency, locale: Locale) {
-  return [
-    {
-      quote: DICT.testimonials.t1Quote[locale],
-      name: DICT.testimonials.t1Name[locale],
-      role: DICT.testimonials.t1Role[locale],
-    },
-    {
-      quote: DICT.testimonials.t2Quote[locale],
-      name: DICT.testimonials.t2Name[locale],
-      role: DICT.testimonials.t2Role[locale],
-    },
-    {
-      quote: `${DICT.testimonials.t3QuotePrefix[locale]}${formatPriceK(4000, currency)}${DICT.testimonials.t3QuoteSuffix[locale]}`,
-      name: DICT.testimonials.t3Name[locale],
-      role: DICT.testimonials.t3Role[locale],
-    },
   ];
 }
 
@@ -212,70 +55,84 @@ function buildFaqs(currency: Currency, locale: Locale) {
 export default async function HomePage() {
   // Resolve display currency + locale from request headers (Vercel/CF
   // geo + cookie). EU visitors see EUR; everyone else sees USD. BG
-  // visitors see Bulgarian copy; the rest see English.
-  const [currency, locale] = await Promise.all([
+  // visitors see Bulgarian copy; the rest see English. Theme drives
+  // which hero photo we ship: a bright AI-generated cityscape +
+  // value-prop cards in light mode, the original dark cityscape in
+  // dark mode (see hero markup below).
+  const [currency, locale, theme] = await Promise.all([
     detectCurrency(),
     detectLocale(),
+    detectTheme(),
   ]);
   const t = createT(locale);
-  const bundles = getLocalizedBundles(locale);
   const hookServices = getLocalizedHookServices(locale);
-  const caseStudies = buildCaseStudies(locale);
   const steps = buildSteps(locale);
-  const renderedTestimonials = buildTestimonials(currency, locale);
   const renderedFaqs = buildFaqs(currency, locale);
-  const bundleCardIncludes = buildBundleCardIncludes(locale);
+  const heroBgSrc =
+    theme === "light" ? "/hero-background-light.png" : "/hero-background.png";
 
   return (
     <>
       <SalesAssistant currency={currency} locale={locale} />
 
       {/* HERO --------------------------------------------------------- */}
+      {/* Two hero photos, picked server-side from the theme cookie:
+            • light mode → /hero-background-light.png — a bright,
+              teal-tinted "BUILD → IMPROVE → SCALE → AI" composite
+              with the value-prop cards baked in. Scrim is a soft
+              bottom-fade only (light/55 → light) so the photo reads
+              through and the headline still has enough contrast at
+              the centre.
+            • dark mode → /hero-background.png — the original dark
+              cityscape. Scrim stays heavy (dark/55 → dark/95) so the
+              photo plays second fiddle to the white headline.
+          Selecting the src on the server avoids loading both photos
+          and prevents the flash-of-wrong-image when the page mounts. */}
       <section
         aria-labelledby="hero-heading"
-        className="relative isolate overflow-hidden bg-neutral-950"
+        className="relative isolate overflow-hidden bg-white dark:bg-neutral-950"
       >
         <Image
-          src="/hero-background.png"
+          src={heroBgSrc}
           alt=""
           fill
           priority
           sizes="100vw"
           className="-z-10 object-cover object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-neutral-950/55 via-neutral-950/80 to-neutral-950/95" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-600/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-white/0 via-white/30 to-white/85 dark:from-neutral-950/55 dark:via-neutral-950/80 dark:to-neutral-950/95" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent dark:from-blue-600/20" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent dark:from-violet-600/10" />
 
         <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-500/30 bg-green-500/10 px-4 py-1.5 text-sm text-green-300">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-green-500 dark:bg-green-400" />
             {t(DICT.status.availableForProjects)}
           </div>
 
           <h1
             id="hero-heading"
-            className="mx-auto max-w-5xl text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="mx-auto max-w-5xl text-4xl font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl dark:text-white"
           >
             <span className="sm:whitespace-nowrap">
               {t(DICT.home.heroLine1)}
             </span>{" "}
-            <span className="block bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="block bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent dark:from-blue-400 dark:to-violet-400">
               {t(DICT.home.heroLine2)}
             </span>
           </h1>
 
-          <div className="mx-auto mt-7 max-w-2xl space-y-1 text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
+          <div className="mx-auto mt-7 max-w-2xl space-y-1 text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
             <p>{t(DICT.home.heroBullet1)}</p>
             <p>{t(DICT.home.heroBullet2)}</p>
             <p>{t(DICT.home.heroBullet3)}</p>
           </div>
 
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
             {t(DICT.home.heroSubBefore)}{" "}
             <Link
               href="/services/website"
-              className="font-semibold text-white underline decoration-blue-400/40 decoration-2 underline-offset-4 transition-colors hover:text-blue-200 hover:decoration-blue-300"
+              className="font-semibold text-neutral-900 underline decoration-blue-500/50 decoration-2 underline-offset-4 transition-colors hover:text-blue-700 hover:decoration-blue-600 dark:text-white dark:decoration-blue-400/40 dark:hover:text-blue-200 dark:hover:decoration-blue-300"
             >
               {t(DICT.home.heroSubJustPrefix)}
               {formatPrice(59, currency)}
@@ -285,7 +142,7 @@ export default async function HomePage() {
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
-              href="#bundles"
+              href="/services#bundles"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
               {t(DICT.cta.seeMoneyBundles)}
@@ -307,17 +164,17 @@ export default async function HomePage() {
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-600 px-7 py-3.5 text-sm font-semibold text-neutral-200 transition-all hover:border-neutral-400 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
             >
               {t(DICT.cta.book15MinTalk)}
             </a>
           </div>
 
-          <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-700/50 bg-neutral-900/40 p-5 text-left backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-400">
+          <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-200 bg-white/70 p-5 text-left backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/40">
+            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
               {t(DICT.home.heroPreviewKicker)}
             </p>
-            <ul className="mt-3 space-y-2 text-sm text-neutral-200">
+            <ul className="mt-3 space-y-2 text-sm text-neutral-800 dark:text-neutral-200">
               {[
                 t(DICT.home.heroPreviewItem1),
                 t(DICT.home.heroPreviewItem2),
@@ -343,7 +200,7 @@ export default async function HomePage() {
             </ul>
           </div>
 
-          <p className="mt-8 text-xs text-neutral-400 sm:text-sm">
+          <p className="mt-8 text-xs text-neutral-600 sm:text-sm dark:text-neutral-400">
             {t(DICT.home.heroFooter)}
           </p>
         </div>
@@ -418,165 +275,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* BUNDLES ------------------------------------------------------ */}
-      <section
-        id="bundles"
-        aria-labelledby="bundles-heading"
-        className="scroll-mt-24 border-t border-neutral-800 bg-neutral-950 py-20"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
-              {t(DICT.home.bundlesKicker)}
-            </p>
-            <h2
-              id="bundles-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl"
-            >
-              {t(DICT.home.bundlesHeadline)}
-            </h2>
-            <p className="mt-4 text-base text-neutral-400">
-              {t(DICT.home.bundlesIntro1)}{" "}
-              <span className="font-semibold text-white">
-                {t(DICT.home.bundlesIntroMid)}
-              </span>
-              {t(DICT.home.bundlesIntroEnd)}
-            </p>
-          </div>
-
-          <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {bundles.map((b) => {
-              const highlighted = !!b.highlight;
-              return (
-                <div
-                  key={b.name}
-                  className={`relative flex flex-col gap-6 rounded-2xl p-8 ${
-                    highlighted
-                      ? "border-2 border-blue-500 bg-gradient-to-b from-blue-950/60 to-neutral-900 shadow-2xl shadow-blue-600/30 ring-1 ring-blue-500/40"
-                      : "border border-neutral-800 bg-neutral-900/60"
-                  }`}
-                >
-                  {highlighted && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                      {t(DICT.home.bundlesMostPopular)}
-                    </span>
-                  )}
-
-                  <header>
-                    <h3 className="text-xl font-bold text-white">{b.name}</h3>
-                    <p className="mt-1 text-sm text-blue-400">{b.tagline}</p>
-                  </header>
-
-                  <div>
-                    <span className="text-5xl font-extrabold tracking-tight text-white">
-                      {formatPrice(b.oneTimeEur, currency)}
-                    </span>
-                    <p className="mt-1 text-sm text-neutral-400">
-                      {renderBundlePricingNote(b, currency, locale)}
-                    </p>
-                  </div>
-
-                  <p className="text-sm italic text-neutral-300">{b.pain}</p>
-
-                  <ul className="flex-1 space-y-3 text-sm text-neutral-300">
-                    {b.freebies?.map((item) => (
-                      <li key={`free:${item}`} className="flex gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                          className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>
-                          <span className="mr-1.5 inline-flex items-center rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
-                            {t(DICT.home.bundlesFreeBadge)}
-                          </span>
-                          {item}
-                        </span>
-                      </li>
-                    ))}
-                    {bundleCardIncludes[b.id].map((item) => (
-                      <li key={item} className="flex gap-2">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                          aria-hidden="true"
-                          className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {b.nudge && (
-                    <p className="text-xs text-blue-300">{b.nudge}</p>
-                  )}
-
-                  <p className="rounded-lg border border-neutral-800 bg-neutral-950/60 px-3 py-2 text-xs text-neutral-300">
-                    <span className="font-semibold text-white">
-                      {t(DICT.home.bundlesRoiLabel)}
-                    </span>{" "}
-                    {renderBundleRoi(b, currency, locale)}
-                  </p>
-
-                  <Link
-                    href={`/bundles/${b.id}`}
-                    prefetch={true}
-                    className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all ${
-                      highlighted
-                        ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500"
-                        : "border border-neutral-700 text-white hover:border-neutral-500"
-                    }`}
-                  >
-                    {b.cta.primary}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
-
-          <p className="mt-10 text-center text-sm text-neutral-400">
-            {t(DICT.home.bundlesCustomNeed)}{" "}
-            <a
-              href={CALENDLY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-blue-400 transition-colors hover:text-blue-300"
-            >
-              {t(DICT.home.bundlesCustomCta)}
-            </a>
-          </p>
-        </div>
-      </section>
-
-      {/* SERVICES TEASER --------------------------------------------- */}
+      {/* SERVICES TEASER (À LA CARTE) -------------------------------- */}
       <section
         id="services"
         aria-labelledby="services-heading"
@@ -685,136 +384,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* RESULTS ------------------------------------------------------ */}
-      <section
-        aria-labelledby="results-heading"
-        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.resultsKicker)}
-            </p>
-            <h2
-              id="results-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              {t(DICT.home.resultsHeadline)}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {caseStudies.map((c) => (
-              <article
-                key={c.title}
-                className={`relative flex flex-col rounded-2xl p-6 ${
-                  c.featured
-                    ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/15 ring-1 ring-blue-500/20 dark:border-blue-400 dark:from-blue-950/50 dark:to-neutral-950 dark:shadow-blue-500/20 dark:ring-blue-400/30"
-                    : "border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
-                }`}
-              >
-                {c.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    {c.badge}
-                  </span>
-                )}
-                {!c.featured && (
-                  <span
-                    className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      c.real
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        c.real ? "bg-green-500" : "bg-neutral-400"
-                      }`}
-                    />
-                    {c.badge}
-                  </span>
-                )}
-                <h3
-                  className={`text-lg font-bold text-neutral-900 dark:text-white ${
-                    c.featured ? "mt-3" : "mt-4"
-                  }`}
-                >
-                  {c.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {c.summary}
-                </p>
-                <p className="mt-4 text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {c.metric}
-                </p>
-                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
-                  {c.tech}
-                </p>
-                {c.href && (
-                  <Link
-                    href={c.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${c.cta} (opens in a new tab)`}
-                    className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
-                      c.featured
-                        ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
-                        : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                    }`}
-                  >
-                    {c.cta}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-3.5 w-3.5"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
-                        clipRule="evenodd"
-                      />
-                      <path
-                        fillRule="evenodd"
-                        d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                )}
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link
-              href="/projects"
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-md dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:border-blue-500"
-            >
-              {t(DICT.home.resultsSeeAll)}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-                className="h-4 w-4"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M3 10a.75.75 0 0 1 .75-.75h10.638L10.23 5.29a.75.75 0 1 1 1.04-1.08l5.5 5.25a.75.75 0 0 1 0 1.08l-5.5 5.25a.75.75 0 1 1-1.04-1.08l4.158-3.96H3.75A.75.75 0 0 1 3 10Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </Link>
-            <p className="mt-3 text-xs text-neutral-500 dark:text-neutral-500">
-              {t(DICT.home.resultsSeeAllNote)}
-            </p>
-          </div>
-        </div>
-      </section>
-
       {/* HOW IT WORKS ------------------------------------------------- */}
       <section
         aria-labelledby="process-heading"
@@ -854,57 +423,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TESTIMONIALS ------------------------------------------------- */}
-      <section
-        aria-labelledby="testimonials-heading"
-        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.testimonialsKicker)}
-            </p>
-            <h2
-              id="testimonials-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              {t(DICT.home.testimonialsHeadline)}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {renderedTestimonials.map((tm) => (
-              <figure
-                key={tm.name}
-                className="flex flex-col rounded-2xl border border-neutral-200 bg-neutral-50 p-6 dark:border-neutral-800 dark:bg-neutral-950"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                  className="h-6 w-6 text-blue-600 dark:text-blue-400"
-                >
-                  <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
-                </svg>
-                <blockquote className="mt-4 text-base leading-relaxed text-neutral-700 dark:text-neutral-200">
-                  “{tm.quote}”
-                </blockquote>
-                <figcaption className="mt-auto pt-6 text-sm">
-                  <div className="font-semibold text-neutral-900 dark:text-white">
-                    {tm.name}
-                  </div>
-                  <div className="text-neutral-500 dark:text-neutral-400">
-                    {tm.role}
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ ---------------------------------------------------------- */}
+      {/* FAQ (QUICK ANSWERS) ----------------------------------------- */}
       <section
         aria-labelledby="faq-heading"
         className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
@@ -950,10 +469,15 @@ export default async function HomePage() {
       </section>
 
       {/* FINAL CTA ---------------------------------------------------- */}
+      {/* The blue→violet gradient is brand chrome and stays vivid on
+          BOTH themes — it's a deliberate "look up here" moment, not a
+          surface that should fade into the page background. We only
+          flip the top border so the seam to the section above reads
+          right in light mode. */}
       <section
         id="contact"
         aria-labelledby="cta-heading"
-        className="scroll-mt-24 border-t border-neutral-800 bg-gradient-to-br from-blue-700 via-blue-600 to-violet-700 py-20 text-white"
+        className="scroll-mt-24 border-t border-neutral-200 bg-gradient-to-br from-blue-700 via-blue-600 to-violet-700 py-20 text-white dark:border-neutral-800"
       >
         <div className="mx-auto max-w-4xl px-6 text-center">
           <h2
@@ -1001,12 +525,12 @@ export default async function HomePage() {
       </section>
 
       {/* FOOTER ------------------------------------------------------- */}
-      <footer className="border-t border-neutral-800 bg-neutral-950 py-10">
-        <div className="mx-auto max-w-7xl px-6 text-center text-sm text-neutral-400">
+      <footer className="border-t border-neutral-200 bg-neutral-50 py-10 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="mx-auto max-w-7xl px-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
           <div className="mb-5 flex items-center justify-center gap-4">
             <a
               href={`mailto:${EMAIL}`}
-              className="rounded-lg border border-neutral-800 p-2.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+              className="rounded-lg border border-neutral-300 p-2.5 text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-white"
               aria-label={`Email Nacho at ${EMAIL}`}
             >
               <svg
@@ -1022,7 +546,7 @@ export default async function HomePage() {
             </a>
             <a
               href={`tel:${PHONE_E164}`}
-              className="rounded-lg border border-neutral-800 p-2.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+              className="rounded-lg border border-neutral-300 p-2.5 text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-white"
               aria-label={`Call Nacho at ${PHONE_DISPLAY}`}
             >
               <svg
@@ -1043,7 +567,7 @@ export default async function HomePage() {
               href="https://linkedin.com/in/nachotsvetkov"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg border border-neutral-800 p-2.5 text-neutral-400 transition-colors hover:border-neutral-600 hover:text-white"
+              className="rounded-lg border border-neutral-300 p-2.5 text-neutral-600 transition-colors hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-white"
               aria-label="LinkedIn"
             >
               <svg
@@ -1060,17 +584,17 @@ export default async function HomePage() {
             &copy; {new Date().getFullYear()} Nacho Tsvetkov.{" "}
             {t(DICT.home.footerRights)}
           </p>
-          <p className="mt-2 text-xs text-neutral-600">
+          <p className="mt-2 text-xs text-neutral-500 dark:text-neutral-600">
             <a
               href={`mailto:${EMAIL}`}
-              className="transition-colors hover:text-neutral-300"
+              className="transition-colors hover:text-neutral-800 dark:hover:text-neutral-300"
             >
               {EMAIL}
             </a>{" "}
             ·{" "}
             <a
               href={`tel:${PHONE_E164}`}
-              className="transition-colors hover:text-neutral-300"
+              className="transition-colors hover:text-neutral-800 dark:hover:text-neutral-300"
             >
               {PHONE_DISPLAY}
             </a>{" "}

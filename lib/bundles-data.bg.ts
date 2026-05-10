@@ -26,6 +26,9 @@ export const BUNDLES_BG: Record<BundleId, BundleCopyOverride> = {
     name: "Startup пакет",
     tagline: "Стартирай бързо и евтино",
     pain: "Нямаш нищо онлайн — или сайтът ти е толкова остарял, че всяка седмица ти струва клиенти.",
+    contentNotes: {
+      website: "Custom уебсайт — до 5 страници (mobile-first, оптимизиран за SEO)",
+    },
     roiHook: "Първата резервация го изплаща",
     cta: {
       primary: "Вземи Startup пакета",
@@ -38,7 +41,7 @@ export const BUNDLES_BG: Record<BundleId, BundleCopyOverride> = {
     tagline: "Надстрой и автоматизирай това, което вече имаш",
     pain: "Бизнесът ти работи, но се дави в ръчна работа — имейли, follow-up-и, графици, въвеждане на данни.",
     contentNotes: {
-      website: "Пълен редизайн — до 5 страници",
+      website: "Пълен редизайн — без лимит на страници",
       ecommerce: "Готов за e-commerce / плащания",
       "marketing-automation":
         "Маркетинг автоматизация (имейл + SMS поредици)",
@@ -48,6 +51,8 @@ export const BUNDLES_BG: Record<BundleId, BundleCopyOverride> = {
     },
     freebies: ["Домейн + хостинг — включени в абонамента"],
     roiHook: "Замества 1–2 души на половин ден",
+    nudge:
+      "Повечето клиенти избират Scale-Up — оптималният баланс между ъпгрейд и автоматизация за бизнеси, които вече имат клиенти.",
     cta: {
       primary: "Започни Scale-Up процеса",
       helper: "Продължи към плащане — сигурно онлайн",
@@ -67,8 +72,6 @@ export const BUNDLES_BG: Record<BundleId, BundleCopyOverride> = {
     },
     freebies: ["Домейн + хостинг — включени в абонамента"],
     roiHook: "Замества екип от 3–5 души",
-    nudge:
-      "Повечето клиенти избират Enterprise — допълнителните AI агенти се изплащат за седмици.",
     cta: {
       primary: "Купи Enterprise пакета",
       helper: "Продължи към плащане — сигурно онлайн",

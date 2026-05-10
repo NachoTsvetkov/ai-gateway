@@ -184,16 +184,16 @@ function Hero({
   return (
     <section
       aria-labelledby="bundle-hero-heading"
-      className="relative isolate overflow-hidden border-b border-neutral-200 bg-neutral-950 py-16 sm:py-20 dark:border-neutral-800"
+      className="relative isolate overflow-hidden border-b border-neutral-200 bg-white py-16 sm:py-20 dark:border-neutral-800 dark:bg-neutral-950"
     >
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/20 via-transparent to-transparent" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-violet-600/15 via-transparent to-transparent" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/20" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-4">
           <Link
-            href="/#bundles"
-            className="inline-flex items-center gap-1.5 text-sm text-neutral-400 transition-colors hover:text-white"
+            href="/services#bundles"
+            className="inline-flex items-center gap-1.5 text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -214,21 +214,21 @@ function Hero({
 
         <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-400">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
               {bundle.tagline}
             </p>
             <h1
               id="bundle-hero-heading"
-              className="mt-3 text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl"
+              className="mt-3 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl dark:text-white"
             >
               {bundle.name}
             </h1>
-            <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-neutral-300 sm:text-lg">
+            <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
               {bundle.pain}
             </p>
 
-            <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+            <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
               {bundle.roiHook}
             </p>
           </div>
@@ -237,18 +237,20 @@ function Hero({
               "you save" pill aligned right when present. The pill is a
               priced anchor — visitors who scroll no further than the
               hero already see the comparative value. */}
-          <div className="rounded-2xl border border-blue-500/30 bg-gradient-to-b from-blue-950/60 to-neutral-900 p-6 shadow-2xl shadow-blue-600/20 sm:p-8">
+          <div className="rounded-2xl border border-blue-300 bg-gradient-to-b from-blue-50 to-white p-6 shadow-2xl shadow-blue-600/15 sm:p-8 dark:border-blue-500/30 dark:from-blue-950/60 dark:to-neutral-900 dark:shadow-blue-600/20">
             <div className="flex items-baseline gap-3">
-              <span className="text-5xl font-extrabold tracking-tight text-white sm:text-6xl">
+              <span className="text-5xl font-extrabold tracking-tight text-neutral-900 sm:text-6xl dark:text-white">
                 {formatPrice(bundle.oneTimeEur, currency)}
               </span>
               {savingsEur > 0 && (
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-300">
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
                   {saveLabel} {formatPrice(savingsEur, currency)}
                 </span>
               )}
             </div>
-            <p className="mt-1 text-sm text-neutral-400">{oneTimeNote}</p>
+            <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+              {oneTimeNote}
+            </p>
 
             <a
               href="#upsells"
@@ -273,7 +275,7 @@ function Hero({
               href={CALENDLY_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-neutral-700 px-6 py-3 text-sm font-semibold text-white transition-colors hover:border-neutral-500"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-900 transition-colors hover:border-neutral-500 dark:border-neutral-700 dark:text-white dark:hover:border-neutral-500"
             >
               {t(DICT.cta.talkFirst)}
             </a>

@@ -125,7 +125,9 @@ export type Bundle = {
 // ----------------------------------------------------------------------
 // Order = display order on /bundles index + homepage. Cheapest first
 // is the convention — visitors anchor on the cheapest price first, then
-// the highlighted "Most popular" Enterprise card pulls them up-tier.
+// the highlighted "Most popular" Scale-Up card in the middle pulls
+// them up-tier (it's the modal customer fit; Enterprise is the rarer
+// outlier reserved for teams ready to delegate fully to AI agents).
 
 export const BUNDLES: ReadonlyArray<Bundle> = [
   {
@@ -135,7 +137,18 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
     pain: "You have nothing online — or your current site is so dated it's costing you customers every week.",
     oneTimeEur: 173,
     contents: [
-      { kind: "service", serviceId: "website", tier: 0 }, // 1-page
+      // The bundle's website inclusion is intentionally MORE generous
+      // than the à-la-carte tier it references for pricing math —
+      // that's the whole point of the bundle. The price math still
+      // anchors to tier 0 (1-page) so the "buying separately" total
+      // stays a conservative comparison; if anything, the bundle's
+      // value is understated.
+      {
+        kind: "service",
+        serviceId: "website",
+        tier: 0,
+        note: "Custom website — up to 5 pages (mobile-first, SEO-optimized)",
+      },
       { kind: "service", serviceId: "chatbot" }, // add-on €50
       { kind: "service", serviceId: "booking" },
       { kind: "bonus", label: "Contact form + email capture" },
@@ -163,7 +176,7 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
         kind: "service",
         serviceId: "website",
         tier: 1,
-        note: "Full redesign — up to 5 pages",
+        note: "Full redesign — no page limit",
       },
       { kind: "service", serviceId: "ecommerce", note: "E-commerce / payments ready" },
       { kind: "service", serviceId: "marketing-automation", note: "Marketing automation (email + SMS sequences)" },
@@ -177,6 +190,9 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
     freebies: ["Domain name + hosting — covered by retainer"],
     roiHook: "Replaces 1–2 part-time hires",
     roiSavingsEur: 3000,
+    highlight: true,
+    nudge:
+      "Most clients pick Scale-Up — the sweet spot of upgrade + automation for businesses that already have customers.",
     cta: {
       primary: "Start the Scale-Up process",
       helper: "Continue to checkout — pay securely online",
@@ -209,9 +225,6 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
     freebies: ["Domain name + hosting — covered by retainer"],
     roiHook: "Replaces a 3–5 person team",
     roiSavingsEur: 5000,
-    highlight: true,
-    nudge:
-      "Most clients choose Enterprise — the extra AI agents pay for themselves in weeks.",
     cta: {
       primary: "Buy the Enterprise Bundle",
       helper: "Continue to checkout — pay securely online",

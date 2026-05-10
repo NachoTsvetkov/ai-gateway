@@ -3,6 +3,51 @@
 @plugin "@tailwindcss/container-queries";
 @plugin "@tailwindcss/typography";
 
+/*
+  Switch the `dark:` variant from Tailwind 4's default (media query
+  `prefers-color-scheme: dark`) to a class-based strategy keyed off the
+  `.dark` ancestor on `<html>`. The cookie-driven theme toggle in the
+  navbar adds/removes that class, and `app/layout.tsx` renders it from
+  the request-time `detectTheme()` result so the first paint is always
+  correct (no flash of wrong theme).
+
+  The `&:where(.dark, .dark *)` form keeps the variant's specificity at
+  zero so utility ordering inside a class list still wins — same
+  behaviour you get from the default media-query variant.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  ── Light theme palette swap (blue → teal) ─────────────────────────────
+  The site's component code uses `blue-*` utilities throughout (buttons,
+  kicker labels, focus rings, hero gradient stops, the sales-assistant
+  launcher, etc.). Tailwind 4 generates each utility as
+  `var(--color-blue-XXX)`, so overriding those custom properties
+  cascades the change through the entire codebase without touching a
+  single component file.
+
+  We override ONLY in light mode (the absence of `.dark` on `<html>`).
+  Dark mode keeps the original navy + blue identity verbatim — visitors
+  who already love that look see no change when they opt into dark.
+
+  The values redirect to Tailwind's own teal-* CSS variables, so the
+  full 50→950 ramp moves in lockstep (hover states, gradients, ring
+  shadows, etc. all stay coherent).
+*/
+:root:not(.dark) {
+  --color-blue-50:  var(--color-teal-50);
+  --color-blue-100: var(--color-teal-100);
+  --color-blue-200: var(--color-teal-200);
+  --color-blue-300: var(--color-teal-300);
+  --color-blue-400: var(--color-teal-400);
+  --color-blue-500: var(--color-teal-500);
+  --color-blue-600: var(--color-teal-600);
+  --color-blue-700: var(--color-teal-700);
+  --color-blue-800: var(--color-teal-800);
+  --color-blue-900: var(--color-teal-900);
+  --color-blue-950: var(--color-teal-950);
+}
+
 @layer base {
   *,
   ::after,
@@ -13,12 +58,17 @@
   }
 
   /*
-    Tell every browser (notably Safari) that the page renders both light
-    and dark UA chrome. Without this Safari may show light-mode form
-    controls and scrollbars even when the body is on a dark background.
+    Pin the UA color-scheme to the active theme so form controls,
+    scrollbars, and the resize-corner glyph match the surface. `light
+    dark` (the previous value) lets the OS choose, which fights our
+    explicit cookie-driven theme on visitors whose OS is dark but
+    who left the site in light mode (or vice versa).
   */
   html {
-    color-scheme: light dark;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
 }
 
@@ -110,9 +160,11 @@ summary::-webkit-details-marker {
 /*
   ── Curated. shop · white-based scope ───────────────────────────────
   The standalone Curated. shop (everything inside ShopShell) is
-  brand-locked to a white identity by request. Tailwind 4's `dark:`
-  variants are media-query-based, so they fire even inside our
-  forced-light wrapper when the visitor's OS is in dark mode.
+  brand-locked to a white identity by request. Now that `dark:` is a
+  class-based variant (see the @custom-variant declaration at the top
+  of this file), every `dark:` utility under the shop subtree fires
+  whenever `<html>` carries `.dark` — i.e. whenever the visitor has
+  opted into dark mode for the rest of the site.
 
   Rather than scrub `dark:*` utilities from every shared shop
   component (CartModal, Chatbot, Carousel, ThreeItemGrid, Search,
@@ -124,11 +176,16 @@ summary::-webkit-details-marker {
   effect is "background stays out of the way".
 
   Each rule below targets the exact Tailwind-generated class name
-  (Tailwind escapes the colon as `\:`). Order doesn't matter — every
-  rule lives inside `@media (prefers-color-scheme: dark)` so they
-  only kick in when there's something to override.
+  (Tailwind escapes the colon as `\:`). The wrapping `html.dark`
+  selector means the override only kicks in when there's something
+  to override — the shop renders untouched in light mode.
+
+  IMPORTANT: the bare `var()` references below resolve against the
+  shop's own light-mode palette, not the page-level overrides at the
+  top of this file. The `.shop-light` forces light tokens regardless
+  of the parent theme, which is exactly the brand-lock we want.
 */
-@media (prefers-color-scheme: dark) {
+html.dark {
   /* Backgrounds */
   .shop-light .dark\:bg-black { background-color: rgb(255 255 255) !important; }
   .shop-light .dark\:bg-black\/70 { background-color: rgb(255 255 255 / 0.85) !important; }
@@ -156,8 +213,8 @@ summary::-webkit-details-marker {
   .shop-light .dark\:hover\:text-white:hover { color: rgb(23 23 23) !important; }
   .shop-light .dark\:hover\:border-white:hover { border-color: rgb(23 23 23) !important; }
 
-  /* Selection — Tailwind ships dark:selection:bg-pink-500 site-wide
-     on the body. Bring it back to the brand teal inside the shop. */
+  /* Selection — the body sets `dark:selection:bg-pink-500` site-wide.
+     Bring it back to the brand teal inside the shop. */
   .shop-light *::selection { background-color: rgb(94 234 212); color: rgb(23 23 23); }
 
   /* Placeholder text colour resets so the search input on the

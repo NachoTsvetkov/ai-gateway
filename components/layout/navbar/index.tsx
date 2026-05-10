@@ -7,7 +7,12 @@ import {
   LanguageToggle,
   LanguageToggleMobile,
 } from "components/layout/language-toggle";
+import {
+  ThemeToggle,
+  ThemeToggleMobile,
+} from "components/layout/theme-toggle";
 import { type Locale } from "lib/i18n/locale";
+import { type Theme } from "lib/theme/theme";
 
 // Single source of truth for the discovery-call URL. Mirrors the value
 // in app/page.tsx and components/ai/sales-assistant.tsx.
@@ -47,10 +52,12 @@ export type NavbarLabels = {
 export function Navbar({
   labels,
   locale,
+  theme,
   showLanguageToggle,
 }: {
   labels: NavbarLabels;
   locale: Locale;
+  theme: Theme;
   showLanguageToggle: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -168,28 +175,36 @@ export function Navbar({
           </div>
         </div>
 
-        {/* Desktop language toggle — pulled out of the inline nav row
-            and absolutely positioned to "hang" below the CTA button.
+        {/* Desktop floating-pill rail — pulled out of the inline nav
+            row and absolutely positioned to "hang" below the navbar.
             Two reasons:
               1. Keeps the navbar's height fixed regardless of whether
-                 the toggle is visible (BG visitors got a slightly
-                 taller bar than EN visitors before this).
-              2. Lets the pill float into the page content with a
-                 subtle visual lift, signalling it's a one-off
-                 affordance rather than a primary nav item.
+                 a pill is visible (BG visitors got a slightly taller
+                 bar than EN visitors before this).
+              2. Lets the pills float into the page content with a
+                 subtle visual lift, signalling these are one-off
+                 affordances rather than primary nav items.
             The outer wrapper mirrors the inner row's max-w-7xl + px
-            so the pill aligns horizontally with the CTA above it,
-            on every viewport width. Mobile gets the toggle via the
-            menu sheet instead. */}
-        {showLanguageToggle && (
-          <div className="pointer-events-none absolute inset-x-0 top-full hidden sm:block">
-            <div className="mx-auto flex max-w-7xl justify-end px-3 sm:px-4 lg:px-6">
+            so the pills align horizontally with the wordmark / CTA
+            above them on every viewport width.
+
+            Layout: theme pill anchored LEFT (always visible — every
+            visitor can switch theme), language pill anchored RIGHT
+            (only mounted for BG traffic). When the language pill is
+            absent the theme pill still sits on the left as expected.
+            Mobile gets both pills inside the menu sheet instead. */}
+        <div className="pointer-events-none absolute inset-x-0 top-full hidden sm:block">
+          <div className="mx-auto flex max-w-7xl items-start justify-between gap-3 px-3 sm:px-4 lg:px-6">
+            <div className="pointer-events-auto mt-1.5">
+              <ThemeToggle currentTheme={theme} />
+            </div>
+            {showLanguageToggle ? (
               <div className="pointer-events-auto mt-1.5">
                 <LanguageToggle currentLocale={locale} />
               </div>
-            </div>
+            ) : null}
           </div>
-        )}
+        </div>
       </nav>
 
       <MobileMenuSheet
@@ -197,6 +212,7 @@ export function Navbar({
         onClose={() => setIsOpen(false)}
         labels={labels}
         locale={locale}
+        theme={theme}
         showLanguageToggle={showLanguageToggle}
       />
     </>
@@ -208,12 +224,14 @@ function MobileMenuSheet({
   onClose,
   labels,
   locale,
+  theme,
   showLanguageToggle,
 }: {
   open: boolean;
   onClose: () => void;
   labels: NavbarLabels;
   locale: Locale;
+  theme: Theme;
   showLanguageToggle: boolean;
 }) {
   return (
@@ -283,11 +301,16 @@ function MobileMenuSheet({
             ))}
           </ul>
 
-          {/* Language toggle row — only mounted for BG visitors. Sits
-              above the primary CTA so the visitor sees it without
-              scrolling. */}
+          {/* Theme toggle row — always mounted. Sits above the
+              language toggle (when present) and above the primary CTA
+              so the visitor sees both switches without scrolling. */}
+          <div className="border-t border-neutral-100 px-3 pt-3 pb-1 dark:border-neutral-800">
+            <ThemeToggleMobile currentTheme={theme} onSwitched={onClose} />
+          </div>
+
+          {/* Language toggle row — only mounted for BG visitors. */}
           {showLanguageToggle && (
-            <div className="border-t border-neutral-100 px-3 pt-3 pb-1 dark:border-neutral-800">
+            <div className="px-3 pt-2 pb-1">
               <LanguageToggleMobile
                 currentLocale={locale}
                 onSwitched={onClose}

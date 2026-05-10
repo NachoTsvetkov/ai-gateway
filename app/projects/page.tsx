@@ -18,13 +18,21 @@ export async function generateMetadata() {
 }
 
 /**
- * Project listing page. Each project card links out to its own
- * standalone demo (KORE warm orange, ROZÉ cream + blush, Curated.
- * blue, etc.) — but the listing here intentionally stays uniform.
- * Mixing nine different brand colours on one grid reads as "templated
- * card collection" rather than "nine distinct sites", which is the
- * opposite of the effect we want; the visual identity each project
- * carries lives behind its own click.
+ * Project listing page — a focused gallery of demo sites.
+ *
+ * Each project card links out to its own standalone demo (KORE warm
+ * orange, ROZÉ cream + blush, Curated. blue, etc.) — but the listing
+ * itself intentionally stays uniform. Mixing nine different brand
+ * colours on one grid reads as "templated card collection" rather than
+ * "nine distinct sites", which is the opposite of the effect we want;
+ * the visual identity each project carries lives behind its own click.
+ *
+ * Layout: header → grid. The "Proven Results" case studies, "Clients"
+ * testimonials, and "Bundles" pricing cards used to live here as
+ * deeper engagement and conversion paths, but those belong on the
+ * commercial /services page (where the full catalogue + bundle
+ * cross-sell live). This page is now strictly a portfolio gallery so
+ * the grid gets the visitor's full attention.
  *
  * Locale model: server component pulls `detectLocale()` and feeds it
  * into `getLocalizedProjects()` (overlays BG copy from
@@ -39,11 +47,12 @@ export default async function ProjectsPage() {
 
   return (
     <>
-      <section className="bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 py-20">
+      {/* HEADER ------------------------------------------------------- */}
+      <section className="bg-gradient-to-br from-neutral-100 via-white to-neutral-100 py-20 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
         <div className="mx-auto max-w-7xl px-6">
           <Link
             href="/"
-            className="mb-6 inline-flex items-center gap-1 text-sm text-neutral-400 transition-colors hover:text-white"
+            className="mb-6 inline-flex items-center gap-1 text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -59,15 +68,16 @@ export default async function ProjectsPage() {
             </svg>
             {t(DICT.projects.backToHome)}
           </Link>
-          <h1 className="text-4xl font-bold text-white sm:text-5xl">
+          <h1 className="text-4xl font-bold text-neutral-900 sm:text-5xl dark:text-white">
             {t(DICT.projects.pageTitle)}
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-neutral-400">
+          <p className="mt-4 max-w-xl text-lg text-neutral-600 dark:text-neutral-400">
             {t(DICT.projects.intro)}
           </p>
         </div>
       </section>
 
+      {/* PROJECTS GRID ------------------------------------------------ */}
       <section className="bg-neutral-50 py-16 dark:bg-neutral-950">
         <div className="mx-auto grid max-w-7xl gap-8 px-6 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (

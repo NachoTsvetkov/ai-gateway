@@ -10,6 +10,7 @@ import { baseUrl } from "lib/utils";
 import { detectLocaleAndCountry } from "lib/i18n/locale.server";
 import { BG_COUNTRY } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { detectTheme } from "lib/theme/theme.server";
 
 // Routes where the global marketing navbar should NOT render. Each of
 // these is a standalone "live demo" with its own brand chrome (its
@@ -53,12 +54,19 @@ export default async function RootLayout({
   // Don't await the fetch, pass the Promise to the context provider
   const cart = getCart();
 
-  // Resolve the visitor's locale (cookie wins, geo fallback) and
-  // country in one pass so we can:
+  // Resolve the visitor's locale (cookie wins, geo fallback), country,
+  // and theme in parallel so we can:
   //   - set the html `lang` attribute correctly for screen readers + SEO
   //   - thread translated chrome strings into the navbar
   //   - decide whether to mount the language toggle (BG traffic only)
-  const { locale, country } = await detectLocaleAndCountry();
+  //   - apply the `dark` class on `<html>` from the server so the first
+  //     paint is correct (no flash of wrong theme)
+  //   - thread the active theme into the navbar so the pill renders
+  //     with the correct active side highlighted on first paint
+  const [{ locale, country }, theme] = await Promise.all([
+    detectLocaleAndCountry(),
+    detectTheme(),
+  ]);
   const showLanguageToggle = country === BG_COUNTRY;
 
   // Pull every navbar string from the central dictionary in the
@@ -79,14 +87,22 @@ export default async function RootLayout({
     ariaCloseMenu: DICT.nav.closeMenu[locale],
   };
 
+  // The `dark` class is what makes every Tailwind `dark:` utility fire
+  // (see the @custom-variant declaration in globals.css). When the
+  // visitor is in light mode the class is omitted entirely, which is
+  // also our default for first-time visitors who haven't picked a
+  // theme yet.
+  const htmlClassName = `${GeistSans.variable} scroll-smooth${theme === "dark" ? " dark" : ""}`;
+
   return (
-    <html lang={locale} className={`${GeistSans.variable} scroll-smooth`}>
+    <html lang={locale} className={htmlClassName}>
       <body suppressHydrationWarning className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
           <NavbarGate hideOnPrefix={HIDE_NAVBAR_ON}>
             <Navbar
               labels={labels}
               locale={locale}
+              theme={theme}
               showLanguageToggle={showLanguageToggle}
             />
           </NavbarGate>
