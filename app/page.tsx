@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SalesAssistant } from "components/ai/sales-assistant";
-import { formatPrice, type Currency } from "lib/currency";
+import { formatPrice, formatPriceK, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import {
   getLocalizedHookServices,
@@ -11,7 +11,6 @@ import { type Bundle, getLocalizedBundles } from "lib/bundles-data";
 import { detectLocale } from "lib/i18n/locale.server";
 import { type Locale, createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
-import { detectTheme } from "lib/theme/theme.server";
 
 // SEO metadata for the homepage. Kept in EUR-English — search engines
 // crawl from various IPs and the SERP description should be stable.
@@ -30,6 +29,10 @@ const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 const EMAIL = "nacho.tsvetkov@gmail.com";
 const PHONE_E164 = "+359882700002";
 const PHONE_DISPLAY = "+359 882 700 002";
+
+// Featured demo project URL — used by the centerpiece case study card
+// in PROVEN RESULTS so the visitor can click through to the live build.
+const DEMO_URL = "/projects/ai-shopify-store";
 
 // Locale-aware renderers for the bundle cards. Both the "pricing
 // note" (one-time vs one-time + retainer) and the "ROI" line carry
@@ -117,6 +120,68 @@ function buildBundleCardIncludes(
   };
 }
 
+// Three featured case studies — drilldowns into selected projects with
+// numeric outcomes. The Curated. shop sits in the MIDDLE so it reads
+// as the centerpiece; the `featured` flag flips it to a blue-bordered,
+// gradient-haloed treatment in the rendering loop.
+function buildCaseStudies(locale: Locale) {
+  return [
+    {
+      title: DICT.caseStudies.fitnessTitle[locale],
+      summary: DICT.caseStudies.fitnessSummary[locale],
+      metric: DICT.caseStudies.fitnessMetric[locale],
+      tech: "Next.js · Stripe · Calendar API · GPT-4o",
+      href: "/projects/local-fitness-studio",
+      cta: DICT.caseStudies.fitnessCta[locale],
+      badge: DICT.caseStudies.badgeLive[locale],
+      real: true,
+      featured: false,
+    },
+    {
+      title: DICT.caseStudies.shopTitle[locale],
+      summary: DICT.caseStudies.shopSummary[locale],
+      metric: DICT.caseStudies.shopMetric[locale],
+      tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
+      href: DEMO_URL,
+      cta: DICT.caseStudies.shopCta[locale],
+      badge: DICT.caseStudies.badgeLive[locale],
+      real: true,
+      featured: true,
+    },
+    {
+      title: DICT.caseStudies.boutiqueTitle[locale],
+      summary: DICT.caseStudies.boutiqueSummary[locale],
+      metric: DICT.caseStudies.boutiqueMetric[locale],
+      tech: "Shopify · AI Personalization · Klaviyo",
+      href: "/projects/boutique-fashion-brand",
+      cta: DICT.caseStudies.boutiqueCta[locale],
+      badge: DICT.caseStudies.badgeLive[locale],
+      real: true,
+      featured: false,
+    },
+  ];
+}
+
+function buildTestimonials(currency: Currency, locale: Locale) {
+  return [
+    {
+      quote: DICT.testimonials.t1Quote[locale],
+      name: DICT.testimonials.t1Name[locale],
+      role: DICT.testimonials.t1Role[locale],
+    },
+    {
+      quote: DICT.testimonials.t2Quote[locale],
+      name: DICT.testimonials.t2Name[locale],
+      role: DICT.testimonials.t2Role[locale],
+    },
+    {
+      quote: `${DICT.testimonials.t3QuotePrefix[locale]}${formatPriceK(4000, currency)}${DICT.testimonials.t3QuoteSuffix[locale]}`,
+      name: DICT.testimonials.t3Name[locale],
+      role: DICT.testimonials.t3Role[locale],
+    },
+  ];
+}
+
 function buildSteps(locale: Locale) {
   return [
     { n: "01", title: DICT.steps.s1Title[locale], body: DICT.steps.s1Body[locale] },
@@ -142,14 +207,12 @@ function buildFaqs(currency: Currency, locale: Locale) {
 export default async function HomePage() {
   // Resolve display currency + locale from request headers (Vercel/CF
   // geo + cookie). EU visitors see EUR; everyone else sees USD. BG
-  // visitors see Bulgarian copy; the rest see English. Theme drives
-  // which hero photo we ship: a bright AI-generated cityscape +
-  // value-prop cards in light mode, the original dark cityscape in
-  // dark mode (see hero markup below).
-  const [currency, locale, theme] = await Promise.all([
+  // visitors see Bulgarian copy; the rest see English. The hero is a
+  // solid surface so we no longer detect the active theme here — both
+  // themes share the same background-glow markup.
+  const [currency, locale] = await Promise.all([
     detectCurrency(),
     detectLocale(),
-    detectTheme(),
   ]);
   const t = createT(locale);
   const hookServices = getLocalizedHookServices(locale);
@@ -157,68 +220,36 @@ export default async function HomePage() {
   const renderedFaqs = buildFaqs(currency, locale);
   const bundles = getLocalizedBundles(locale);
   const bundleCardIncludes = buildBundleCardIncludes(locale);
-  const heroBgSrc =
-    theme === "light" ? "/hero-background-light.png" : "/hero-background.png";
+  const caseStudies = buildCaseStudies(locale);
+  const renderedTestimonials = buildTestimonials(currency, locale);
 
   return (
     <>
       <SalesAssistant currency={currency} locale={locale} />
 
       {/* HERO --------------------------------------------------------- */}
-      {/* Two hero photos, picked server-side from the theme cookie:
-            • light mode → /hero-background-light.png — a busy
-              teal-tinted "BUILD → IMPROVE → SCALE → AI" composite
-              with code blocks, a website mockup, charts and the
-              value-prop cards. As pure art it's gorgeous, but used
-              raw it competes with the headline that overlays its
-              centre. Scrim therefore does THREE jobs in light mode:
-                1) backdrop-blur softens every element into an
-                   impressionistic shape so the eye doesn't get
-                   pulled into the mockup,
-                2) a uniform off-white wash flattens contrast across
-                   the whole frame, and
-                3) a centre radial spotlight pulls extra white in
-                   around the headline column so the gradient title
-                   reads cleanly while the cards at the edges stay
-                   visible.
-            • dark mode → /hero-background.png — the original dark
-              cityscape. Scrim stays a vertical dark gradient
-              (dark/55 → dark/95); no blur, no spotlight (the photo
-              is already low-contrast and a strong dark scrim is
-              enough on its own).
-          Selecting the src on the server avoids loading both photos
-          and prevents the flash-of-wrong-image when the page mounts. */}
+      {/* Solid surface + two soft brand glows. The previous iteration
+          shipped a 600KB photo composite under a heavy scrim; the
+          scrim was knocking the artwork back so much that the visual
+          cost wasn't paying off (and it caused a flash-of-wrong-image
+          on hydration when the theme cookie changed). The headline
+          now lands on flat colour, with a top-right blue glow + a
+          bottom-left violet glow giving the surface gradient depth
+          without competing with the type. Both glows pick up the
+          --color-blue-* / --color-violet-* tokens, so they follow the
+          theme automatically. */}
       <section
         aria-labelledby="hero-heading"
         className="relative isolate overflow-hidden bg-white dark:bg-neutral-950"
       >
-        <Image
-          src={heroBgSrc}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 object-cover object-center"
-        />
-        {/* Layer 1: blur + uniform wash. backdrop-blur targets the
-            <Image> beneath; bg-white/55 sits on top of the blur so we
-            get a frosted-glass effect in light mode. Blur is dialled
-            to 3px (~25% of the previous backdrop-blur-md) so the
-            artwork stays recognisable while still being knocked back.
-            In dark mode we drop the blur and switch to the original
-            vertical dark gradient. */}
-        <div className="absolute inset-0 -z-10 bg-white/55 backdrop-blur-[3px] dark:bg-gradient-to-b dark:from-neutral-950/55 dark:via-neutral-950/80 dark:to-neutral-950/95 dark:backdrop-blur-0" />
-        {/* Layer 2: centre spotlight (light mode only). Pulls extra
-            opacity in around the headline column so the gradient text
-            never lands on a busy patch of the photo. */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_55%_45%_at_center,_var(--tw-gradient-stops))] from-white/85 via-white/45 to-transparent dark:from-transparent dark:via-transparent dark:to-transparent" />
-        {/* Layer 3: bottom fade — sells the seam into the next
-            section on both themes. */}
+        {/* Bottom fade — softens the seam into PROVEN RESULTS below
+            on both themes. */}
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
-        {/* Layer 4: subtle blue glow (existing brand hint). */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent dark:from-blue-600/20" />
-        {/* Layer 5: subtle violet glow. */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/5 via-transparent to-transparent dark:from-violet-600/10" />
+        {/* Top-right blue glow — primary brand accent, slightly
+            stronger now there's no photo to lift it off. */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
+        {/* Bottom-left violet glow — softer secondary tint. */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
         <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
@@ -323,6 +354,119 @@ export default async function HomePage() {
           <p className="mt-8 text-xs text-neutral-600 sm:text-sm dark:text-neutral-400">
             {t(DICT.home.heroFooter)}
           </p>
+        </div>
+      </section>
+
+      {/* PROVEN RESULTS ----------------------------------------------- */}
+      {/* Sits directly under the hero so the visitor's first scroll
+          earns numeric proof BEFORE we ask for money. Three case
+          studies with hard metrics ("+47% bookings", "€4k saved",
+          etc.) — the Curated. shop is the centerpiece (featured = a
+          blue-haloed treatment that draws the eye to the live demo).
+          Pairs with the Testimonials block lower down: numbers here,
+          quoted humans there, so social proof brackets the pricing
+          on both sides. */}
+      <section
+        aria-labelledby="results-heading"
+        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.resultsKicker)}
+            </p>
+            <h2
+              id="results-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              {t(DICT.home.resultsHeadline)}
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {caseStudies.map((c) => (
+              <article
+                key={c.title}
+                className={`relative flex flex-col rounded-2xl p-6 ${
+                  c.featured
+                    ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/15 ring-1 ring-blue-500/20 dark:border-blue-400 dark:from-blue-950/50 dark:to-neutral-950 dark:shadow-blue-500/20 dark:ring-blue-400/30"
+                    : "border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
+                }`}
+              >
+                {c.featured && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    {c.badge}
+                  </span>
+                )}
+                {!c.featured && (
+                  <span
+                    className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      c.real
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        c.real ? "bg-green-500" : "bg-neutral-400"
+                      }`}
+                    />
+                    {c.badge}
+                  </span>
+                )}
+                <h3
+                  className={`text-lg font-bold text-neutral-900 dark:text-white ${
+                    c.featured ? "mt-3" : "mt-4"
+                  }`}
+                >
+                  {c.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                  {c.summary}
+                </p>
+                <p className="mt-4 text-sm font-bold text-blue-600 dark:text-blue-400">
+                  {c.metric}
+                </p>
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
+                  {c.tech}
+                </p>
+                {c.href && (
+                  <Link
+                    href={c.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${c.cta} (opens in a new tab)`}
+                    className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
+                      c.featured
+                        ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
+                        : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                    }`}
+                  >
+                    {c.cta}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
+                        clipRule="evenodd"
+                      />
+                      <path
+                        fillRule="evenodd"
+                        d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+                )}
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -606,7 +750,114 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* HOW IT WORKS ------------------------------------------------- */}
+      {/* Process clarity goes BEFORE testimonials + about: visitors who
+          like the offer above need to know how the engagement flows
+          before they trust voices or the founder. The 4-step "discover
+          → build → polish → launch" track resolves the "what happens
+          after I click" friction so the testimonials below land on a
+          visitor who can already picture the project running. */}
+      <section
+        aria-labelledby="process-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.processKicker)}
+            </p>
+            <h2
+              id="process-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              {t(DICT.home.processHeadline)}
+            </h2>
+          </div>
+
+          <ol className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step) => (
+              <li
+                key={step.n}
+                className="rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:border-blue-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
+              >
+                <div className="text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400">
+                  {step.n}
+                </div>
+                <h3 className="mt-2 text-base font-bold text-neutral-900 dark:text-white">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* CLIENTS — testimonials. Quoted humans land AFTER the process
+          block so the visitor reads "yes, here's how it works" then
+          "yes, real people are happy with how it worked". Pairs with
+          PROVEN RESULTS up top: numbers above the pricing decision,
+          voices below it, so social proof brackets the offer on both
+          sides. About me follows next so the visitor's last
+          impression before the final CTA is the human they'd be
+          working with. */}
+      <section
+        aria-labelledby="testimonials-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.testimonialsKicker)}
+            </p>
+            <h2
+              id="testimonials-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              {t(DICT.home.testimonialsHeadline)}
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {renderedTestimonials.map((tm) => (
+              <figure
+                key={tm.name}
+                className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                >
+                  <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
+                </svg>
+                <blockquote className="mt-4 text-base leading-relaxed text-neutral-700 dark:text-neutral-200">
+                  “{tm.quote}”
+                </blockquote>
+                <figcaption className="mt-auto pt-6 text-sm">
+                  <div className="font-semibold text-neutral-900 dark:text-white">
+                    {tm.name}
+                  </div>
+                  <div className="text-neutral-500 dark:text-neutral-400">
+                    {tm.role}
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ABOUT -------------------------------------------------------- */}
+      {/* Sits AFTER the testimonials so the visitor reads "real people
+          are happy" and then "here's the human those people worked
+          with". Last credibility hit before FAQ + Final CTA — the
+          stats line ("8+ years · 50+ projects · 3-7 day delivery")
+          quantifies the bio without forcing them to read it. */}
       <section
         aria-labelledby="about-heading"
         className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
@@ -672,45 +923,6 @@ export default async function HomePage() {
               </div>
             </dl>
           </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS ------------------------------------------------- */}
-      <section
-        aria-labelledby="process-heading"
-        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.processKicker)}
-            </p>
-            <h2
-              id="process-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              {t(DICT.home.processHeadline)}
-            </h2>
-          </div>
-
-          <ol className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step) => (
-              <li
-                key={step.n}
-                className="rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:border-blue-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-              >
-                <div className="text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400">
-                  {step.n}
-                </div>
-                <h3 className="mt-2 text-base font-bold text-neutral-900 dark:text-white">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {step.body}
-                </p>
-              </li>
-            ))}
-          </ol>
         </div>
       </section>
 

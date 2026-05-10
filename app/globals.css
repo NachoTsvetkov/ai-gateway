@@ -18,35 +18,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  ── Light theme palette swap (blue → teal) ─────────────────────────────
-  The site's component code uses `blue-*` utilities throughout (buttons,
-  kicker labels, focus rings, hero gradient stops, the sales-assistant
-  launcher, etc.). Tailwind 4 generates each utility as
-  `var(--color-blue-XXX)`, so overriding those custom properties
-  cascades the change through the entire codebase without touching a
-  single component file.
-
-  We override ONLY in light mode (the absence of `.dark` on `<html>`).
-  Dark mode keeps the original navy + blue identity verbatim — visitors
-  who already love that look see no change when they opt into dark.
-
-  The values redirect to Tailwind's own teal-* CSS variables, so the
-  full 50→950 ramp moves in lockstep (hover states, gradients, ring
-  shadows, etc. all stay coherent).
+  Both themes ship the same blue identity. An earlier iteration tinted
+  light mode towards teal via a `--color-blue-* → --color-teal-*` swap
+  here; that's been removed so the homepage hero, kickers, focus rings,
+  bundle pricing accents, and sales-assistant launcher all read the
+  same hue on light + dark. Dark stays the original navy + blue. If we
+  ever need a per-theme accent again, reintroduce the override scoped
+  to `:root:not(.dark)` and remap the ramp 50→950 in lockstep so
+  gradients and ring shadows stay coherent.
 */
-:root:not(.dark) {
-  --color-blue-50:  var(--color-teal-50);
-  --color-blue-100: var(--color-teal-100);
-  --color-blue-200: var(--color-teal-200);
-  --color-blue-300: var(--color-teal-300);
-  --color-blue-400: var(--color-teal-400);
-  --color-blue-500: var(--color-teal-500);
-  --color-blue-600: var(--color-teal-600);
-  --color-blue-700: var(--color-teal-700);
-  --color-blue-800: var(--color-teal-800);
-  --color-blue-900: var(--color-teal-900);
-  --color-blue-950: var(--color-teal-950);
-}
 
 @layer base {
   *,

@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { formatPrice, formatPriceK, type Currency } from "lib/currency";
+import { formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import { detectLocale } from "lib/i18n/locale.server";
 import { createT, type Locale } from "lib/i18n/locale";
@@ -13,9 +12,6 @@ import {
   type PainCategory,
   type Service,
 } from "lib/services-data";
-import { detectTheme } from "lib/theme/theme.server";
-
-const DEMO_URL = "/projects/ai-shopify-store";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -135,87 +131,13 @@ const CARD = {
   seeDetails: { en: "See details", bg: "Виж детайли" },
 } as const;
 
-// ---------------------------------------------------------------------
-// Case-study / testimonial renderers.
-//
-// Originally lived on /projects but were relocated here so the services
-// catalogue gets its full proof narrative on a single page
-// (catalogue → results → clients → CTA). The Bundles section moved on
-// from here too — it now lives on the homepage right under the hero,
-// referenced via /#bundles. The /projects page is a focused gallery
-// of demo sites.
-// ---------------------------------------------------------------------
-
-// Three featured case studies — drilldowns into selected projects with
-// numeric outcomes. The Curated. shop sits in the MIDDLE so it reads
-// as the centerpiece; the `featured` flag flips it to a blue-bordered,
-// gradient-haloed treatment in the rendering loop.
-function buildCaseStudies(locale: Locale) {
-  return [
-    {
-      title: DICT.caseStudies.fitnessTitle[locale],
-      summary: DICT.caseStudies.fitnessSummary[locale],
-      metric: DICT.caseStudies.fitnessMetric[locale],
-      tech: "Next.js · Stripe · Calendar API · GPT-4o",
-      href: "/projects/local-fitness-studio",
-      cta: DICT.caseStudies.fitnessCta[locale],
-      badge: DICT.caseStudies.badgeLive[locale],
-      real: true,
-      featured: false,
-    },
-    {
-      title: DICT.caseStudies.shopTitle[locale],
-      summary: DICT.caseStudies.shopSummary[locale],
-      metric: DICT.caseStudies.shopMetric[locale],
-      tech: "Next.js · Shopify · OpenAI · Vercel AI SDK",
-      href: DEMO_URL,
-      cta: DICT.caseStudies.shopCta[locale],
-      badge: DICT.caseStudies.badgeLive[locale],
-      real: true,
-      featured: true,
-    },
-    {
-      title: DICT.caseStudies.boutiqueTitle[locale],
-      summary: DICT.caseStudies.boutiqueSummary[locale],
-      metric: DICT.caseStudies.boutiqueMetric[locale],
-      tech: "Shopify · AI Personalization · Klaviyo",
-      href: "/projects/boutique-fashion-brand",
-      cta: DICT.caseStudies.boutiqueCta[locale],
-      badge: DICT.caseStudies.badgeLive[locale],
-      real: true,
-      featured: false,
-    },
-  ];
-}
-
-function buildTestimonials(currency: Currency, locale: Locale) {
-  return [
-    {
-      quote: DICT.testimonials.t1Quote[locale],
-      name: DICT.testimonials.t1Name[locale],
-      role: DICT.testimonials.t1Role[locale],
-    },
-    {
-      quote: DICT.testimonials.t2Quote[locale],
-      name: DICT.testimonials.t2Name[locale],
-      role: DICT.testimonials.t2Role[locale],
-    },
-    {
-      quote: `${DICT.testimonials.t3QuotePrefix[locale]}${formatPriceK(4000, currency)}${DICT.testimonials.t3QuoteSuffix[locale]}`,
-      name: DICT.testimonials.t3Name[locale],
-      role: DICT.testimonials.t3Role[locale],
-    },
-  ];
-}
-
 export default async function ServicesPage() {
   // Both detections fire in parallel — the page is a server component
   // so we want the slowest of (currency cookie/header lookup,
   // locale cookie/header lookup) and not their sum.
-  const [currency, locale, theme] = await Promise.all([
+  const [currency, locale] = await Promise.all([
     detectCurrency(),
     detectLocale(),
-    detectTheme(),
   ]);
   const t = createT(locale);
 
@@ -224,17 +146,6 @@ export default async function ServicesPage() {
   // duplicating the entire dataset.
   const painCategories = getLocalizedPainCategories(locale);
   const gettingStartedServices = getLocalizedGettingStartedServices(locale);
-  const caseStudies = buildCaseStudies(locale);
-  const renderedTestimonials = buildTestimonials(currency, locale);
-
-  // Theme drives which hero photo we ship: a bright AI-generated
-  // cityscape with the value-prop cards in light mode, the original
-  // dark cityscape in dark mode. Selecting on the server prevents
-  // loading both photos and avoids the flash-of-wrong-image at hydration.
-  const heroBgSrc =
-    theme === "light"
-      ? "/services-hero-background-light.png"
-      : "/services-hero-background.png";
 
   // The Getting Started block reuses translations from DICT so the
   // copy stays in lockstep with the homepage teaser hooks.
@@ -251,58 +162,26 @@ export default async function ServicesPage() {
         aria-labelledby="services-heading"
         className="relative isolate overflow-hidden bg-white py-20 sm:py-24 dark:bg-neutral-950"
       >
-        {/* Background: cityscape skyline + nebula glow + floating UI
-            cards labelled "More Customers / Higher Conversions / Save
-            Time / Reliable Security / Built for Growth / Fixed Price"
-            — they thematically mirror the page's value props, so we
-            want them to actually be visible.
+        {/* Solid surface + soft brand glow. Earlier this hero shipped
+            a 600KB photo composite with the value-prop cards baked in
+            — striking but it competed with the headline + nav pills,
+            and forced theme-aware src switching that flashed on the
+            first paint. Now the surface is flat and the glow does the
+            work.
 
             CRITICAL: the section MUST carry `isolate` so it creates
             its own stacking context. Without it, the `-z-10` layers
-            below fall BEHIND the section background and the entire
-            hero renders as flat colour. `isolate` makes -z-10 mean
-            "below content, above this section's own background" —
-            the layering we want.
-
-            We ship two photos and pick on the server (`heroBgSrc`):
-              • light mode → /services-hero-background-light.png — a
-                bright sunrise cityscape with the value-prop cards
-                already baked in. The scrim drops to a soft bottom
-                fade so the photo + cards stay visible.
-              • dark mode → /services-hero-background.png — the
-                original deep-navy variant, kept under a heavier
-                scrim so the headline + body still read.
-
-            Stack (bottom → top, all -z-10 except content):
-              1. section bg                — neutral colour before paint
-              2. <Image>                   — the photo itself
-              3. uniform scrim             — heavy in dark, light in light
-              4. radial vignette           — darker at the centre horizon
-                                             so the headline pops
-              5. bottom fade               — sells the seam into the next
-                                             section on both themes
-              6. blue glow                 — preserves the brand hint
-              7. content (`relative`)      — sits above the -z-10 stack    */}
-        <Image
-          src={heroBgSrc}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="-z-10 object-cover object-center"
-        />
-        {/* Layer 1: uniform scrim — soft in light mode (so the bright
-            cityscape + cards stay visible) and heavy in dark mode (so
-            the dark photo's nebula reads as a textured backdrop). */}
-        <div className="absolute inset-0 -z-10 bg-white/15 dark:bg-neutral-950/70" />
-        {/* Layer 2: radial vignette — pulls a touch of light/dark in at
-            the headline column so text contrast holds. */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/65 via-white/20 to-transparent dark:from-neutral-950/85 dark:via-neutral-950/55" />
-        {/* Layer 3: bottom fade — matches the section that follows so
-            the seam reads cleanly on both themes. */}
+            below fall BEHIND the section background and the glows
+            disappear. `isolate` keeps -z-10 meaning "below content,
+            above this section's own background". */}
+        {/* Top-centre blue glow — the page's brand accent, used here
+            as a tasteful mask behind the headline. */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
+        {/* Bottom-left violet glow — softer secondary tint. */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
+        {/* Bottom fade — sells the seam into the sections below on
+            both themes. */}
         <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
-        {/* Layer 4: subtle blue glow. */}
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent dark:from-blue-600/15" />
 
         <div className="relative mx-auto max-w-4xl px-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
@@ -489,169 +368,6 @@ export default async function ServicesPage() {
       </div>
 
       {/* ---------------------------------------------------------------- */}
-      {/* PROVEN RESULTS — featured case studies with numeric outcomes.    */}
-      {/* Sits AFTER the catalogue so the visitor first sees what they    */}
-      {/* can buy, then the proof those services produce real numbers.   */}
-      {/* ---------------------------------------------------------------- */}
-      <section
-        aria-labelledby="results-heading"
-        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.resultsKicker)}
-            </p>
-            <h2
-              id="results-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              {t(DICT.home.resultsHeadline)}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {caseStudies.map((c) => (
-              <article
-                key={c.title}
-                className={`relative flex flex-col rounded-2xl p-6 ${
-                  c.featured
-                    ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/15 ring-1 ring-blue-500/20 dark:border-blue-400 dark:from-blue-950/50 dark:to-neutral-950 dark:shadow-blue-500/20 dark:ring-blue-400/30"
-                    : "border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
-                }`}
-              >
-                {c.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    {c.badge}
-                  </span>
-                )}
-                {!c.featured && (
-                  <span
-                    className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      c.real
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        c.real ? "bg-green-500" : "bg-neutral-400"
-                      }`}
-                    />
-                    {c.badge}
-                  </span>
-                )}
-                <h3
-                  className={`text-lg font-bold text-neutral-900 dark:text-white ${
-                    c.featured ? "mt-3" : "mt-4"
-                  }`}
-                >
-                  {c.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {c.summary}
-                </p>
-                <p className="mt-4 text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {c.metric}
-                </p>
-                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
-                  {c.tech}
-                </p>
-                {c.href && (
-                  <Link
-                    href={c.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${c.cta} (opens in a new tab)`}
-                    className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
-                      c.featured
-                        ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
-                        : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                    }`}
-                  >
-                    {c.cta}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-3.5 w-3.5"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
-                        clipRule="evenodd"
-                      />
-                      <path
-                        fillRule="evenodd"
-                        d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                )}
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
-      {/* CLIENTS — testimonials. Quoted humans land RIGHT AFTER the      */}
-      {/* numeric proof so the visitor reads "metrics + voices" as one   */}
-      {/* combined social-proof block before reaching the bundle pricing. */}
-      {/* ---------------------------------------------------------------- */}
-      <section
-        aria-labelledby="testimonials-heading"
-        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.testimonialsKicker)}
-            </p>
-            <h2
-              id="testimonials-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              {t(DICT.home.testimonialsHeadline)}
-            </h2>
-          </div>
-
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {renderedTestimonials.map((tm) => (
-              <figure
-                key={tm.name}
-                className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-800 dark:bg-neutral-900"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                  className="h-6 w-6 text-blue-600 dark:text-blue-400"
-                >
-                  <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849h-4v-10h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983v-10h9.983z" />
-                </svg>
-                <blockquote className="mt-4 text-base leading-relaxed text-neutral-700 dark:text-neutral-200">
-                  “{tm.quote}”
-                </blockquote>
-                <figcaption className="mt-auto pt-6 text-sm">
-                  <div className="font-semibold text-neutral-900 dark:text-white">
-                    {tm.name}
-                  </div>
-                  <div className="text-neutral-500 dark:text-neutral-400">
-                    {tm.role}
-                  </div>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------------- */}
       {/* CLOSING CTA                                                      */}
       {/* ---------------------------------------------------------------- */}
       <section
@@ -739,7 +455,7 @@ function ServiceCard({
           </span>
         )}
         <h3
-          className={`text-base font-bold text-neutral-900 dark:text-white ${
+          className={`text-lg font-bold leading-snug text-neutral-900 dark:text-white ${
             // Reserve room for the badge so long names don't run under it.
             stepLabel ? "pr-12" : ""
           }`}
@@ -760,13 +476,19 @@ function ServiceCard({
             {service.solution}
           </p>
         </div>
-        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
-          <p className={`text-sm font-semibold ${priceText_color}`}>
+        {/* Footer row: price on the left grows/wraps as needed, "See
+            details" on the right is locked to a single line and never
+            shrinks. Without `flex-shrink-0 whitespace-nowrap` the long
+            tier prices ("Starting at €273 (full payments-ready site)")
+            squeeze the BG label "Виж детайли" onto two lines on the
+            narrower cards. */}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+          <p className={`min-w-0 flex-1 text-base font-semibold ${priceText_color}`}>
             {priceText}
           </p>
           <span
             aria-hidden="true"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-all group-hover:text-neutral-900 group-hover:translate-x-0.5 dark:text-neutral-500 dark:group-hover:text-white"
+            className="inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-neutral-500 transition-all group-hover:text-neutral-900 group-hover:translate-x-0.5 dark:text-neutral-500 dark:group-hover:text-white"
           >
             {t(CARD.seeDetails)}
             <svg

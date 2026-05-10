@@ -96,7 +96,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={htmlClassName}>
-      <body suppressHydrationWarning className="bg-neutral-50 text-black selection:bg-teal-300 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
+      <body suppressHydrationWarning className="bg-neutral-50 text-black selection:bg-blue-200 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
           <NavbarGate hideOnPrefix={HIDE_NAVBAR_ON}>
             <Navbar
