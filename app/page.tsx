@@ -317,6 +317,7 @@ export default async function HomePage() {
             </Link>
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
@@ -635,6 +636,7 @@ export default async function HomePage() {
             {t(DICT.home.bundlesCustomNeed)}{" "}
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-blue-700 transition-colors hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -999,6 +1001,7 @@ export default async function HomePage() {
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-semibold text-blue-700 shadow-lg transition-all hover:scale-[1.02] hover:bg-blue-50"

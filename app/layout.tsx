@@ -1,6 +1,7 @@
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar, type NavbarLabels } from "components/layout/navbar";
 import { NavbarGate } from "components/layout/navbar/navbar-gate";
+import { AnalyticsRoot } from "components/analytics/analytics-root";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
 import { ReactNode } from "react";
@@ -110,6 +111,22 @@ export default async function RootLayout({
             {children}
             <Toaster closeButton />
           </main>
+          {/* Marketing-consent banner + Meta Pixel loader. Default-deny
+              per GDPR — banner shows on first visit, pixel only loads
+              after Accept. We reuse `HIDE_NAVBAR_ON` as the exclusion
+              list so demo subsites (Curated., KORE, ROZÉ, /product,
+              /search) keep their own brand chrome and aren't tagged
+              against the marketing funnel. */}
+          <AnalyticsRoot
+            pixelId={process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? null}
+            excludePathPrefixes={HIDE_NAVBAR_ON}
+            consent={{
+              accept: DICT.consent.accept[locale],
+              reject: DICT.consent.reject[locale],
+              message: DICT.consent.message[locale],
+              ariaLabel: DICT.consent.ariaLabel[locale],
+            }}
+          />
         </CartProvider>
       </body>
     </html>

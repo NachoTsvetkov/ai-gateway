@@ -140,6 +140,7 @@ export default async function CheckoutSuccessPage({
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
             href={CALENDLY_URL}
+            data-pixel-lead
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500"

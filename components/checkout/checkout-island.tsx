@@ -27,6 +27,7 @@ import {
 import type { Upsell } from "lib/bundles-data";
 import { type Locale, createT, DEFAULT_LOCALE } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { track } from "lib/pixel/client";
 
 export type TierOption = {
   /** Index into the source `tiers[]`. Must match the URL `tier` param. */
@@ -330,6 +331,20 @@ export function CheckoutIsland({
 
       <Link
         href={checkoutHref}
+        onClick={() => {
+          // Meta Pixel InitiateCheckout — fired client-side right
+          // before the navigation to /checkout. `track()` queues the
+          // browser pixel hit synchronously and posts the CAPI mirror
+          // with `keepalive: true`, so both survive the navigation
+          // even though the current document is about to unload.
+          track("InitiateCheckout", {
+            content_ids: [buyable.id],
+            content_name: buyable.name,
+            content_type: buyable.kind,
+            value: oneTimeTotal,
+            currency,
+          });
+        }}
         className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-600/40 sm:text-lg"
       >
         {checkoutCtaLabel}

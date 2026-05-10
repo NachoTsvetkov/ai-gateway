@@ -149,6 +149,7 @@ export function Navbar({
 
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-500 sm:px-4 sm:py-2 sm:text-sm"
@@ -321,6 +322,7 @@ function MobileMenuSheet({
           <div className="border-t border-neutral-100 p-3 dark:border-neutral-800">
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}

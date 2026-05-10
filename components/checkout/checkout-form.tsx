@@ -37,6 +37,7 @@ import type { Buyable } from "lib/buyable";
 import type { Upsell } from "lib/bundles-data";
 import { type Locale, createT, DEFAULT_LOCALE } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { track } from "lib/pixel/client";
 import {
   PayPalCheckoutButtons,
   type CheckoutCustomerInput,
@@ -227,6 +228,29 @@ export function CheckoutForm({
   }
 
   function handlePayPalSuccess(args: { kind: PayPalButtonsKind; id: string }) {
+    // Meta Pixel Purchase — fired the moment PayPal confirms the
+    // capture (orders) or the subscription is activated. We pass the
+    // hashed email through to /api/pixel so CAPI can match the event
+    // against the same visitor's prior PageView/InitiateCheckout for
+    // attribution. The browser pixel hit ALSO survives the
+    // navigation below thanks to `track()`'s keepalive fetch.
+    //
+    // We use `oneTimeTotalEur` (the "due today" total including
+    // upsells) as the conversion value, which is what shows up in
+    // Ads Manager's purchase column. For pure-monthly retainers
+    // that's the same number as one month's fee — fine.
+    track(
+      "Purchase",
+      {
+        content_ids: [buyable.id],
+        content_name: buyable.name,
+        content_type: buyable.kind,
+        value: oneTimeTotalEur,
+        currency,
+      },
+      email ? { email } : undefined,
+    );
+
     const url = new URL(window.location.href);
     url.pathname = "/checkout/success";
     url.searchParams.set("type", args.kind);
@@ -255,6 +279,8 @@ export function CheckoutForm({
           {t(DICT.checkout.submittedOr)}
           <a
             href={CALENDLY_URL}
+          data-pixel-lead
+            data-pixel-lead
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold underline underline-offset-2"
@@ -436,6 +462,8 @@ export function CheckoutForm({
           {t(DICT.checkout.formBookFirstPrefix)}
           <a
             href={CALENDLY_URL}
+          data-pixel-lead
+            data-pixel-lead
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
@@ -490,6 +518,7 @@ export function CheckoutForm({
         {t(DICT.checkout.formBookFirstPrefix)}
         <a
           href={CALENDLY_URL}
+          data-pixel-lead
           target="_blank"
           rel="noopener noreferrer"
           className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"

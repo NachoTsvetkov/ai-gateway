@@ -45,6 +45,7 @@ import {
   getApplicableUpsells,
 } from "lib/buyable";
 import { CheckoutIsland } from "components/checkout/checkout-island";
+import { ViewContentTracker } from "components/analytics/view-content-tracker";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -106,6 +107,16 @@ export default async function BundleDetailPage({
 
   return (
     <main className="bg-white dark:bg-neutral-950">
+      {/* Meta Pixel ViewContent — fires once on hydration with the
+          bundle's id, name, and headline price. The tracker no-ops
+          when consent isn't granted. */}
+      <ViewContentTracker
+        contentId={bundle.id}
+        contentName={bundle.name}
+        contentType="bundle"
+        value={bundle.oneTimeEur}
+        currency={currency}
+      />
       <Hero
         bundle={bundle}
         currency={currency}
@@ -273,6 +284,8 @@ function Hero({
             </a>
             <a
               href={CALENDLY_URL}
+            data-pixel-lead
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-900 transition-colors hover:border-neutral-500 dark:border-neutral-700 dark:text-white dark:hover:border-neutral-500"
@@ -625,6 +638,7 @@ function FooterCTA({ locale }: { locale: Locale }) {
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
             href={CALENDLY_URL}
+            data-pixel-lead
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500"

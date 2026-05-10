@@ -26,6 +26,7 @@ import {
   CheckoutIsland,
   type TierOption,
 } from "components/checkout/checkout-island";
+import { ViewContentTracker } from "components/analytics/view-content-tracker";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -186,6 +187,17 @@ export default async function ServiceDetailPage({
 
   return (
     <main className="bg-white dark:bg-neutral-900">
+      {/* Meta Pixel ViewContent — fires once on hydration with the
+          service's id, name, headline price, and pain category. The
+          tracker no-ops when consent isn't granted. */}
+      <ViewContentTracker
+        contentId={service.id}
+        contentName={service.name}
+        contentType="service"
+        contentCategory={category?.title}
+        value={buyable.oneTimeEur}
+        currency={currency}
+      />
       {/* ---------------------------------------------------------------- */}
       {/* HERO — pain agitation                                            */}
       {/* ---------------------------------------------------------------- */}
@@ -293,6 +305,7 @@ export default async function ServiceDetailPage({
                 who want to talk first. */}
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
@@ -770,6 +783,8 @@ export default async function ServiceDetailPage({
                 </a>
                 <a
                   href={CALENDLY_URL}
+                  data-pixel-lead
+              data-pixel-lead
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-neutral-600 underline-offset-4 transition-colors hover:text-blue-600 hover:underline dark:text-neutral-400 dark:hover:text-blue-400"
@@ -836,6 +851,7 @@ export default async function ServiceDetailPage({
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"

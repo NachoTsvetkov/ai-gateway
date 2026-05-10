@@ -857,4 +857,19 @@ export const DICT = {
       "(пълен сайт, готов за плащания)",
     ),
   },
+
+  // -------------------------------------------------------------------
+  // Cookie / marketing-consent banner (default-deny, GDPR-aligned).
+  // Renders on the first visit and disappears once the visitor picks
+  // a side. The choice is persisted client-side for 365 days.
+  // -------------------------------------------------------------------
+  consent: {
+    message: s(
+      "We use cookies to measure marketing performance (Meta Pixel) and improve the site. None of this is required to browse — pick the option that works for you.",
+      "Използваме бисквитки, за да измерваме рекламни кампании (Meta Pixel) и да подобряваме сайта. Не са задължителни, за да разглеждаш — избери това, което ти подхожда.",
+    ),
+    accept: s("Accept", "Приемам"),
+    reject: s("Reject", "Отказвам"),
+    ariaLabel: s("Cookie consent", "Съгласие за бисквитки"),
+  },
 } as const;

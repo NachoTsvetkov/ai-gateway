@@ -205,6 +205,18 @@ function escapeHtml(s: string): string {
     .replace(/'/g, "&#039;");
 }
 
+// Extracts the hostname from a hyperlink so we can decide whether to
+// tag it `data-pixel-lead`. Wrapped in try/catch because URL() throws
+// on relative paths or anything that isn't a valid URL — those just
+// don't match calendly.com and that's the correct outcome.
+function safeHostFromHref(href: string): string {
+  try {
+    return new URL(href).hostname;
+  } catch {
+    return "";
+  }
+}
+
 type BundleRec = { id: BundleId; note?: string };
 
 // Detect every bundle anchor link emitted by the assistant and pair it
@@ -263,7 +275,14 @@ function renderMessageHtml(text: string): string {
     const target = isExternal
       ? ` target="_blank" rel="noopener noreferrer"`
       : "";
-    return `<a href="${safeHref}" class="${LINK_CLASS}"${target}>${safeLabel}</a>`;
+    // Tag Calendly anchors so <LeadLinkTracker> fires a Lead event
+    // when the visitor clicks. Detected by hostname (not literal
+    // "calendly.com" substring) so a path like "/calendly-tips" on
+    // our own domain wouldn't get mis-tagged.
+    const lead = /(^|\.)calendly\.com$/i.test(safeHostFromHref(p.href))
+      ? ` data-pixel-lead`
+      : "";
+    return `<a href="${safeHref}" class="${LINK_CLASS}"${target}${lead}>${safeLabel}</a>`;
   });
 
   html = html.replace(BOLD_RE, "<strong>$1</strong>");
@@ -624,6 +643,7 @@ export function SalesAssistant({
           <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-neutral-800 dark:bg-neutral-900/80">
             <a
               href={CALENDLY_URL}
+              data-pixel-lead
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-blue-500"
@@ -765,6 +785,7 @@ export function SalesAssistant({
                 {ASSISTANT_UI.errorPrefix[locale]}
                 <a
                   href={CALENDLY_URL}
+                  data-pixel-lead
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-semibold underline"
