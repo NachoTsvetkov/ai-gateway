@@ -65,8 +65,21 @@ export type Buyable = {
   oneTimeEur: number;
   retainerEur?: number;
   /** Per-buyable CTA verbs threaded across the homepage card, the chat
-   *  card (bundles only), the detail page, and the checkout button. */
-  cta: { primary: string; helper: string; checkout: string };
+   *  card (bundles only), the detail page, and the checkout button.
+   *
+   *  `verb` is the bare action verb without the tier suffix (e.g.
+   *  "Build my site"). The CheckoutIsland uses it to re-derive the
+   *  button label live when the visitor switches tier in the picker —
+   *  otherwise the label would be frozen to whichever tier was selected
+   *  at server-render time. Only set for tiered services; bundles and
+   *  non-tiered services leave it undefined and the island falls back
+   *  to `checkout` unchanged. */
+  cta: {
+    primary: string;
+    helper: string;
+    checkout: string;
+    verb?: string;
+  };
   /** "View what's included" link target (the buyable's own detail page). */
   detailsUrl: string;
   /**
@@ -225,10 +238,16 @@ function getServiceCta(
 ): Buyable["cta"] {
   const verb = SERVICE_PRIMARY_CTA[id][locale];
   const primary = verb + (tierName ? ` — ${tierName}` : "");
+  // `verb` is exposed only for tiered services so the CheckoutIsland
+  // can re-derive `<verb> — <activeTier.label>` when the visitor
+  // switches tier client-side. Non-tiered services don't need it
+  // (the suffix is empty anyway) and leaving it undefined keeps the
+  // shape lean.
   return {
     primary,
     helper: SERVICE_CTA_HELPER[locale],
     checkout: primary,
+    verb: tierName !== undefined ? verb : undefined,
   };
 }
 

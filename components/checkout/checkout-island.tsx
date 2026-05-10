@@ -141,6 +141,20 @@ export function CheckoutIsland({
     buyable.retainerEur === buyable.oneTimeEur &&
     !activeTier;
 
+  // The button label has to track the LIVE tier selection. The
+  // server-rendered `buyable.cta.checkout` bakes in whatever tier the
+  // page loaded with (tier 0 by default), so without re-deriving here
+  // the button keeps saying "Build my site — 1-page" even after the
+  // visitor picks "3-page" in the radio above. We re-compose the label
+  // from the bare verb (set on tiered services only) + the currently
+  // selected tier's label. For bundles and non-tiered services `verb`
+  // is undefined and we fall back to the original cta.checkout, which
+  // already has no tier suffix to drift out of sync with.
+  const checkoutCtaLabel =
+    buyable.cta.verb && activeTier
+      ? `${buyable.cta.verb} — ${activeTier.label}`
+      : buyable.cta.checkout;
+
   return (
     <section
       aria-labelledby={headingId}
@@ -318,7 +332,7 @@ export function CheckoutIsland({
         href={checkoutHref}
         className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-600/40 sm:text-lg"
       >
-        {buyable.cta.checkout}
+        {checkoutCtaLabel}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
