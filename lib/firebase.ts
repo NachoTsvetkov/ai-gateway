@@ -18,5 +18,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app);
 
 // Collection name for Chaos Phase survey responses
+// Prod (default on live LPs): chaos_survey_responses
+// Local/custom testing: chaos_survey_responses_test (activated via useTestCollection=true or ?test=false on forms)
 export const SURVEYS_COLLECTION = 'chaos_survey_responses';
 export const TEST_SURVEYS_COLLECTION = 'chaos_survey_responses_test';

@@ -27,6 +27,8 @@ export type ChaosSurveyData = z.infer<typeof ChaosSurveySchema>;
  * before or after calling this.
  */
 export async function saveChaosSurveyResponse(data: ChaosSurveyData, useTestCollection = false): Promise<string> {
+  // default=false=prod main collection; true=local/custom test bucket.
+  // URL override on forms: ?test=false forces true here (local/custom). See ChaosSurveyForm.
   // Client-side validation (defense in depth)
   const parsed = ChaosSurveySchema.parse(data);
 

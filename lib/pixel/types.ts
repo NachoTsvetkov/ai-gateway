@@ -36,7 +36,7 @@ export type PixelCustomData = {
   /** "service" / "bundle" map cleanly to our funnel; "product" is
    *  here for symmetry with the demo Curated. shop if we ever decide
    *  to track it (currently excluded). */
-  content_type?: "product" | "service" | "bundle";
+  content_type?: "product" | "service" | "bundle" | "page" | "audit";
   content_category?: string;
   /** Monetary value of the event. ALWAYS pair with `currency` so
    *  Meta's value optimisation works. */

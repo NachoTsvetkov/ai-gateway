@@ -19,7 +19,7 @@ type Props = {
   contentId: string;
   /** Display name (already locale-resolved). */
   contentName: string;
-  contentType: "service" | "bundle";
+  contentType: "service" | "bundle" | "page" | "audit";
   /** Optional category label — pain-category title for services. */
   contentCategory?: string;
   /** Headline price in EUR (whole units). When set we also forward

@@ -1,0 +1,12 @@
+[submodule ".grok/plugins/vercel"]
+	path = .grok/plugins/vercel
+	url = https://github.com/vercel/vercel-plugin.git
+[submodule ".grok/plugins/superpowers"]
+	path = .grok/plugins/superpowers
+	url = https://github.com/obra/superpowers.git
+[submodule ".grok/plugins/chrome-devtools"]
+	path = .grok/plugins/chrome-devtools
+	url = https://github.com/ChromeDevTools/chrome-devtools-mcp.git
+[submodule ".grok/plugins/sentry"]
+	path = .grok/plugins/sentry
+	url = https://github.com/getsentry/sentry-for-ai.git

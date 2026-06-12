@@ -22,7 +22,7 @@ async function test() {
 
   try {
     const result = await Promise.race([
-      saveChaosSurveyResponse(testData, true), // true = use test collection
+      saveChaosSurveyResponse(testData, true), // true = use test collection (local/custom _test); internal flag, independent of ?test= url param
       new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout after ' + timeoutMs + 'ms - likely Firestore rules or DB not set up')), timeoutMs))
     ]);
     console.log('✅ Success! Document ID in test collection:', result);

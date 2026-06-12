@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
+import { ViewContentTracker } from 'components/analytics/view-content-tracker';
 
 export const metadata = {
   title: 'Free AI Audits & Experiments for Small Businesses | Choose Your Focus',
@@ -48,8 +49,18 @@ export default function FreeAIAuditsHub() {
 
   return (
     <main className="bg-white dark:bg-neutral-950">
+      <ViewContentTracker
+        contentId="free-ai-audits"
+        contentName="Free AI Audits Hub"
+        contentType="page"
+      />
       <div className="mx-auto max-w-7xl px-6 py-16 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-green-500 dark:bg-green-400" />
+            Free • Personalized • 48 hours
+          </div>
+
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
             Choose the Free AI Audit That Solves Your Biggest Small Business Problem
           </h1>
@@ -81,15 +92,15 @@ export default function FreeAIAuditsHub() {
             <Link
               key={audit.href}
               href={audit.href}
-              className="group block rounded-2xl border border-neutral-200 bg-white p-6 transition hover:border-blue-200 hover:shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-900"
+              className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
             >
-              <h3 className="text-lg font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400">
+              <h3 className="text-lg font-semibold text-neutral-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                 {audit.title}
               </h3>
-              <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+              <p className="mt-3 flex-1 text-sm text-neutral-600 dark:text-neutral-300">
                 {audit.description}
               </p>
-              <div className="mt-4 text-sm font-medium text-blue-600 dark:text-blue-400">
+              <div className="mt-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
                 Start this audit →
               </div>
             </Link>
@@ -105,15 +116,15 @@ export default function FreeAIAuditsHub() {
           </p>
         </div>
 
-        {/* Optional test form for the hub itself */}
+        {/* Quick test form using test collection */}
         <div className="mx-auto mt-16 max-w-2xl">
-          <div className="mb-4 text-center text-sm uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-            Quick test (uses test collection)
+          <div className="mb-4 text-center text-sm font-medium uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+            Quick test (writes to test collection)
           </div>
           <ChaosSurveyForm 
             source="hub-test" 
             title="Test the Chaos Survey Form"
-            useTestCollection={true}
+            useTestCollection={true}  // true = local/custom test bucket; default=false=prod. ?test=false in URL forces local/custom on any page.
           />
         </div>
       </div>
