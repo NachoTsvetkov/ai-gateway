@@ -10,7 +10,12 @@
     "paypal:setup": "tsx scripts/paypal-setup-plans.ts",
     "firestore:create-db": "firebase firestore:databases:create \"(default)\" --location nam5 --project nachotsvetkov-cbaa7",
     "firestore:deploy-rules": "firebase deploy --only firestore:rules --project nachotsvetkov-cbaa7",
-    "firestore:setup": "npm run firestore:create-db && npm run firestore:deploy-rules"
+    "firestore:setup": "npm run firestore:create-db && npm run firestore:deploy-rules",
+    "firestore:purge": "tsx scripts/purge-firestore-collections.ts",
+    "test:surveys": "tsx scripts/test-report-request.ts",
+    "test:orders": "tsx scripts/test-order.ts",
+    "test:marketing": "tsx scripts/test-marketing-email.ts",
+    "test:firebase": "npm run test:surveys && npm run test:orders"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",
@@ -39,12 +44,13 @@
     "@types/react": "19.0.12",
     "@types/react-dom": "19.0.4",
     "dotenv": "^17.4.2",
+    "firebase-admin": "^13.10.0",
+    "firebase-tools": "^13.0.0",
     "postcss": "^8.5.3",
     "prettier": "3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4.0.14",
     "tsx": "^4.21.0",
-    "typescript": "5.8.2",
-    "firebase-tools": "^13.0.0"
+    "typescript": "5.8.2"
   }
 }

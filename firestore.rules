@@ -1,37 +1,128 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Report request / Personalized AI Opportunity Report responses.
-    // Only allow create from the public web forms (client SDK + the /api/report-request route).
-    // No public reads, updates, or deletes — owner reviews in Firebase Console.
-    // IMPORTANT: Deploy these rules (or paste into console) AFTER creating the database.
 
-    match /chaos_survey_responses/{docId} {
-      allow create: if
-        request.resource.data.keys().hasAll([
-          'source', 'business_type', 'pain', 'desired_results', 'budget', 'interest', 'email'
-        ])
-        && request.resource.data.interest is number
-        && request.resource.data.interest >= 1 && request.resource.data.interest <= 10
-        && request.resource.data.email is string
-        // source etc are non-empty strings (Zod already enforces on client+server)
-        ;
-      allow read: if false;   // keep prod locked for now (owner can still browse in console)
+    // ============================================
+    // PUBLIC CREATION (Website / Lead Generation)
+    // ============================================
+
+    // Survey responses from the website
+    match /survey_responses/{docId} {
+      allow create: if 
+        request.resource.data.email is string &&
+        request.resource.data.email != "";
+      allow read, update, delete: if false;
+    }
+
+    // Marketing email subscribers
+    match /marketing_emails/{docId} {
+      allow create: if 
+        request.resource.data.email is string &&
+        request.resource.data.email != "";
+      allow read, update, delete: if false;
+    }
+
+    // ============================================
+    // INTERNAL COLLECTIONS (Desktop App Only)
+    // ============================================
+
+    match /contacts/{docId} {
+      allow read, write: if false;
+    }
+
+    match /reports/{docId} {
+      allow read, write: if false;
+    }
+
+    match /meetings/{docId} {
+      allow read, write: if false;
+    }
+
+    match /proposals/{docId} {
+      allow read, write: if false;
+    }
+
+    match /projects/{docId} {
+      allow read, write: if false;
+    }
+
+    match /activities/{docId} {
+      allow read, write: if false;
+    }
+
+    // Orders (create + status updates allowed)
+    match /orders/{docId} {
+      allow create: if 
+        request.resource.data.customer is map &&
+        request.resource.data.customer.email is string &&
+        request.resource.data.status is string;
+
+      allow update: if 
+        request.resource.data.keys().hasAll(['status']) &&
+        request.resource.data.status is string;
+
+      allow read, delete: if false;
+    }
+
+    // ============================================
+    // TEST COLLECTIONS (Development)
+    // ============================================
+
+    match /survey_responses_test/{docId} {
+      allow create: if true;
+      allow read: if true;
       allow update, delete: if false;
     }
 
-    match /chaos_survey_responses_test/{docId} {
-      allow create: if
-        request.resource.data.keys().hasAll([
-          'source', 'business_type', 'pain', 'desired_results', 'budget', 'interest', 'email'
-        ])
-        && request.resource.data.interest is number
-        && request.resource.data.interest >= 1 && request.resource.data.interest <= 10
-        && request.resource.data.email is string;
-      allow read: if true;    // allow reads on test collection so the verification script + /api/report-request GET work
+    match /marketing_emails_test/{docId} {
+      allow create: if true;
+      allow read: if true;
       allow update, delete: if false;
     }
 
-    // Add other app rules here as needed (never open /*/* broadly).
+    match /contacts_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /reports_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /meetings_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /proposals_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /projects_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /activities_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /orders_test/{docId} {
+      allow create: if true;
+      allow read: if true;
+      allow update: if 
+        request.resource.data.keys().hasAll(['status']);
+      allow delete: if false;
+    }
+
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

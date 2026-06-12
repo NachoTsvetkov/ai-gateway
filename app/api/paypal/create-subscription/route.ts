@@ -19,6 +19,7 @@ import { createSubscription } from "lib/paypal/subscriptions";
 import type { CheckoutCustomer } from "lib/paypal/orders";
 import { PayPalApiError } from "lib/paypal/client";
 import { getPublicOrigin } from "lib/paypal/origin";
+import { saveOrder } from "lib/orders";
 
 type CreateSubscriptionBody = {
   searchParams: {
@@ -72,6 +73,9 @@ export async function POST(req: Request) {
 
   const upsells = resolveLocalizedUpsells(body.searchParams.upsells, locale);
 
+  const upsellsTotalEur = upsells.reduce((sum, u) => sum + u.eur, 0);
+  const totalEur = buyable.oneTimeEur + upsellsTotalEur;
+
   // Use the public-facing origin (honours X-Forwarded-Host so ngrok /
   // tunnels / prod load balancers all hand PayPal a URL the buyer's
   // browser can actually return to). Pre-populate `?type=…&ref=…` so
@@ -94,6 +98,36 @@ export async function POST(req: Request) {
       returnUrl,
       cancelUrl,
     });
+
+    // Persist at create time (PayPal button click) for subscriptions too.
+    // Full customer + buyable details are captured here even if approval is later abandoned.
+    //
+    // Non-fatal: if persistence fails we still return the subscription id so the
+    // approval flow can continue for the buyer.
+    try {
+      await saveOrder({
+        customer: body.customer,
+        buyable: {
+          kind: buyable.kind,
+          id: buyable.id,
+          tier: buyable.tier,
+          name: buyable.name,
+          oneTimeEur: buyable.oneTimeEur,
+          retainerEur: buyable.retainerEur,
+          reference: buyable.reference,
+        },
+        upsells: upsells.map((u) => ({ id: u.id, label: u.label, eur: u.eur })),
+        totalEur,
+        currency,
+        locale,
+        paypal: { kind: "subscription", id: subscription.id },
+        status: "created",
+        pageUrl: returnUrl,
+      }, false);
+    } catch (persistErr) {
+      console.error('[paypal] create-subscription: failed to persist intent record (non-fatal)', persistErr);
+    }
+
     return NextResponse.json({ id: subscription.id });
   } catch (err) {
     if (

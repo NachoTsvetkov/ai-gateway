@@ -13,6 +13,7 @@
 import { NextResponse } from "next/server";
 import { captureOrder } from "lib/paypal/orders";
 import { PayPalApiError } from "lib/paypal/client";
+import { updateOrderStatus } from "lib/orders";
 
 type CaptureOrderBody = { orderId: string };
 
@@ -45,6 +46,21 @@ export async function POST(req: Request) {
         `amount=${amount?.value} ${amount?.currency_code}, ` +
         `payer=${captured.payer?.email_address ?? "?"})`,
     );
+
+    // Flip the record (created earlier on button click) to 'paid'.
+    // This is server-authoritative for one-time orders. Uses merge so it works
+    // even if only the minimal intent record existed.
+    // Non-fatal — the money has already been captured; failing to write our log
+    // must not affect the buyer success response.
+    try {
+      await updateOrderStatus("order", body.orderId, "paid", false, {
+        capture_id: captureId,
+        amount: amount ? { value: amount.value, currency: amount.currency_code } : undefined,
+      });
+    } catch (persistErr) {
+      console.error('[paypal] capture-order: failed to update status to paid (non-fatal)', persistErr);
+    }
+
     return NextResponse.json({
       ok: true,
       orderId: captured.id,

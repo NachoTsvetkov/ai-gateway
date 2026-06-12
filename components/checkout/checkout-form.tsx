@@ -251,6 +251,44 @@ export function CheckoutForm({
       email ? { email } : undefined,
     );
 
+    // Persist the completed order to our Firebase (orders / orders_test).
+    // This runs only on the success path (after capture for one-time orders,
+    // after approval for subscriptions). Uses keepalive so the POST survives
+    // the immediate redirect to /checkout/success. The payload is the full
+    // customer + buyable snapshot + upsells + PayPal proof.
+    // Server route re-validates; we never trust the client for totals in
+    // other PayPal paths, but here the record is primarily for owner follow-up.
+    const customerSnap = getCustomer();
+    const orderPayload = {
+      customer: customerSnap,
+      buyable: {
+        kind: buyable.kind,
+        id: buyable.id,
+        tier: buyable.tier,
+        name: buyable.name,
+        oneTimeEur: buyable.oneTimeEur,
+        retainerEur: buyable.retainerEur,
+        reference: buyable.reference,
+      },
+      upsells: upsells.map((u) => ({ id: u.id, label: u.label, eur: u.eur })),
+      totalEur: oneTimeTotalEur,
+      currency,
+      locale,
+      paypal: { kind: args.kind, id: args.id },
+      status: "paid" as const,
+      pageUrl: typeof window !== 'undefined' ? window.location.href : undefined,
+    };
+
+    void fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderPayload),
+      keepalive: true,
+    }).catch(() => {
+      // Non-fatal: PayPal dashboard + the custom_id on the transaction still
+      // contain the reference + business for manual reconciliation.
+    });
+
     const url = new URL(window.location.href);
     url.pathname = "/checkout/success";
     url.searchParams.set("type", args.kind);

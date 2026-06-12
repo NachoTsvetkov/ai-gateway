@@ -89,6 +89,9 @@ This project uses **project-scoped plugins** (committed in `.grok/plugins/`) for
 - **chrome-devtools** (https://github.com/ChromeDevTools/chrome-devtools-mcp) — Browser automation + DevTools MCP. Skills for LCP debugging, a11y, memory leaks, network/console inspection, performance tracing. Extremely useful for verifying the storefront UIs, cart flows, rich AI chat renders, and demo shells in a real browser.
 - **sentry** (https://github.com/getsentry/sentry-for-ai) — Error monitoring and debugging for AI-assisted development. Provides MCP access to Sentry issues, stack traces, fingerprint search; skills for Next.js SDK setup, Sentry code review on GitHub PRs, fixing issues identified in production, AI monitoring setup. Highly recommended for this project (public demos, AI agents, forms/surveys hitting Firebase, cart/checkout flows on Vercel deploys) to catch runtime errors early and integrate monitoring into the dev process.
 
+### Custom Skills for the Business (Chaos / Reports)
+- `generate-ai-opportunity-report` (local in `.grok/skills/generate-ai-opportunity-report/SKILL.md`) — The dedicated skill that turns a raw ReportRequest / Chaos survey submission (from Firestore) into the exact "Personalized AI Opportunity Report" deliverable the customer receives. It is used by the desktop monitor tool (`tools/GrokFirebaseReportMonitor`) when new submissions arrive.
+
 Plugins are discovered from `.grok/plugins/<name>` (submodules here for clean versioning). Use `/plugins` (or Ctrl+L) in the TUI to manage, reload with `r`, or inspect components. The project versions take priority.
 
 When doing Vercel-related work (deploys, AI Gateway, env, performance), always load the vercel plugin skills + the local nextjs-developer / project-conventions.

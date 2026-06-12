@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ReportRequestSchema, saveReportRequestResponse, getRecentReportRequests, type ReportRequestData } from 'lib/surveys';
+import { parseUseTestCollection } from 'lib/collection-mode';
 import { z } from 'zod';
 
 // Clean API for Personalized AI Opportunity Report requests.
-// POST /api/report-request  -> save (supports ?test=true/false to choose collection; default = prod)
-// GET  /api/report-request?test=false  -> recent from test collection (for verification)
+// POST /api/report-request       -> prod survey_responses (default)
+// POST /api/report-request?test=true -> survey_responses_test
+// GET  /api/report-request?test=true -> recent from test collection (verification)
 
 const QuerySchema = z.object({
   test: z.enum(['true', 'false', '1', '0']).optional(),
@@ -17,11 +19,8 @@ export async function POST(request: NextRequest) {
     // Re-validate at the API boundary (untrusted input)
     const parsed = ReportRequestSchema.parse(body) as ReportRequestData;
 
-    // Determine collection from query (matches the client form convention)
     const { test } = QuerySchema.parse(Object.fromEntries(request.nextUrl.searchParams));
-    const useTest = test === 'true' || test === '1' || test === 'false' || test === '0'
-      ? (test === 'false' || test === '0')
-      : false; // default prod; ?test=false selects the local/custom test collection
+    const useTest = parseUseTestCollection(test, false);
 
     const id = await saveReportRequestResponse(parsed, useTest);
 
@@ -57,9 +56,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { test } = QuerySchema.parse(Object.fromEntries(request.nextUrl.searchParams));
-    const useTest = test === 'true' || test === '1' || test === 'false' || test === '0'
-      ? (test === 'false' || test === '0')
-      : true; // default to test collection for safe verification reads
+    const useTest = parseUseTestCollection(test, true);
 
     const recent = await getRecentReportRequests(useTest, 5);
 

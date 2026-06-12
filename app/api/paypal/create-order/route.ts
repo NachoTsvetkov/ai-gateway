@@ -18,6 +18,7 @@ import { createOrder } from "lib/paypal/orders";
 import type { CheckoutCustomer } from "lib/paypal/orders";
 import { PayPalApiError } from "lib/paypal/client";
 import { getPublicOrigin } from "lib/paypal/origin";
+import { saveOrder } from "lib/orders";
 
 type CreateOrderBody = {
   searchParams: {
@@ -75,6 +76,9 @@ export async function POST(req: Request) {
 
   const upsells = resolveLocalizedUpsells(body.searchParams.upsells, locale);
 
+  const upsellsTotalEur = upsells.reduce((sum, u) => sum + u.eur, 0);
+  const totalEur = buyable.oneTimeEur + upsellsTotalEur;
+
   // Use the public-facing origin (honours X-Forwarded-Host so ngrok /
   // tunnels / prod load balancers all hand PayPal a URL the buyer's
   // browser can actually return to). Pre-populate `?type=…&ref=…` so
@@ -96,6 +100,41 @@ export async function POST(req: Request) {
       returnUrl,
       cancelUrl,
     });
+
+    // Persist the order *at the moment the PayPal button is clicked* (create time).
+    // This gives us the full customer details + exact buyable even if the buyer
+    // never completes the popup or the final success signal is lost.
+    // We use a stable doc id (based on PayPal order id) so the later success
+    // can update the status to 'paid'.
+    //
+    // IMPORTANT: This write must never break the payment flow. If Firestore is down,
+    // rules are misdeployed, etc., we still return the PayPal order id so the buyer
+    // can continue.
+    try {
+      await saveOrder({
+        customer: body.customer,
+        buyable: {
+          kind: buyable.kind,
+          id: buyable.id,
+          tier: buyable.tier,
+          name: buyable.name,
+          oneTimeEur: buyable.oneTimeEur,
+          retainerEur: buyable.retainerEur,
+          reference: buyable.reference,
+        },
+        upsells: upsells.map((u) => ({ id: u.id, label: u.label, eur: u.eur })),
+        totalEur,
+        currency,
+        locale,
+        paypal: { kind: "order", id: order.id },
+        status: "created",
+        pageUrl: returnUrl,
+      }, false);
+    } catch (persistErr) {
+      console.error('[paypal] create-order: failed to persist intent record (non-fatal)', persistErr);
+      // Do not re-throw — payment creation must succeed for the buyer.
+    }
+
     return NextResponse.json({ id: order.id });
   } catch (err) {
     return errorResponse(err, "create_order_failed");

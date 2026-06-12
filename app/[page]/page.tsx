@@ -27,6 +27,12 @@ export default async function Page(props: {
   params: Promise<{ page: string }>;
 }) {
   const params = await props.params;
+  // Prevent the dynamic marketing [page] route from catching /api/* or other internal paths
+  // (ensures API routes like /api/orders take precedence; without this some dev setups with [page] catch-all
+  // and experimental features can cause 404 "page not found" for API GETs).
+  if (params.page === 'api' || params.page.startsWith('api')) {
+    notFound();
+  }
   const page = await getPage(params.page);
 
   if (!page) return notFound();

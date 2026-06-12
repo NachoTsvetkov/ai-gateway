@@ -28,25 +28,28 @@ export type ChaosSurveyData = ReportRequestData;
 
 /**
  * Saves a report request (Personalized AI Opportunity Report / audit survey response) to Firestore.
- * Called by the client form (optimistically) and the API route.
- * 
- * The `useTestCollection` flag + ?test= param lets us keep production data clean while testing.
+ *
+ * Per Client Journey docs: the **website only writes survey_responses** (or *_test).
+ * Contact creation, activity logging, and funnel progression are handled by the desktop app
+ * when it detects new surveys.
  */
 export async function saveReportRequestResponse(data: ReportRequestData, useTestCollection = false): Promise<string> {
-  // default=false=prod main collection; true=local/custom test bucket.
-  // ?test=false in the URL (or prop) forces the test collection.
   const parsed = ReportRequestSchema.parse(data);
 
-  console.log('Attempting to save report request to Firestore:', { collection: useTestCollection ? 'test' : 'prod', data: parsed });
+  const surveysColl = useTestCollection ? TEST_SURVEYS_COLLECTION : SURVEYS_COLLECTION;
 
-  const collectionName = useTestCollection ? TEST_SURVEYS_COLLECTION : SURVEYS_COLLECTION;
-
-  const docRef = await addDoc(collection(db, collectionName), {
-    ...parsed,
-    // serverTimestamp() removed to avoid resolution issues on new DBs / certain streams.
-    created_at: new Date().toISOString(),
+  console.log('Attempting to save report request to Firestore:', {
+    collection: useTestCollection ? TEST_SURVEYS_COLLECTION : SURVEYS_COLLECTION,
+    email: parsed.email,
+    source: parsed.source,
   });
 
+  const surveyData = {
+    ...parsed,
+    created_at: new Date().toISOString(),
+  };
+
+  const docRef = await addDoc(collection(db, surveysColl), surveyData);
   return docRef.id;
 }
 
@@ -58,8 +61,8 @@ export async function getRecentReportRequests(useTestCollection = false, maxResu
   const collectionName = useTestCollection ? TEST_SURVEYS_COLLECTION : SURVEYS_COLLECTION;
   const q = query(
     collection(db, collectionName),
-    orderBy('created_at', 'desc'), // fallback ordering since we use client created_at
-    limit(maxResults)
+    orderBy('created_at', 'desc'),
+    limit(maxResults),
   );
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({

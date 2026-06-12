@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
 import { ReportRequestSchema, type ReportRequestData } from 'lib/surveys';
+import { collectionQueryString } from 'lib/collection-mode';
 import { track } from 'lib/pixel/client';
 
 interface Props {
@@ -21,16 +22,18 @@ export function ReportRequestForm({
   title = 'Get Your Free Personalized AI Opportunity Report',
   intro = "Answer a few short questions and I'll send you a free personalized AI Opportunity Report with ideas tailored to your business within 48 hours. 100% free — no obligation.",
   painLabel = "What's your biggest current frustration or revenue leak?",
-  useTestCollection: propUseTest = false, // false (default) = prod collection; true = local/custom test bucket
+  useTestCollection: propUseTest = false, // false (default) = prod; true or ?test=true = test bucket
   onSuccess 
 }: Props) {
   const searchParams = useSearchParams();
   const urlTestParam = searchParams?.get('test');
-  // Prod is default. ?test=false (or 0) forces the local/custom test collection.
-  // ?test=true (or 1) forces prod.
-  const urlUseTest = (urlTestParam === 'false' || urlTestParam === '0') ? true :
-                     (urlTestParam === 'true' || urlTestParam === '1') ? false : undefined;
-  const useTestCollection = urlUseTest !== undefined ? urlUseTest : propUseTest;
+  // ?test=true (or 1) → test collection; ?test=false → prod; no param → prop default (prod on live pages)
+  const useTestCollection =
+    urlTestParam === 'true' || urlTestParam === '1'
+      ? true
+      : urlTestParam === 'false' || urlTestParam === '0'
+        ? false
+        : propUseTest;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -107,8 +110,8 @@ export function ReportRequestForm({
     // Fire the API call in the background (optimistic UI).
     // The visitor sees the thank-you immediately. The request is processed asynchronously.
     // The save will succeed once the Firestore database and security rules are correctly configured.
-    const testParam = useTestCollection ? 'false' : 'true';
-    fetch(`/api/report-request?test=${testParam}`, {
+    const testQuery = collectionQueryString(useTestCollection);
+    fetch(`/api/report-request${testQuery}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
