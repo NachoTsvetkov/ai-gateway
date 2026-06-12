@@ -19,7 +19,7 @@ export default function VirtualTeamRetainerAudit() {
       {/* Hero / Header - gradient background consistent with the main landing page hero */}
       <section
         aria-labelledby="audit-hero-heading"
-        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20"
+        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20 min-h-[65vh] flex items-center"
       >
         {/* Mask: knocks the saturated bg back to a usable surface on light/dark */}
         <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
@@ -31,7 +31,7 @@ export default function VirtualTeamRetainerAudit() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
         <div className="mx-auto max-w-3xl px-6">
-          <div className="mb-4">
+          <div className="mb-4 text-left">
             <Link
               href="/free-ai-audits"
               className="inline-flex items-center gap-1.5 text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
@@ -52,6 +52,7 @@ export default function VirtualTeamRetainerAudit() {
               All free audits
             </Link>
           </div>
+          <div className="text-center">
 
           <p className="text-sm font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
             Ongoing AI Virtual Team Member
@@ -71,33 +72,8 @@ export default function VirtualTeamRetainerAudit() {
             AI that keeps working and improving • Monthly strategy &amp; optimization • Predictable results
           </div>
         </div>
-      </section>
-
-      <div className="mx-auto max-w-3xl px-6 pt-12">
-        <div className="text-center text-sm font-medium uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4">
-          Real Results from Small Businesses Like Yours
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <a
-            href="/projects/ai-shopify-store"
-            className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-          >
-            <div className="font-semibold text-neutral-900 dark:text-white">AI-Powered Shopify Store</div>
-            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
-              Autonomous agents + voice + recovery running 24/7 with monthly optimization
-            </p>
-          </a>
-          <a
-            href="/projects/autonomous-agentic-commerce-bot"
-            className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-          >
-            <div className="font-semibold text-neutral-900 dark:text-white">Autonomous Agentic Commerce Bot</div>
-            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
-              Tool-calling AI that acts on your behalf — continuously improving
-            </p>
-          </a>
-        </div>
       </div>
+      </section>
 
       <div className="mx-auto max-w-3xl px-6 py-12 lg:py-16">
         <div className="text-center mb-6">
@@ -114,16 +90,35 @@ export default function VirtualTeamRetainerAudit() {
           useTestCollection={false}
         />
 
-        <div className="mt-12 text-center text-sm">
-          <a href="https://calendly.com/nacho-tsvetkov/30min" className="text-blue-600 hover:underline dark:text-blue-400">
-            While you wait — book your free 15-min discovery call →
+        <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <a 
+            href="https://calendly.com/nacho-tsvetkov/30min" 
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
+          >
+            Book your free 15-min discovery call →
           </a>
-          <span className="mx-3 text-neutral-400">•</span>
-          <a href="/bundles/enterprise" className="text-blue-600 hover:underline dark:text-blue-400">
-            Or explore proven AI solutions →
+          <a 
+            href="/bundles/enterprise" 
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
+          >
+            Explore proven AI solutions →
           </a>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-neutral-200 bg-neutral-50 py-8 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="mx-auto max-w-3xl px-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
+          <p>
+            &copy; {new Date().getFullYear()} Nacho Tsvetkov. All rights reserved.
+          </p>
+          <p className="mt-1 text-xs">
+            <a href="mailto:nacho.tsvetkov@gmail.com" className="hover:underline">nacho.tsvetkov@gmail.com</a>
+            {" · "}
+            <a href="https://calendly.com/nacho-tsvetkov/30min" className="hover:underline">Book a call</a>
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

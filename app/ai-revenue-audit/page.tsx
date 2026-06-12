@@ -19,7 +19,7 @@ export default function RevenueLeakAudit() {
       {/* Hero / Header - gradient background consistent with the main landing page hero */}
       <section
         aria-labelledby="audit-hero-heading"
-        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20"
+        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20 min-h-[65vh] flex items-center"
       >
         {/* Mask: knocks the saturated bg back to a usable surface on light/dark */}
         <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
@@ -31,7 +31,7 @@ export default function RevenueLeakAudit() {
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
         <div className="mx-auto max-w-3xl px-6">
-          <div className="mb-4">
+          <div className="mb-4 text-left">
             <Link
               href="/free-ai-audits"
               className="inline-flex items-center gap-1.5 text-sm text-neutral-600 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
@@ -53,52 +53,27 @@ export default function RevenueLeakAudit() {
             </Link>
           </div>
 
-          <p className="text-sm font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
-            Revenue Leak / Quick Wins
-          </p>
-          <h1
-            id="audit-hero-heading"
-            className="mt-3 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl dark:text-white"
-          >
-            Stop Losing Revenue While You Sleep — Get Your Free AI Revenue Leak Audit
-          </h1>
-          <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
-            In 15 minutes or less, identify hidden leaks in bookings, leads, and follow-ups. I'll personally review your answers and send you 3 tailored AI fixes that have delivered +340% more bookings for other small businesses.
-          </p>
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
+              Revenue Leak / Quick Wins
+            </p>
+            <h1
+              id="audit-hero-heading"
+              className="mt-3 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl dark:text-white"
+            >
+              Stop Losing Revenue While You Sleep — Get Your Free AI Revenue Leak Audit
+            </h1>
+            <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
+              In 15 minutes or less, identify hidden leaks in bookings, leads, and follow-ups. I'll personally review your answers and send you 3 tailored AI fixes that have delivered +340% more bookings for other small businesses.
+            </p>
 
-          <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
-            Used by fitness studios, boutiques &amp; service businesses • Results in under 2 weeks
+            <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
+              Used by fitness studios, boutiques &amp; service businesses • Results in under 2 weeks
+            </div>
           </div>
         </div>
       </section>
-
-      {/* Social proof - consistent card style from home */}
-      <div className="mx-auto max-w-3xl px-6 pt-12">
-        <div className="text-center text-sm font-medium uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4">
-          Real Results from Small Businesses Like Yours
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <a
-            href="/projects/local-fitness-studio"
-            className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-          >
-            <div className="font-semibold text-neutral-900 dark:text-white">Local Fitness Studio (KORE)</div>
-            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
-              +340% bookings, 0 missed calls with AI booking flow + chatbot
-            </p>
-          </a>
-          <a
-            href="/projects/boutique-fashion-brand"
-            className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-          >
-            <div className="font-semibold text-neutral-900 dark:text-white">Boutique Fashion Brand (ROZÉ)</div>
-            <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-300">
-              28% cart recovery +19% AOV with AI personalization + automation
-            </p>
-          </a>
-        </div>
-      </div>
 
       {/* Form section */}
       <div className="mx-auto max-w-3xl px-6 py-12 lg:py-16">
@@ -116,16 +91,35 @@ export default function RevenueLeakAudit() {
           useTestCollection={false}
         />
 
-        <div className="mt-12 text-center text-sm">
-          <a href="https://calendly.com/nacho-tsvetkov/30min" className="text-blue-600 hover:underline dark:text-blue-400">
-            While you wait — book your free 15-min discovery call →
+        <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <a 
+            href="https://calendly.com/nacho-tsvetkov/30min" 
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
+          >
+            Book your free 15-min discovery call →
           </a>
-          <span className="mx-3 text-neutral-400">•</span>
-          <a href="/bundles/enterprise" className="text-blue-600 hover:underline dark:text-blue-400">
-            Or explore proven AI solutions that delivered results →
+          <a 
+            href="/bundles/enterprise" 
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
+          >
+            Explore proven AI solutions →
           </a>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-neutral-200 bg-neutral-50 py-8 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="mx-auto max-w-3xl px-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
+          <p>
+            &copy; {new Date().getFullYear()} Nacho Tsvetkov. All rights reserved.
+          </p>
+          <p className="mt-1 text-xs">
+            <a href="mailto:nacho.tsvetkov@gmail.com" className="hover:underline">nacho.tsvetkov@gmail.com</a>
+            {" · "}
+            <a href="https://calendly.com/nacho-tsvetkov/30min" className="hover:underline">Book a call</a>
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

@@ -16,7 +16,8 @@ service cloud.firestore {
         && request.resource.data.email is string
         // source etc are non-empty strings (Zod already enforces on client+server)
         ;
-      allow read, update, delete: if false; // console only for Nacho
+      allow read: if false;   // keep prod locked for now (owner can still browse in console)
+      allow update, delete: if false;
     }
 
     match /chaos_survey_responses_test/{docId} {
@@ -27,7 +28,8 @@ service cloud.firestore {
         && request.resource.data.interest is number
         && request.resource.data.interest >= 1 && request.resource.data.interest <= 10
         && request.resource.data.email is string;
-      allow read, update, delete: if false;
+      allow read: if true;    // allow reads on test collection so the verification script + /api/report-request GET work
+      allow update, delete: if false;
     }
 
     // Add other app rules here as needed (never open /*/* broadly).

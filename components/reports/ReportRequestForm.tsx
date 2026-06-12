@@ -92,15 +92,31 @@ export function ReportRequestForm({
     })
       .then(async (res) => {
         if (!res.ok) {
-          const errBody = await res.json().catch(() => ({}));
-          console.error('Report request API non-OK (data may still have landed):', errBody);
+          // Background failure is ok due to optimistic UI; the request may have landed or will be retried via Calendly.
+          // Only log details in dev for debugging.
+          if (process.env.NODE_ENV === 'development') {
+            let errBody;
+            try {
+              errBody = await res.json();
+            } catch {
+              errBody = await res.text().catch(() => '');
+            }
+            const msg = errBody?.error?.message || (typeof errBody === 'string' ? errBody : JSON.stringify(errBody));
+            if (msg) {
+              console.warn('Report request API non-OK (data may still have landed):', msg);
+            }
+          }
         } else {
           const j = await res.json().catch(() => ({}));
-          console.log('Report request saved via API:', j);
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Report request saved via API:', j);
+          }
         }
       })
       .catch((e) => {
-        console.error('Report request API call failed to send (Calendly remains available):', e);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Report request API call failed to send (Calendly remains available):', e);
+        }
       });
 
     // Always show the friendly success state right away
@@ -219,18 +235,12 @@ export function ReportRequestForm({
       {currentStep === 5 && (
         <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What budget range would you consider for a solution that delivers clear ROI?</label>
-            <select
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What would feel like a fair price for a solution that delivers these results for your business?</label>
+            <input
               {...register('budget')}
-              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:focus:border-blue-400 dark:focus:ring-blue-400"
-            >
-              <option value="">Select...</option>
-              <option value="Under $500">Under $500</option>
-              <option value="$500–$2,000">$500–$2,000</option>
-              <option value="$2,000–$5,000">$2,000–$5,000</option>
-              <option value="$5,000+">$5,000+</option>
-              <option value="Not sure yet">Not sure yet</option>
-            </select>
+              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+              placeholder="e.g. $2,000 or whatever feels like a fair price for these results"
+            />
             {errors.budget && <p className="text-sm text-red-600 dark:text-red-400">{errors.budget.message}</p>}
           </div>
 

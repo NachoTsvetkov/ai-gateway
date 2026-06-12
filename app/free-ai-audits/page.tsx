@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ReportRequestForm } from 'components/reports/ReportRequestForm';
 import { ViewContentTracker } from 'components/analytics/view-content-tracker';
 
 export const metadata = {
@@ -124,7 +123,7 @@ export default function FreeAIAuditsHub() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="mt-12 mb-12 text-center">
           <p className="text-neutral-600 dark:text-neutral-400">
             Not sure which one is right for you?{' '}
             <a href="https://calendly.com/nacho-tsvetkov/30min" className="font-medium text-blue-600 hover:underline dark:text-blue-400">
@@ -133,17 +132,21 @@ export default function FreeAIAuditsHub() {
           </p>
         </div>
 
-        {/* Quick test form using test collection */}
-        <div className="mx-auto mt-16 max-w-2xl">
-          <div className="mb-4 text-center text-sm font-medium uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-            Quick test (writes to test collection)
-          </div>
-          <ReportRequestForm 
-            source="hub-test" 
-            title="Quick internal test form"
-            useTestCollection={true}  // true = local/custom test bucket; default=false=prod. ?test=false in URL forces local/custom on any page.
-          />
+      {/* Footer */}
+      <footer className="border-t border-neutral-200 bg-neutral-50 py-8 dark:border-neutral-800 dark:bg-neutral-950">
+        <div className="mx-auto max-w-7xl px-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
+          <p>
+            &copy; {new Date().getFullYear()} Nacho Tsvetkov. All rights reserved.
+          </p>
+          <p className="mt-1 text-xs">
+            <a href="mailto:nacho.tsvetkov@gmail.com" className="hover:underline">nacho.tsvetkov@gmail.com</a>
+            {" · "}
+            <a href="https://calendly.com/nacho-tsvetkov/30min" className="hover:underline">Book a call</a>
+            {" · "}
+            <a href="/" className="hover:underline">Back to home</a>
+          </p>
         </div>
+      </footer>
     </main>
   );
 }

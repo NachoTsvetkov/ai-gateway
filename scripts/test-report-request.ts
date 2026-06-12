@@ -16,7 +16,7 @@ async function test() {
     pain: 'Missed leads after hours and manual follow up taking too much time',
     desired_results: 'More bookings without hiring staff, time back for coaching',
     tried_so_far: 'Tried basic booking software and manual follow-ups',
-    budget: '$2,000–$5,000',
+    budget: '$1,500–$2,500',
     interest: 9,
     email: 'test@example.com',
     additional_details: 'This is a test submission from the Grok implementation task. Please ignore/delete.',
@@ -81,9 +81,10 @@ async function test() {
     console.log('   (We have firebase.json, .firebaserc, and firestore.rules already set up for you.)');
     console.log('');
     console.log('   Alternative location? Run: npx firebase firestore:locations');
-    console.log('   Console fallback: https://console.firebase.google.com/project/nachotsvetkov-cbaa7/firestore');
+    console.log('   Console fallback (since you created DB via web console): https://console.firebase.google.com/project/nachotsvetkov-cbaa7/firestore');
+    console.log('   -> In the Firestore section, go to Rules tab, paste the entire content of the local "firestore.rules" file, and Publish.');
     console.log('');
-    console.log('2. After the above succeeds, re-run this script: npx tsx scripts/test-report-request.ts');
+    console.log('2. After the above succeeds (rules deployed), re-run this script: npx tsx scripts/test-report-request.ts');
     console.log('3. Test live forms at http://localhost:3000 (dev server is running). Use ?test=false for test bucket.');
     console.log('4. Other issues: API not enabled, billing, or data validation.');
     process.exit(1);

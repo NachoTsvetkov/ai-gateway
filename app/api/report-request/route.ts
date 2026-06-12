@@ -65,8 +65,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, collection: useTest ? 'test' : 'prod', recent });
   } catch (err: any) {
+    console.error('GET /api/report-request error (full):', err);
     return NextResponse.json(
-      { error: { code: 'FETCH_FAILED', message: err?.message || 'Failed to fetch recent requests' } },
+      { error: { code: 'FETCH_FAILED', message: err?.message || 'Failed to fetch recent requests', stack: err?.stack?.split('\n').slice(0,5).join('\n') } },
       { status: 500 }
     );
   }
