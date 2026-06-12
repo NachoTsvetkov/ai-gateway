@@ -25,8 +25,9 @@ export function ChaosSurveyForm({
   onSuccess 
 }: Props) {
   const searchParams = useSearchParams();
-  const urlTest = searchParams?.get('test') === 'true' || searchParams?.get('test') === '1';
-  const useTestCollection = propUseTest || urlTest;
+  const urlTestParam = searchParams?.get('test');
+  const urlUseTest = urlTestParam === 'true' || urlTestParam === '1' ? true : (urlTestParam === 'false' || urlTestParam === '0' ? false : undefined);
+  const useTestCollection = urlUseTest !== undefined ? urlUseTest : propUseTest;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
