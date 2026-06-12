@@ -12,14 +12,23 @@ import {
   setSurveyMonitorStatus,
   upsertContactReportSent,
 } from 'lib/desktop-firestore';
-import { sendGmailHtml, isGmailConfigured } from 'lib/gmail-send';
+import { sendGmailReportDelivery, isGmailConfigured } from 'lib/gmail-send';
+import { renderReportPdf } from 'lib/report-pdf';
+import { assessSurveyForReport } from 'lib/survey-quality';
+import type { ReportRequestData } from 'lib/surveys';
 
 const BodySchema = z.object({
   reportId: z.string().min(1),
   surveyId: z.string().optional(),
   toEmail: z.string().email().optional(),
   test: z.boolean().optional().default(false),
+  /** Local testing only — requires ALLOW_PLACEHOLDER_REPORT_SEND=true on the server. */
+  forceSend: z.boolean().optional().default(false),
 });
+
+function placeholderSendAllowed(forceSend: boolean): boolean {
+  return forceSend && process.env.ALLOW_PLACEHOLDER_REPORT_SEND === 'true';
+}
 
 const STAGE_RANK: Record<string, number> = {
   marketing_lead: 10,
@@ -42,10 +51,24 @@ function pickFunnelStage(existing: string | undefined, incoming: string): string
   return next >= cur ? incoming : existing;
 }
 
+async function resolvePdfBuffer(report: {
+  pdfBase64?: string;
+  content?: string;
+  attachmentFileName?: string;
+}): Promise<{ buffer: Buffer; filename: string }> {
+  const filename = report.attachmentFileName || 'AI-Opportunity-Report.pdf';
+  if (report.pdfBase64) {
+    return { buffer: Buffer.from(report.pdfBase64, 'base64'), filename };
+  }
+  if (report.content && report.content.length > 100) {
+    return { buffer: await renderReportPdf(report.content), filename };
+  }
+  throw new Error('Report has no PDF attachment data');
+}
+
 /**
  * POST /api/desktop/send-report
- * Sends a generated HTML report via Gmail and updates Firestore journey state.
- * Header: X-Desktop-Sync-Secret
+ * Sends short delivery email + PDF report attachment via Gmail.
  */
 export async function POST(request: NextRequest) {
   if (!authorizeDesktopRequest(request)) return desktopUnauthorizedResponse();
@@ -78,8 +101,12 @@ export async function POST(request: NextRequest) {
     const report = reportDoc.data as {
       contactId: string;
       surveyResponseId?: string;
-      content: string;
+      content?: string;
       subject?: string;
+      emailHtml?: string;
+      emailText?: string;
+      attachmentFileName?: string;
+      pdfBase64?: string;
     };
 
     const surveyId = body.surveyId || report.surveyResponseId;
@@ -99,16 +126,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (surveyId && !placeholderSendAllowed(body.forceSend)) {
+      const survey = await getSurveyDoc(surveyId, useTest);
+      if (survey) {
+        const surveyData = survey.data as ReportRequestData;
+        const quality = assessSurveyForReport(surveyData);
+        if (!quality.valid) {
+          return NextResponse.json(
+            {
+              error: {
+                code: 'INSUFFICIENT_SURVEY_DATA',
+                message:
+                  'Survey answers are too vague to send a personalized report. Ask the client for real answers and regenerate. For local pipeline testing, set ALLOW_PLACEHOLDER_REPORT_SEND=true in .env.local and AllowPlaceholderReportSend in appsettings.json.',
+                reasons: quality.reasons,
+              },
+            },
+            { status: 422 },
+          );
+        }
+      }
+    }
+
     const subject = report.subject || 'Your Personalized AI Opportunity Report';
-    const html = report.content;
-    if (!html || html.length < 100) {
+    const emailHtml = report.emailHtml;
+    const emailText = report.emailText;
+
+    if (!emailHtml || !emailText) {
       return NextResponse.json(
-        { error: { code: 'EMPTY_REPORT', message: 'Report has no HTML content' } },
+        { error: { code: 'MISSING_EMAIL_BODY', message: 'Report has no delivery email — regenerate the report' } },
         { status: 400 },
       );
     }
 
-    const gmailResult = await sendGmailHtml(toEmail, subject, html);
+    const { buffer: pdfBuffer, filename } = await resolvePdfBuffer(report);
+
+    const gmailResult = await sendGmailReportDelivery(
+      toEmail,
+      subject,
+      emailHtml,
+      emailText,
+      {
+        filename,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    );
+
     const now = new Date().toISOString();
 
     await markReportSent(body.reportId, useTest, now);
@@ -140,7 +203,12 @@ export async function POST(request: NextRequest) {
         subject,
         template: 'report_delivery',
         category: 'correspondence',
-        bodyPreview: html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 2000),
+        bodyPreview: emailText.slice(0, 2000),
+        emailHtml,
+        emailText,
+        attachmentFileName: filename,
+        attachmentContentType: 'application/pdf',
+        hasAttachment: true,
         status: 'sent',
         sentAt: now,
         created_at: now,
@@ -153,7 +221,12 @@ export async function POST(request: NextRequest) {
     await logReportSentActivity(
       contactId,
       `Personalized AI Opportunity Report sent to ${toEmail}`,
-      { reportId: body.reportId, surveyId: surveyId ?? null, gmailMessageId: gmailResult.messageId },
+      {
+        reportId: body.reportId,
+        surveyId: surveyId ?? null,
+        gmailMessageId: gmailResult.messageId,
+        attachmentFileName: filename,
+      },
       useTest,
       now,
     );
@@ -168,6 +241,7 @@ export async function POST(request: NextRequest) {
       surveyId: surveyId ?? null,
       toEmail,
       subject,
+      attachmentFileName: filename,
       gmailMessageId: gmailResult.messageId,
       sentAt: now,
     });

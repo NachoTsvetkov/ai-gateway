@@ -1,13 +1,18 @@
 import { generateObject, gateway } from 'ai';
 import { z } from 'zod';
 import type { ReportRequestData } from './surveys';
+import {
+  buildDeliveryEmailHtml,
+  buildDeliveryEmailText,
+  defaultReportSubject,
+  reportAttachmentFileName,
+} from './report-delivery-email';
 import { wrapReportHtml, type ReportTemplateContent } from './report-email-template';
+import { renderReportPdf } from './report-pdf';
+import { assertSurveyQualityForReport } from './survey-quality';
 
 const ReportContentSchema = z.object({
-  subject: z.string().min(10).max(120),
-  kicker: z.string().min(3).max(80),
   headline: z.string().min(10).max(120),
-  introHtml: z.string().min(20),
   sections: z
     .array(
       z.object({
@@ -16,15 +21,19 @@ const ReportContentSchema = z.object({
         bullets: z.array(z.string()),
       }),
     )
-    .min(6)
-    .max(6),
-  closingHtml: z.string().min(20),
+    .length(7),
 });
 
 export type GeneratedReport = {
   subject: string;
-  html: string;
+  reportHtml: string;
+  emailHtml: string;
+  emailText: string;
+  attachmentFileName: string;
+  pdfBase64: string;
   content: ReportTemplateContent;
+  /** @deprecated use reportHtml */
+  html: string;
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -37,6 +46,7 @@ const SOURCE_LABELS: Record<string, string> = {
 };
 
 const REQUIRED_SECTION_TITLES = [
+  'Introduction',
   'Your Current Situation',
   'Key Opportunities I See',
   'Recommended AI Solutions',
@@ -46,55 +56,45 @@ const REQUIRED_SECTION_TITLES = [
 ] as const;
 
 function buildSystemPrompt(): string {
-  return `You are an expert AI automation consultant helping small business owners. You write Personalized AI Opportunity Reports for Nacho Tsvetkov's free audit offer (nachotsvetkov.com).
+  return `You are an expert AI automation consultant helping small business owners.
+
+Write a personalized, professional **AI Opportunity Report** based on the survey responses provided.
 
 **Tone:** Professional but approachable, helpful, and confident. Avoid hype or overly salesy language. Use simple, clear language.
 
-**Length:** Aim for 600–900 words total across all sections.
+**Length:** 600–900 words total across all sections.
 
-**Output format:** Structured content only (NOT a full HTML document). The website wraps your content in a branded email template automatically.
+**Output format:** Structured content only (NOT a full HTML document). The website wraps your content in a branded PDF template.
 
-**HTML rules for introHtml, bodyHtml, closingHtml:**
-- Use only email-safe inline-friendly tags: <p>, <strong>, <em>, <br> — no markdown, no headings inside bodyHtml (section titles are separate).
-- No external CSS, no <style> blocks, no JavaScript, no images, no div/class/id attributes.
-- Keep paragraphs short (2–4 sentences). Use bullets array for lists (plain text strings, no HTML in bullets).
+**HTML rules for bodyHtml:**
+- Use only: <p>, <strong>, <em>, <br> — no markdown, no headings inside bodyHtml (section titles are separate).
+- No external CSS, scripts, images, or div/class/id attributes.
+- Keep paragraphs short (2–4 sentences). Use bullets array for lists (plain text strings).
 
-**Personalization:** Reference the client's business type, goals, challenges, budget, and what they've tried from the survey.
+**Personalization:** Reference business type, goals, challenges, budget, and what they've tried. Only use details that appear in the survey — never invent specifics.
 
-**Recommendations:** Tie solutions to real offerings on nachotsvetkov.com:
-- Custom AI chatbots and virtual employees / AI receptionists
-- Business automation systems and AI agents
-- AI-powered websites and Shopify storefront integrations (voice shopping, visual stylist, cart recovery, analytics)
-- Marketing automation
-- Retainer-based AI virtual team support
+**Data quality:** If any answer looks like a placeholder (e.g. "test", "asdf", "foo", single repeated words, or identical fields), do NOT fabricate business context. Write only from distinct, substantive survey answers.
 
-**Section structure (exact titles for the sections array, in this order):**
-1. Your Current Situation — empathetic summary of their challenges from the survey
-2. Key Opportunities I See — 3–5 high-level opportunities (use bullets)
-3. Recommended AI Solutions — 2–4 specific solutions tied to nachotsvetkov.com offerings; for each mention expected benefit and relative complexity (use bullets)
-4. Quick Wins You Could Implement — 2–3 practical suggestions they could do quickly without hiring help (use bullets)
-5. Potential Business Impact — realistic, conservative estimate of time/money saved or revenue gained; do NOT promise specific revenue numbers
-6. Recommended Next Steps — clear, low-pressure CTA to book a free discovery call (Calendly link is added by the template — do not invent URLs)
+**Recommendations:** Tie to nachotsvetkov.com offerings — custom AI chatbots, automation systems, AI agents, AI-powered websites, marketing automation, retainers.
 
-**introHtml:** Introduction section — thank them and show you understood their business and main goal (1–2 paragraphs).
+**Section structure (exact titles, this order):**
+1. Introduction — thank the client; show you understood their business and main goal
+2. Your Current Situation — empathetic summary of challenges from the survey
+3. Key Opportunities I See — 3–5 high-level opportunities (use bullets)
+4. Recommended AI Solutions — 2–4 specific solutions with expected benefit and complexity (use bullets)
+5. Quick Wins You Could Implement — 2–3 practical suggestions without hiring help (use bullets)
+6. Potential Business Impact — realistic, conservative time/revenue impact; no guaranteed numbers
+7. Recommended Next Steps — soft invitation to book a discovery call (no invented URLs)
 
-**closingHtml:** Warm personal sign-off from Nacho (1 short paragraph). Mention the report was prepared from their survey answers.
+**headline:** Tailored to business_type and main pain (short, benefit-oriented)
 
-**subject:** Personal, not spammy — e.g. "Your Personalized AI Opportunity Report — [Business Type]"
-
-**kicker:** "Personalized AI Opportunity Report"
-
-**headline:** Tailored to their business_type and main pain (short, benefit-oriented)
-
-**Important rules:**
-- Do not promise specific results or guaranteed revenue.
-- Focus on value and possibilities, not hard selling.
-- Make it feel custom-written for this specific business.
-- Do not output markdown.`;
+**Rules:** No specific revenue promises. Helpful not salesy. Custom-written feel. No markdown.`;
 }
 
 function buildUserPrompt(survey: ReportRequestData & { id?: string }): string {
-  return `Write the report content for this survey submission.
+  return `Write the report for this survey.
+
+The survey has already been validated — all answers below are real client input. Personalize every section from these specifics.
 
 Use exactly these section titles in order: ${REQUIRED_SECTION_TITLES.join(' | ')}
 
@@ -119,9 +119,14 @@ ${JSON.stringify(
 )}`;
 }
 
-export async function generateOpportunityReportHtml(
+export async function generateOpportunityReport(
   survey: ReportRequestData & { id?: string; created_at?: string },
 ): Promise<GeneratedReport> {
+  const quality = assertSurveyQualityForReport(survey);
+  const businessName = quality.businessName!;
+  const firstName = quality.firstName!;
+  const personalizedNote = quality.personalizedNote;
+
   const { object } = await generateObject({
     model: gateway('openai/gpt-4o'),
     schema: ReportContentSchema,
@@ -129,17 +134,43 @@ export async function generateOpportunityReportHtml(
     prompt: buildUserPrompt(survey),
   });
 
+  const subject = defaultReportSubject(businessName);
+
   const content: ReportTemplateContent = {
-    ...object,
-    recipientName: survey.business_type || survey.email.split('@')[0],
+    subject,
+    kicker: 'Personalized AI Opportunity Report',
+    headline: object.headline,
+    sections: object.sections,
+    recipientName: businessName,
+    businessName,
     sourceLabel: SOURCE_LABELS[survey.source] || survey.source,
   };
 
-  const html = wrapReportHtml(content);
+  const reportHtml = wrapReportHtml(content);
+  const attachmentFileName = reportAttachmentFileName(businessName);
+
+  const deliveryParams = {
+    firstName,
+    businessName,
+    personalizedNote,
+    attachmentFileName,
+  };
+
+  const emailHtml = buildDeliveryEmailHtml(deliveryParams);
+  const emailText = buildDeliveryEmailText(deliveryParams);
+  const pdfBuffer = await renderReportPdf(reportHtml);
+  const pdfBase64 = pdfBuffer.toString('base64');
 
   return {
-    subject: object.subject,
-    html,
+    subject,
+    reportHtml,
+    html: reportHtml,
+    emailHtml,
+    emailText,
+    attachmentFileName,
+    pdfBase64,
     content,
   };
 }
+
+export const generateOpportunityReportHtml = generateOpportunityReport;

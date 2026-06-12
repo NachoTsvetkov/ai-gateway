@@ -12,23 +12,43 @@ import {
   setSurveyMonitorStatus,
   getSurveyDoc,
 } from 'lib/desktop-firestore';
-import { generateOpportunityReportHtml } from 'lib/report-generation';
+import { generateOpportunityReport } from 'lib/report-generation';
+import { SurveyQualityError } from 'lib/survey-quality';
 import { contactIdFromEmail } from 'lib/journey';
 import { buildReportRecord } from 'lib/report-records';
 import type { ReportRequestData } from 'lib/surveys';
 
-export const maxDuration = 120;
+export const maxDuration = 180;
 
 const BodySchema = z.object({
   surveyId: z.string().min(1),
   test: z.boolean().optional().default(false),
 });
 
-/**
- * POST /api/desktop/generate-report
- * Generates a branded HTML report via AI Gateway and saves it to Firestore.
- * Header: X-Desktop-Sync-Secret
- */
+function reportPayload(data: Record<string, unknown>, reportId: string) {
+  return {
+    success: true,
+    reportId,
+    surveyId: data.surveyResponseId ?? null,
+    contactId: data.contactId,
+    toEmail: data.toEmail ?? null,
+    subject: data.subject ?? null,
+    headline: data.headline ?? null,
+    status: data.status ?? null,
+    contentFormat: data.contentFormat ?? 'html',
+    html: data.content ?? '',
+    reportHtml: data.content ?? '',
+    emailHtml: data.emailHtml ?? '',
+    emailText: data.emailText ?? '',
+    attachmentFileName: data.attachmentFileName ?? null,
+    attachmentContentType: data.attachmentContentType ?? 'application/pdf',
+    bodyPreview: data.bodyPreview ?? null,
+    created_at: data.created_at ?? null,
+    sentAt: data.sentAt ?? null,
+    hasPdfAttachment: Boolean(data.pdfBase64),
+  };
+}
+
 export async function POST(request: NextRequest) {
   if (!authorizeDesktopRequest(request)) return desktopUnauthorizedResponse();
 
@@ -69,7 +89,7 @@ export async function POST(request: NextRequest) {
 
     await setSurveyMonitorStatus(body.surveyId, 'GeneratingReport', useTest);
 
-    const generated = await generateOpportunityReportHtml({
+    const generated = await generateOpportunityReport({
       ...surveyData,
       id: body.surveyId,
     });
@@ -90,39 +110,45 @@ export async function POST(request: NextRequest) {
     await logReportGeneratedActivity(contactId, body.surveyId, reportId, useTest, now);
 
     return NextResponse.json({
-      success: true,
-      reportId,
+      ...reportPayload(record as unknown as Record<string, unknown>, reportId),
       surveyId: body.surveyId,
-      contactId,
-      toEmail: surveyData.email.trim().toLowerCase(),
-      subject: generated.subject,
-      headline: record.headline,
-      html: generated.html,
+      pdfBase64: generated.pdfBase64,
     });
   } catch (err: unknown) {
     if (surveyIdForRevert) {
       try {
         await setSurveyMonitorStatus(surveyIdForRevert, 'New', useTestForRevert);
       } catch {
-        /* ignore revert failure */
+        /* ignore */
       }
     }
+
+    if (err instanceof SurveyQualityError) {
+      return NextResponse.json(
+        {
+          error: {
+            code: err.code,
+            message: err.message,
+            reasons: err.reasons,
+          },
+        },
+        { status: 422 },
+      );
+    }
+
     const message = err instanceof Error ? err.message : 'Report generation failed';
     console.error('POST /api/desktop/generate-report error', err);
     return NextResponse.json({ error: { code: 'GENERATION_FAILED', message } }, { status: 500 });
   }
 }
 
-/**
- * GET /api/desktop/generate-report?reportId=... or ?surveyId=...
- * Fetch a saved report (full HTML) for desktop preview/resend.
- */
 export async function GET(request: NextRequest) {
   if (!authorizeDesktopRequest(request)) return desktopUnauthorizedResponse();
 
   const reportId = request.nextUrl.searchParams.get('reportId');
   const surveyId = request.nextUrl.searchParams.get('surveyId');
   const useTest = request.nextUrl.searchParams.get('test') === 'true';
+  const includePdf = request.nextUrl.searchParams.get('includePdf') === 'true';
 
   if (!reportId && !surveyId) {
     return NextResponse.json(
@@ -143,19 +169,11 @@ export async function GET(request: NextRequest) {
   }
 
   const data = doc.data;
-  return NextResponse.json({
-    success: true,
-    reportId: reportId ?? doc.ref.id,
-    surveyId: data.surveyResponseId ?? null,
-    contactId: data.contactId,
-    toEmail: data.toEmail ?? null,
-    subject: data.subject ?? null,
-    headline: data.headline ?? null,
-    status: data.status ?? null,
-    contentFormat: data.contentFormat ?? 'html',
-    html: data.content ?? '',
-    bodyPreview: data.bodyPreview ?? null,
-    created_at: data.created_at ?? null,
-    sentAt: data.sentAt ?? null,
-  });
+  const payload = reportPayload(data, reportId ?? doc.ref.id);
+
+  if (includePdf && data.pdfBase64) {
+    return NextResponse.json({ ...payload, pdfBase64: data.pdfBase64 });
+  }
+
+  return NextResponse.json(payload);
 }

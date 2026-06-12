@@ -18,7 +18,8 @@
     "test:marketing": "tsx scripts/test-marketing-email.ts",
     "test:firebase": "npm run test:surveys && npm run test:orders",
     "test:generate-report": "tsx scripts/test-generate-report.ts",
-    "test:fetch-report": "tsx scripts/test-fetch-report.ts"
+    "test:fetch-report": "tsx scripts/test-fetch-report.ts",
+    "test:report-pdf": "tsx scripts/test-report-pdf.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",
@@ -27,12 +28,15 @@
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.4.0",
     "@paypal/react-paypal-js": "^9.2.0",
+    "@sparticuz/chromium-min": "^147.0.0",
     "ai": "^6.0.142",
     "clsx": "^2.1.1",
     "firebase": "^12.14.0",
     "geist": "^1.3.1",
     "next": "15.6.0-canary.60",
     "nodemailer": "^8.0.11",
+    "puppeteer": "^25.1.0",
+    "puppeteer-core": "^25.1.0",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "react-hook-form": "^7.78.0",

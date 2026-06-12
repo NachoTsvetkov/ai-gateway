@@ -16,7 +16,13 @@ export type ReportRecord = {
   headline: string;
   kicker: string;
   sourceLabel: string;
+  /** Full report HTML (PDF source) */
   content: string;
+  emailHtml: string;
+  emailText: string;
+  attachmentFileName: string;
+  attachmentContentType: 'application/pdf';
+  pdfBase64: string;
   bodyPreview: string;
   model: string;
   generatedBy: 'website-api';
@@ -31,7 +37,6 @@ export function stripHtmlPreview(html: string, max = 500): string {
   return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max);
 }
 
-/** Stable doc id — one canonical report per survey (regenerate overwrites). */
 export function reportDocIdFromSurvey(surveyId: string): string {
   const safe = surveyId.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80);
   return `rpt_${safe}`;
@@ -55,8 +60,13 @@ export function buildReportRecord(
     headline: content.headline,
     kicker: content.kicker,
     sourceLabel: content.sourceLabel ?? survey.source,
-    content: generated.html,
-    bodyPreview: stripHtmlPreview(generated.html),
+    content: generated.reportHtml,
+    emailHtml: generated.emailHtml,
+    emailText: generated.emailText,
+    attachmentFileName: generated.attachmentFileName,
+    attachmentContentType: 'application/pdf',
+    pdfBase64: generated.pdfBase64,
+    bodyPreview: generated.emailText.slice(0, 500),
     model: REPORT_MODEL_ID,
     generatedBy: 'website-api',
     created_at: now,
