@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { authorizeDesktopRequest, desktopUnauthorizedResponse } from 'lib/desktop-auth';
 import {
-  authorizeDesktopRequest,
-  desktopUnauthorizedResponse,
-  requireAdminFirestore,
-} from 'lib/desktop-auth';
-import {
-  actionsCollection,
-  contactsCollection,
-  reportsCollection,
-  sentEmailsCollection,
-  surveysCollection,
-} from 'lib/desktop-collections';
-import { ACTIVITIES_COLLECTION, TEST_ACTIVITIES_COLLECTION } from 'lib/firebase';
+  completePendingSendReportActions,
+  getContactDoc,
+  getReportDoc,
+  getSurveyDoc,
+  logReportSentActivity,
+  logSentEmailDoc,
+  markReportSent,
+  setSurveyMonitorStatus,
+  upsertContactReportSent,
+} from 'lib/desktop-firestore';
 import { sendGmailHtml, isGmailConfigured } from 'lib/gmail-send';
 
 const BodySchema = z.object({
@@ -64,39 +63,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { db, error } = requireAdminFirestore();
-  if (!db) return error!;
-
   try {
     const body = BodySchema.parse(await request.json());
     const useTest = body.test;
 
-    const reportRef = db.collection(reportsCollection(useTest)).doc(body.reportId);
-    const reportSnap = await reportRef.get();
-    if (!reportSnap.exists) {
+    const reportDoc = await getReportDoc(body.reportId, useTest);
+    if (!reportDoc) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: `Report ${body.reportId} not found` } },
         { status: 404 },
       );
     }
 
-    const report = reportSnap.data() as {
+    const report = reportDoc.data as {
       contactId: string;
       surveyResponseId?: string;
       content: string;
-      contentFormat?: string;
       subject?: string;
-      status?: string;
     };
 
     const surveyId = body.surveyId || report.surveyResponseId;
     let toEmail = body.toEmail?.trim().toLowerCase();
 
     if (!toEmail && surveyId) {
-      const surveySnap = await db.collection(surveysCollection(useTest)).doc(surveyId).get();
-      if (surveySnap.exists) {
-        const survey = surveySnap.data() as { email?: string };
-        toEmail = survey.email?.trim().toLowerCase();
+      const survey = await getSurveyDoc(surveyId, useTest);
+      if (survey) {
+        toEmail = (survey.data.email as string | undefined)?.trim().toLowerCase();
       }
     }
 
@@ -119,40 +111,29 @@ export async function POST(request: NextRequest) {
     const gmailResult = await sendGmailHtml(toEmail, subject, html);
     const now = new Date().toISOString();
 
-    await reportRef.set(
-      {
-        status: 'sent',
-        sentAt: now,
-      },
-      { merge: true },
-    );
+    await markReportSent(body.reportId, useTest, now);
 
     if (surveyId) {
-      await db.collection(surveysCollection(useTest)).doc(surveyId).set(
-        { monitor_status: 'Sent' },
-        { merge: true },
-      );
+      await setSurveyMonitorStatus(surveyId, 'Sent', useTest);
     }
 
     const contactId = report.contactId;
-    const contactRef = db.collection(contactsCollection(useTest)).doc(contactId);
-    const contactSnap = await contactRef.get();
-    const prevStage = contactSnap.exists
-      ? ((contactSnap.data() as { funnelStage?: string }).funnelStage ?? 'survey_submitted')
+    const existingContact = await getContactDoc(contactId, useTest);
+    const prevStage = existingContact
+      ? ((existingContact.data.funnelStage as string | undefined) ?? 'survey_submitted')
       : 'survey_submitted';
 
-    await contactRef.set(
-      {
-        email: toEmail,
-        funnelStage: pickFunnelStage(prevStage, 'report_sent'),
-        updated_at: now,
-        lastActivityAt: now,
-      },
-      { merge: true },
+    await upsertContactReportSent(
+      contactId,
+      toEmail,
+      pickFunnelStage(prevStage, 'report_sent'),
+      useTest,
+      now,
     );
 
     const sentEmailId = sentEmailDocId('report_delivery', contactId, body.reportId);
-    await db.collection(sentEmailsCollection(useTest)).doc(sentEmailId).set(
+    await logSentEmailDoc(
+      sentEmailId,
       {
         contactId,
         toEmail,
@@ -166,36 +147,19 @@ export async function POST(request: NextRequest) {
         relatedType: 'report',
         relatedId: body.reportId,
       },
-      { merge: true },
+      useTest,
     );
 
-    await db.collection(useTest ? TEST_ACTIVITIES_COLLECTION : ACTIVITIES_COLLECTION).add({
+    await logReportSentActivity(
       contactId,
-      type: 'report_sent',
-      description: `Personalized AI Opportunity Report sent to ${toEmail}`,
-      metadata: { reportId: body.reportId, surveyId: surveyId ?? null, gmailMessageId: gmailResult.messageId },
-      created_at: now,
-    });
+      `Personalized AI Opportunity Report sent to ${toEmail}`,
+      { reportId: body.reportId, surveyId: surveyId ?? null, gmailMessageId: gmailResult.messageId },
+      useTest,
+      now,
+    );
 
     if (surveyId) {
-      const actionsSnap = await db
-        .collection(actionsCollection(useTest))
-        .where('type', '==', 'send_report')
-        .where('relatedId', '==', surveyId)
-        .where('status', '==', 'pending')
-        .limit(5)
-        .get();
-
-      for (const docSnap of actionsSnap.docs) {
-        await docSnap.ref.set(
-          {
-            status: 'completed',
-            completedAt: now,
-            resolution: 'sent',
-          },
-          { merge: true },
-        );
-      }
+      await completePendingSendReportActions(surveyId, useTest, now);
     }
 
     return NextResponse.json({

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { authorizeDesktopRequest, desktopUnauthorizedResponse } from 'lib/desktop-auth';
 import {
-  authorizeDesktopRequest,
-  desktopUnauthorizedResponse,
-  requireAdminFirestore,
-} from 'lib/desktop-auth';
-import { reportsCollection, surveysCollection } from 'lib/desktop-collections';
+  createReportDoc,
+  getSurveyDoc,
+  setSurveyMonitorStatus,
+} from 'lib/desktop-firestore';
 import { generateOpportunityReportHtml } from 'lib/report-generation';
 import { contactIdFromEmail } from 'lib/journey';
 import type { ReportRequestData } from 'lib/surveys';
@@ -37,29 +37,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { db, error } = requireAdminFirestore();
-  if (!db) return error!;
+  let surveyIdForRevert: string | null = null;
+  let useTestForRevert = false;
 
   try {
     const body = BodySchema.parse(await request.json());
     const useTest = body.test;
-    const surveyRef = db.collection(surveysCollection(useTest)).doc(body.surveyId);
-    const surveySnap = await surveyRef.get();
+    surveyIdForRevert = body.surveyId;
+    useTestForRevert = useTest;
 
-    if (!surveySnap.exists) {
+    const survey = await getSurveyDoc(body.surveyId, useTest);
+    if (!survey) {
       return NextResponse.json(
         { error: { code: 'NOT_FOUND', message: `Survey ${body.surveyId} not found` } },
         { status: 404 },
       );
     }
 
-    const surveyData = surveySnap.data() as ReportRequestData & {
+    const surveyData = survey.data as ReportRequestData & {
       contactId?: string;
       created_at?: string;
       monitor_status?: string;
     };
 
-    await surveyRef.set({ monitor_status: 'GeneratingReport' }, { merge: true });
+    await setSurveyMonitorStatus(body.surveyId, 'GeneratingReport', useTest);
 
     const generated = await generateOpportunityReportHtml({
       ...surveyData,
@@ -69,8 +70,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
     const contactId = surveyData.contactId || contactIdFromEmail(surveyData.email);
 
-    const reportRef = db.collection(reportsCollection(useTest)).doc();
-    await reportRef.set({
+    const reportId = await createReportDoc(useTest, {
       contactId,
       surveyResponseId: body.surveyId,
       status: 'ready',
@@ -80,11 +80,11 @@ export async function POST(request: NextRequest) {
       created_at: now,
     });
 
-    await surveyRef.set({ monitor_status: 'ReportReady' }, { merge: true });
+    await setSurveyMonitorStatus(body.surveyId, 'ReportReady', useTest);
 
     return NextResponse.json({
       success: true,
-      reportId: reportRef.id,
+      reportId,
       surveyId: body.surveyId,
       contactId,
       toEmail: surveyData.email.trim().toLowerCase(),
@@ -92,6 +92,13 @@ export async function POST(request: NextRequest) {
       html: generated.html,
     });
   } catch (err: unknown) {
+    if (surveyIdForRevert) {
+      try {
+        await setSurveyMonitorStatus(surveyIdForRevert, 'New', useTestForRevert);
+      } catch {
+        /* ignore revert failure */
+      }
+    }
     const message = err instanceof Error ? err.message : 'Report generation failed';
     console.error('POST /api/desktop/generate-report error', err);
     return NextResponse.json({ error: { code: 'GENERATION_FAILED', message } }, { status: 500 });
