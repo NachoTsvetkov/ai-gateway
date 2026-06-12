@@ -1,75 +1,97 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fcommerce&project-name=commerce&repo-name=commerce&demo-title=Next.js%20Commerce&demo-url=https%3A%2F%2Fdemo.vercel.store&demo-image=https%3A%2F%2Fbigcommerce-demo-asset-ksvtgfvnd.vercel.app%2Fbigcommerce.png&env=COMPANY_NAME,SHOPIFY_REVALIDATION_SECRET,SHOPIFY_STORE_DOMAIN,SHOPIFY_STOREFRONT_ACCESS_TOKEN,SITE_NAME)
+# Nacho Tsvetkov – Money Generator for Small Businesses
 
-# Next.js Commerce
+**Professional websites + smart automation that turn small businesses into 24/7 money generators.** No more missed leads, no more manual work. Starting at €59.
 
-A high-performance, server-rendered Next.js App Router ecommerce application.
+This is a production-grade Next.js portfolio and lead-generation site that demonstrates exactly the kind of deliverables offered: custom sites combined with layered AI automation (chatbots → qualification agents → autonomous agents → voice).
 
-This template uses React Server Components, Server Actions, `Suspense`, `useOptimistic`, and more.
+The site itself is the product — multiple fully functional, standalone-feeling **branded demo experiences** prove the AI features in realistic buying, booking, and support contexts.
 
-<h3 id="v1-note"></h3>
+## Live Demos (the proof)
 
-> Note: Looking for Next.js Commerce v1? View the [code](https://github.com/vercel/commerce/tree/v1), [demo](https://commerce-v1.vercel.store), and [release notes](https://github.com/vercel/commerce/releases/tag/v1).
+These routes are intentionally built to feel like real independent brand sites (global marketing nav is hidden, brand-specific shells and theming are used):
 
-## Providers
+- **Curated.** (`/projects/ai-shopify-store`) — Premium white-label headless Shopify storefront with a full suite of AI shopping assistants. Real cart, real checkout (Shopify + PayPal), AI that can search, recommend, add to cart, and act autonomously.
+- **KORE** (`/projects/local-fitness-studio`) — Local fitness studio (warm orange/cream) with an after-hours AI receptionist that books classes and hands off to humans.
+- **ROZÉ** (`/projects/boutique-fashion-brand`) — Bulgarian-language luxury boutique with a personal AI stylist and human-sounding abandoned-cart recovery.
 
-Vercel will only be actively maintaining a Shopify version [as outlined in our vision and strategy for Next.js Commerce](https://github.com/vercel/commerce/pull/966).
+Individual deep-dive demos for specific capabilities:
+- Multi-Modal Visual Stylist (vision + RAG over catalog)
+- Autonomous Agentic Commerce Bot (full tool-calling that can complete purchases)
+- Smart Cart Recovery Agent
+- Personalized Style Concierge
+- Voice-Enabled Shopping Assistant
+- AI Store Analytics Insights
+- Sales Assistant
 
-Vercel is happy to partner and work with any commerce provider to help them get a similar template up and running and listed below. Alternative providers should be able to fork this repository and swap out the `lib/shopify` file with their own implementation while leaving the rest of the template mostly unchanged.
+See `app/projects/` and the data files for the full list and marketing descriptions.
 
-- Shopify (this repository)
-- [BigCommerce](https://github.com/bigcommerce/nextjs-commerce) ([Demo](https://next-commerce-v2.vercel.app/))
-- [Ecwid by Lightspeed](https://github.com/Ecwid/ecwid-nextjs-commerce/) ([Demo](https://ecwid-nextjs-commerce.vercel.app/))
-- [Geins](https://github.com/geins-io/vercel-nextjs-commerce) ([Demo](https://geins-nextjs-commerce-starter.vercel.app/))
-- [Medusa](https://github.com/medusajs/vercel-commerce) ([Demo](https://medusa-nextjs-commerce.vercel.app/))
-- [Prodigy Commerce](https://github.com/prodigycommerce/nextjs-commerce) ([Demo](https://prodigy-nextjs-commerce.vercel.app/))
-- [Saleor](https://github.com/saleor/nextjs-commerce) ([Demo](https://saleor-commerce.vercel.app/))
-- [Shopware](https://github.com/shopwareLabs/vercel-commerce) ([Demo](https://shopware-vercel-commerce-react.vercel.app/))
-- [Swell](https://github.com/swellstores/verswell-commerce) ([Demo](https://verswell-commerce.vercel.app/))
-- [Umbraco](https://github.com/umbraco/Umbraco.VercelCommerce.Demo) ([Demo](https://vercel-commerce-demo.umbraco.com/))
-- [Wix](https://github.com/wix/headless-templates/tree/main/nextjs/commerce) ([Demo](https://wix-nextjs-commerce.vercel.app/))
-- [Fourthwall](https://github.com/FourthwallHQ/vercel-commerce) ([Demo](https://vercel-storefront.fourthwall.app/))
+## Offerings (Bundles)
 
-> Note: Providers, if you are looking to use similar products for your demo, you can [download these assets](https://drive.google.com/file/d/1q_bKerjrwZgHwCw0ovfUMW6He9VtepO_/view?usp=sharing).
+Tiered service packages sold via the site:
 
-## Integrations
+- **Startup** — Custom site (up to 5 pages), AI chatbot trained on your business, booking integration, basic analytics/SEO.
+- **Scale-up** — Everything in Startup + unlimited pages, e-commerce ready, lead qualification, marketing automation (email/SMS), light CRM, ongoing support + content changes.
+- **Enterprise** — Everything in Scale-up + custom autonomous AI agents, voice agents, advanced personalization, complex integrations (CRM/ERP), priority support + strategy calls.
 
-Integrations enable upgraded or additional functionality for Next.js Commerce
+Full details, pricing notes (one-time vs retainer), and ROI examples live in `lib/bundles-data.ts` (and the `.bg.ts` overlay) and the `/bundles` + `/services` pages.
 
-- [Orama](https://github.com/oramasearch/nextjs-commerce) ([Demo](https://vercel-commerce.oramasearch.com/))
+## Tech Stack
 
-  - Upgrades search to include typeahead with dynamic re-rendering, vector-based similarity search, and JS-based configuration.
-  - Search runs entirely in the browser for smaller catalogs or on a CDN for larger.
+- **Framework**: Next.js 15/16 (canary), React 19, App Router, Server Components/Actions, Turbopack, streaming.
+- **AI Layer**: Vercel AI SDK (`streamText`, `useChat`, tool calling), OpenAI models via AI Gateway (`grok` wait — currently `openai/gpt-4o` and mini variants). Rich in-chat rendering of products, tool status, and cart actions.
+- **Commerce**: Custom headless Shopify Storefront API integration (`lib/shopify/`). Real carts, optimistic updates, product search/recommendations that AI agents can drive. PayPal integration for subscriptions and checkout.
+- **Frontend**: Tailwind 4, Geist font, Sonner toasts, fully responsive with production-quality UI standards (see the `frontend-ui-engineering` patterns).
+- **i18n & Localization**: English canonical in data files + full Bulgarian (`*-data.bg.ts` + `DICT` system). Server-side locale/country/currency detection (`detectLocaleAndCountry`, etc.). Language toggle shown only for BG traffic.
+- **Analytics & Conversion**: Meta Pixel + Conversions API (CAPI) with consent gate, full-funnel instrumentation.
+- **Other**: Zod for validation, custom catalog loaders for vision/RAG agents, theme system (light/dark + brand overrides in demos).
 
-- [React Bricks](https://github.com/ReactBricks/nextjs-commerce-rb) ([Demo](https://nextjs-commerce.reactbricks.com/))
-  - Edit pages, product details, and footer content visually using [React Bricks](https://www.reactbricks.com) visual headless CMS.
+See `package.json`, `lib/`, `app/api/*/chat/route.ts`, and `components/ai/` for the agent implementations.
 
-## Running locally
+## Project Structure Highlights
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js Commerce. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+- `app/` — Marketing site + the "brand demo" sub-apps (many use dedicated shells to hide global nav).
+- `components/ai/` — All the rich chat UIs that power the agents.
+- `lib/shopify/` — The custom Storefront wrappers, queries, mutations, types, and cart helpers.
+- `lib/*-data.ts` (+ `.bg.ts`) — Source of truth for projects, bundles, services, etc.
+- `lib/i18n/` — Locale detection and translation dictionary.
+- `app/api/{agentic-commerce,visual-stylist,...}/chat/route.ts` — The individual AI agents (system prompts + tools).
+- `scripts/` — PayPal plan setup helpers.
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control your Shopify store.
+## Running Locally
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+1. `pnpm install`
+2. Copy `.env.example` → `.env.local` (or `.env`) and fill the required values:
+   - Shopify Storefront (domain + access token)
+   - `AI_GATEWAY_API_KEY` (for the model gateway)
+   - PayPal (sandbox recommended first)
+   - Meta Pixel + CAPI (optional but fully wired)
+3. `pnpm dev` (uses Turbopack)
 
-```bash
-pnpm install
-pnpm dev
-```
+The project "test" script runs Prettier check. Use `pnpm build` to validate.
 
-Your app should now be running on [localhost:3000](http://localhost:3000/).
+**Important**: Never commit real secrets. The `.env` is gitignored.
 
-<details>
-  <summary>Expand if you work at Vercel and want to run locally and / or contribute</summary>
+## Development Conventions (this project)
 
-1. Run `vc link`.
-1. Select the `Vercel Solutions` scope.
-1. Connect to the existing `commerce-shopify` project.
-1. Run `vc env pull` to get environment variables.
-1. Run `pnpm dev` to ensure everything is working correctly.
-</details>
+- **Relative paths preferred** in code, imports, and tool calls.
+- **Environment**: Windows + PowerShell (pwsh) in this workspace. Use appropriate cmdlets for shell tasks.
+- **"Brand illusion"** — Edits inside `/projects/ai-shopify-store`, `/projects/local-fitness-studio`, etc. must preserve the standalone real-brand experience. Do not leak global marketing elements.
+- **i18n duality** — Always keep English data and Bulgarian overlays in sync.
+- **AI agent rules** — Many agents have strict prompt guidelines (e.g. tone for recovery, "never say AI" in certain customer copy, grounding in real catalog data). See the individual route files and the `ai-agents` skill.
+- **Skills system** — This repo uses both Claude and Grok skills. See the local `.grok/skills/project-conventions/` for Grok-specific executable rules, and the user-level bridge + domain skills (`claude-repo-bridge`, `nextjs-developer`, `shopify-headless`, `ai-agents`).
 
-## Vercel, Next.js Commerce, and Shopify Integration Guide
+For full current conventions when working with Grok, the `project-conventions` skill is the single source of truth and should be loaded for relevant tasks.
 
-You can use this comprehensive [integration guide](https://vercel.com/docs/integrations/ecommerce/shopify) with step-by-step instructions on how to configure Shopify as a headless CMS using Next.js Commerce as your headless Shopify storefront on Vercel.
+## Repository
+
+Primary git remote: https://github.com/NachoTsvetkov/ai-gateway.git
+
+This is a heavily customized fork of the Vercel Next.js Commerce template, extended with the full AI agent layer, bilingual marketing site, specific demo shells, and the service-bundle positioning.
+
+## License
+
+See `license.md`.
+
+---
+
+*This README was updated from the original generic commerce template to accurately reflect the current state of the project.*
