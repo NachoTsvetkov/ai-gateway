@@ -1,6 +1,6 @@
 /**
  * Short delivery email — Daniel Priestley style (value first, sell the meeting).
- * See Email_Template_for_AI_Opportunity_Report.md
+ * Gmail-safe: table rows for paragraph spacing, minimal inline styles.
  */
 
 import { businessDisplayLabel, firstNameFromValidSurvey, isMeaningfulAnswer } from './survey-quality';
@@ -11,13 +11,14 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nachotsvetkov.com'
 const PHONE_DISPLAY = process.env.REPORT_CONTACT_PHONE || '+359 882 700 002';
 const FROM_NAME = process.env.GMAIL_FROM_NAME || 'Nacho Tsvetkov';
 
-const P_STYLE = 'margin:0 0 16px 0;font-size:15px;line-height:1.65;color:#404040;';
-const LINK_STYLE = 'color:#2563eb;text-decoration:underline;';
+const CELL =
+  'font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:24px;color:#222222;';
+const CELL_GAP = `${CELL}padding:0 0 18px 0;`;
+const CELL_LAST = `${CELL}padding:0;`;
+const LINK = 'color:#1a73e8;text-decoration:underline;';
 
 export type DeliveryEmailParams = {
-  /** From email local part only; omit for "Hi," greeting. */
   firstName?: string;
-  /** e.g. "your business" or a descriptive company name — never a bare category like "Software". */
   businessLabel: string;
   personalizedNote?: string;
   personalizedNoteHtml?: string;
@@ -32,12 +33,8 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function paragraph(innerHtml: string): string {
-  return `<p style="${P_STYLE}">${innerHtml}</p>`;
-}
-
 function emailLink(href: string, label: string): string {
-  return `<a href="${escapeHtml(href)}" style="${LINK_STYLE}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+  return `<a href="${escapeHtml(href)}" style="${LINK}">${escapeHtml(label)}</a>`;
 }
 
 function greetingText(firstName?: string): string {
@@ -63,21 +60,34 @@ function phoneTelHref(display: string): string {
   return digits ? `tel:${digits}` : display;
 }
 
-function wrapEmailHtml(title: string, body: string): string {
+/** One paragraph per table row — spacing Gmail reliably preserves. */
+function emailRows(cells: string[]): string {
+  return cells
+    .map((html, i) => {
+      const style = i < cells.length - 1 ? CELL_GAP : CELL_LAST;
+      return `<tr><td style="${style}">${html}</td></tr>`;
+    })
+    .join('\n');
+}
+
+function wrapEmailHtml(rows: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8" /><title>${escapeHtml(title)}</title></head>
-<body style="margin:0;padding:24px;font-family:Georgia,'Times New Roman',serif;background:#ffffff;">
-  ${body}
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;max-width:600px;">
+    ${rows}
+  </table>
 </body>
 </html>`;
 }
 
-function signatureBlockHtml(): string {
+function signatureRows(): string[] {
   const siteLabel = friendlySiteLabel(SITE_URL);
-  return paragraph(
+  return [
+    'Looking forward to hearing your thoughts.',
     `Best regards,<br />${escapeHtml(FROM_NAME)}<br />${emailLink(phoneTelHref(PHONE_DISPLAY), PHONE_DISPLAY)}<br />${emailLink(SITE_URL, siteLabel)}`,
-  );
+  ];
 }
 
 export function firstNameFromSurvey(email: string): string {
@@ -109,7 +119,6 @@ export function insufficientSurveySubject(): string {
   return 'Quick follow-up on your AI questionnaire — need a few more details';
 }
 
-/** Follow-up when survey answers are placeholders — no PDF attachment. */
 export function buildInsufficientSurveyEmailText(firstName: string): string {
   return `${greetingText(firstName)}
 
@@ -136,31 +145,22 @@ ${SITE_URL}`;
 }
 
 export function buildInsufficientSurveyEmailHtml(firstName: string): string {
-  const body = [
-    paragraph(greetingHtml(firstName)),
-    paragraph('Thank you for filling out the questionnaire.'),
-    paragraph(
-      "I started reviewing your answers, but a few responses look incomplete or like placeholders — so I haven't attached a Personalized AI Opportunity Report yet. I prepare each report by hand from your specific business context, and I need a bit more detail to make it genuinely useful for you.",
-    ),
-    paragraph(
-      "When you have a moment, could you reply with (or resubmit the form with):<br /><br />• What type of business you run (be specific — e.g. &quot;boutique fitness studio in Sofia&quot;, not &quot;Test&quot;)<br />• Your biggest current frustration or bottleneck<br />• The results you'd most like to see from AI or automation<br />• A rough budget or &quot;not sure yet&quot;",
-    ),
-    paragraph("Once I have that, I'll put together a tailored report and send it over."),
-    paragraph(
-      `If you'd prefer to talk it through live, ${emailLink(CALENDLY_URL, CALENDLY_LINK_LABEL)}.`,
-    ),
-    signatureBlockHtml(),
-  ].join('\n');
-
-  return wrapEmailHtml('Questionnaire follow-up', body);
+  const rows = emailRows([
+    greetingHtml(firstName),
+    'Thank you for filling out the questionnaire.',
+    "I started reviewing your answers, but a few responses look incomplete or like placeholders — so I haven't attached a Personalized AI Opportunity Report yet. I prepare each report by hand from your specific business context, and I need a bit more detail to make it genuinely useful for you.",
+    'When you have a moment, could you reply with (or resubmit the form with):<br /><br />• What type of business you run (be specific)<br />• Your biggest current frustration or bottleneck<br />• The results you\'d most like to see from AI or automation<br />• A rough budget or &quot;not sure yet&quot;',
+    "Once I have that, I'll put together a tailored report and send it over.",
+    `If you'd prefer to talk it through live, ${emailLink(CALENDLY_URL, CALENDLY_LINK_LABEL)}.`,
+    ...signatureRows(),
+  ]);
+  return wrapEmailHtml(rows);
 }
 
-/** @deprecated internal — use isMeaningfulAnswer from survey-quality for validation */
 export function isValidBusinessNameForReport(businessType?: string): boolean {
   return isMeaningfulAnswer(businessType, 'business_type');
 }
 
-/** Plain-text delivery email when a valid PDF report is attached. */
 export function buildDeliveryEmailText(params: DeliveryEmailParams): string {
   const { firstName, businessLabel, personalizedNote, attachmentFileName } = params;
   const note = personalizedNote ? `\n${personalizedNote}\n` : '';
@@ -188,39 +188,29 @@ ${PHONE_DISPLAY}
 ${SITE_URL}`;
 }
 
-/** HTML delivery email with clickable Calendly, phone, and website links. */
 export function buildDeliveryEmailHtml(params: DeliveryEmailParams): string {
   const { firstName, businessLabel, personalizedNote, personalizedNoteHtml, attachmentFileName } =
     params;
 
-  const noteParagraph = personalizedNoteHtml
-    ? paragraph(personalizedNoteHtml)
-    : personalizedNote
-      ? paragraph(escapeHtml(personalizedNote))
-      : null;
+  const noteCell =
+    personalizedNoteHtml ??
+    (personalizedNote ? escapeHtml(personalizedNote) : null);
 
-  const body = [
-    paragraph(greetingHtml(firstName)),
-    paragraph(
-      'Thank you for filling out the questionnaire. I\'ve reviewed your answers and put together a short <strong>Personalized AI Opportunity Report</strong> based on your business and goals.',
-    ),
-    ...(noteParagraph ? [noteParagraph] : []),
-    paragraph(
-      `You can find it attached to this email (<strong>${escapeHtml(attachmentFileName)}</strong>).`,
-    ),
-    paragraph(
-      `In the report, I've outlined a few areas where AI and automation could potentially help <strong>${escapeHtml(businessLabel)}</strong>, along with some initial ideas that might be worth exploring.`,
-    ),
-    paragraph(
-      "If any of this resonates with you, I'd be happy to jump on a quick 15–20 minute call to walk through the ideas and see if there's a good fit to go deeper.",
-    ),
-    paragraph('Would you be open to that?'),
-    paragraph(
-      `Just reply to this email or ${emailLink(CALENDLY_URL, CALENDLY_LINK_LABEL)} to book a time that works for you.`,
-    ),
-    paragraph('Looking forward to hearing your thoughts.'),
-    signatureBlockHtml(),
-  ].join('\n');
+  const cells: string[] = [
+    greetingHtml(firstName),
+    "Thank you for filling out the questionnaire. I've reviewed your answers and put together a short Personalized AI Opportunity Report based on your business and goals.",
+  ];
 
-  return wrapEmailHtml('Report delivery', body);
+  if (noteCell) cells.push(noteCell);
+
+  cells.push(
+    `You can find it attached to this email (${escapeHtml(attachmentFileName)}).`,
+    `In the report, I've outlined a few areas where AI and automation could potentially help ${escapeHtml(businessLabel)}, along with some initial ideas that might be worth exploring.`,
+    "If any of this resonates with you, I'd be happy to jump on a quick 15–20 minute call to walk through the ideas and see if there's a good fit to go deeper.",
+    'Would you be open to that?',
+    `Just reply to this email or ${emailLink(CALENDLY_URL, CALENDLY_LINK_LABEL)} to book a time that works for you.`,
+    ...signatureRows(),
+  );
+
+  return wrapEmailHtml(emailRows(cells));
 }

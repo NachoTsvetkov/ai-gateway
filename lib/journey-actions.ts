@@ -180,6 +180,8 @@ export function nextActionAfterComplete(
   contactId: string,
   contactEmail: string,
   now = new Date().toISOString(),
+  relatedType?: string,
+  relatedId?: string,
 ): CreateJourneyActionInput | null {
   switch (completedType) {
     case 'generate_report':
@@ -190,6 +192,8 @@ export function nextActionAfterComplete(
         title: 'Send report to client',
         description: 'Email the Personalized AI Opportunity Report',
         dueAt: addHours(now, 24),
+        relatedType: relatedType ?? 'survey',
+        relatedId,
         funnelStage: 'report_ready',
       };
     case 'send_report':

@@ -232,7 +232,7 @@ export async function POST(request: NextRequest) {
     );
 
     if (surveyId) {
-      await completePendingSendReportActions(surveyId, useTest, now);
+      await completePendingSendReportActions(surveyId, contactId, useTest, now);
     }
 
     return NextResponse.json({

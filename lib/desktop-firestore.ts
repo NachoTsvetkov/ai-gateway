@@ -149,18 +149,43 @@ export async function logReportGeneratedActivity(
   });
 }
 
-export async function completePendingSendReportActions(surveyId: string, useTest: boolean, now: string) {
-  const q = query(
-    collection(db, actionsCollection(useTest)),
+export async function completePendingSendReportActions(
+  surveyId: string,
+  contactId: string,
+  useTest: boolean,
+  now: string,
+) {
+  const col = actionsCollection(useTest);
+  const completed = new Set<string>();
+
+  const completeDocs = async (docs: { id: string; ref: (typeof surveySnap.docs)[number]['ref'] }[]) => {
+    await Promise.all(
+      docs
+        .filter((d) => !completed.has(d.id))
+        .map(async (d) => {
+          completed.add(d.id);
+          await updateDoc(d.ref, { status: 'completed', completedAt: now, resolution: 'sent' });
+        }),
+    );
+  };
+
+  const bySurvey = query(
+    collection(db, col),
     where('type', '==', 'send_report'),
     where('relatedId', '==', surveyId),
     where('status', '==', 'pending'),
     limit(5),
   );
-  const snap = await getDocs(q);
-  await Promise.all(
-    snap.docs.map((d) =>
-      updateDoc(d.ref, { status: 'completed', completedAt: now, resolution: 'sent' }),
-    ),
+  const surveySnap = await getDocs(bySurvey);
+  await completeDocs(surveySnap.docs.map((d) => ({ id: d.id, ref: d.ref })));
+
+  const byContact = query(
+    collection(db, col),
+    where('type', '==', 'send_report'),
+    where('contactId', '==', contactId),
+    where('status', '==', 'pending'),
+    limit(5),
   );
+  const contactSnap = await getDocs(byContact);
+  await completeDocs(contactSnap.docs.map((d) => ({ id: d.id, ref: d.ref })));
 }
