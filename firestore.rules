@@ -12,7 +12,13 @@ service cloud.firestore {
         request.resource.data.email is string &&
         request.resource.data.email != "";
       allow read: if true;
-      allow update, delete: if false;
+      // Desktop monitor may update pipeline status only (not survey answers)
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['monitor_status'])
+          && request.resource.data.monitor_status is string;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['monitor_status', 'archived']);
+      allow delete: if false;
     }
 
     // Marketing email subscribers
@@ -40,20 +46,37 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Desktop monitor creates/updates journey side-effect records (REST API key)
     match /reports/{docId} {
-      allow read, write: if false;
+      allow create: if
+        request.resource.data.contactId is string &&
+        request.resource.data.status is string;
+      allow update: if
+        request.resource.data.contactId is string &&
+        request.resource.data.status is string;
+      allow read: if true;
+      allow delete: if false;
     }
 
     match /meetings/{docId} {
-      allow read, write: if false;
+      allow create: if request.resource.data.contactId is string;
+      allow update: if request.resource.data.contactId is string;
+      allow read: if true;
+      allow delete: if false;
     }
 
     match /proposals/{docId} {
-      allow read, write: if false;
+      allow create: if request.resource.data.contactId is string;
+      allow update: if request.resource.data.contactId is string;
+      allow read: if true;
+      allow delete: if false;
     }
 
     match /projects/{docId} {
-      allow read, write: if false;
+      allow create: if request.resource.data.contactId is string;
+      allow update: if request.resource.data.contactId is string;
+      allow read: if true;
+      allow delete: if false;
     }
 
     match /activities/{docId} {
@@ -73,6 +96,20 @@ service cloud.firestore {
         request.resource.data.dueAt is string;
       allow update: if
         request.resource.data.contactId is string &&
+        request.resource.data.status is string;
+      allow read: if true;
+      allow delete: if false;
+    }
+
+    // Outbound correspondence sent to clients (reports, marketing, proposals)
+    match /sent_emails/{docId} {
+      allow create: if
+        request.resource.data.toEmail is string &&
+        request.resource.data.subject is string &&
+        request.resource.data.template is string &&
+        request.resource.data.status is string;
+      allow update: if
+        request.resource.data.toEmail is string &&
         request.resource.data.status is string;
       allow read: if true;
       allow delete: if false;
@@ -100,7 +137,12 @@ service cloud.firestore {
     match /survey_responses_test/{docId} {
       allow create: if true;
       allow read: if true;
-      allow update, delete: if false;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['monitor_status'])
+          && request.resource.data.monitor_status is string;
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['monitor_status', 'archived']);
+      allow delete: if false;
     }
 
     match /marketing_emails_test/{docId} {
@@ -140,6 +182,11 @@ service cloud.firestore {
     }
 
     match /actions_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /sent_emails_test/{docId} {
       allow create, read, update: if true;
       allow delete: if false;
     }

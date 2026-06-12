@@ -60,3 +60,7 @@ export const TEST_ACTIVITIES_COLLECTION = "activities_test";
 
 export const ACTIONS_COLLECTION = "actions";
 export const TEST_ACTIONS_COLLECTION = "actions_test";
+
+/** Outbound emails sent to clients (reports, marketing, proposals — not contact records). */
+export const SENT_EMAILS_COLLECTION = "sent_emails";
+export const TEST_SENT_EMAILS_COLLECTION = "sent_emails_test";

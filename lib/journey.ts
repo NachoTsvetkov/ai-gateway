@@ -95,7 +95,9 @@ export async function upsertContact(input: UpsertContactInput, useTestCollection
       created_at: (prev?.created_at as string) || now,
       updated_at: now,
       lastActivityAt: now,
-      ...(input.phone?.trim() ? { phone: input.phone.trim() } : prev?.phone ? { phone: prev.phone as string } : {}),
+      ...(input.phone?.trim()
+        ? { phone: input.phone.trim() }
+        : {}),
     },
     { merge: true },
   );
