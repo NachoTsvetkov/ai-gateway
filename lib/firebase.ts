@@ -57,3 +57,6 @@ export const TEST_PROJECTS_COLLECTION = "projects_test";
 
 export const ACTIVITIES_COLLECTION = "activities";
 export const TEST_ACTIVITIES_COLLECTION = "activities_test";
+
+export const ACTIONS_COLLECTION = "actions";
+export const TEST_ACTIONS_COLLECTION = "actions_test";

@@ -6,12 +6,13 @@ service cloud.firestore {
     // PUBLIC CREATION (Website / Lead Generation)
     // ============================================
 
-    // Survey responses from the website
+    // Survey responses from the website (public create; read for owner desktop monitor via same API key)
     match /survey_responses/{docId} {
       allow create: if 
         request.resource.data.email is string &&
         request.resource.data.email != "";
-      allow read, update, delete: if false;
+      allow read: if true;
+      allow update, delete: if false;
     }
 
     // Marketing email subscribers
@@ -19,7 +20,8 @@ service cloud.firestore {
       allow create: if 
         request.resource.data.email is string &&
         request.resource.data.email != "";
-      allow read, update, delete: if false;
+      allow read: if true;
+      allow update, delete: if false;
     }
 
     // ============================================
@@ -27,7 +29,15 @@ service cloud.firestore {
     // ============================================
 
     match /contacts/{docId} {
-      allow read, write: if false;
+      allow create: if
+        request.resource.data.email is string &&
+        request.resource.data.email != "" &&
+        request.resource.data.funnelStage is string;
+      allow update: if
+        request.resource.data.email is string &&
+        request.resource.data.funnelStage is string;
+      allow read: if true;
+      allow delete: if false;
     }
 
     match /reports/{docId} {
@@ -47,10 +57,28 @@ service cloud.firestore {
     }
 
     match /activities/{docId} {
-      allow read, write: if false;
+      allow create: if
+        request.resource.data.contactId is string &&
+        request.resource.data.type is string;
+      allow read: if true;
+      allow update, delete: if false;
     }
 
-    // Orders (create + status updates allowed)
+    // Journey actions (tasks with due dates — created on website intake, updated by desktop)
+    match /actions/{docId} {
+      allow create: if
+        request.resource.data.contactId is string &&
+        request.resource.data.type is string &&
+        request.resource.data.status is string &&
+        request.resource.data.dueAt is string;
+      allow update: if
+        request.resource.data.contactId is string &&
+        request.resource.data.status is string;
+      allow read: if true;
+      allow delete: if false;
+    }
+
+    // Orders (create + status updates allowed; read for owner desktop monitor)
     match /orders/{docId} {
       allow create: if 
         request.resource.data.customer is map &&
@@ -61,7 +89,8 @@ service cloud.firestore {
         request.resource.data.keys().hasAll(['status']) &&
         request.resource.data.status is string;
 
-      allow read, delete: if false;
+      allow read: if true;
+      allow delete: if false;
     }
 
     // ============================================
@@ -106,6 +135,11 @@ service cloud.firestore {
     }
 
     match /activities_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
+    match /actions_test/{docId} {
       allow create, read, update: if true;
       allow delete: if false;
     }

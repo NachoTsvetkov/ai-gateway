@@ -1,5 +1,11 @@
 import { addDoc, collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db, SURVEYS_COLLECTION, TEST_SURVEYS_COLLECTION } from './firebase';
+import { logActivity, upsertContact } from './journey';
+import {
+  createMarketingLeadAction,
+  createOrderSubmitActions,
+  createSurveySubmitActions,
+} from './journey-actions';
 import { z } from 'zod';
 
 // Zod schema for survey data validation (used on client before saving and at API boundary).
@@ -27,11 +33,8 @@ export const ChaosSurveySchema = ReportRequestSchema;
 export type ChaosSurveyData = ReportRequestData;
 
 /**
- * Saves a report request (Personalized AI Opportunity Report / audit survey response) to Firestore.
- *
- * Per Client Journey docs: the **website only writes survey_responses** (or *_test).
- * Contact creation, activity logging, and funnel progression are handled by the desktop app
- * when it detects new surveys.
+ * Saves a report request to Firestore and upserts the linked contact + activity
+ * so the desktop CRM shows journey stage immediately.
  */
 export async function saveReportRequestResponse(data: ReportRequestData, useTestCollection = false): Promise<string> {
   const parsed = ReportRequestSchema.parse(data);
@@ -39,17 +42,50 @@ export async function saveReportRequestResponse(data: ReportRequestData, useTest
   const surveysColl = useTestCollection ? TEST_SURVEYS_COLLECTION : SURVEYS_COLLECTION;
 
   console.log('Attempting to save report request to Firestore:', {
-    collection: useTestCollection ? TEST_SURVEYS_COLLECTION : SURVEYS_COLLECTION,
+    collection: surveysColl,
     email: parsed.email,
     source: parsed.source,
   });
 
+  const contactId = await upsertContact(
+    {
+      email: parsed.email,
+      name: parsed.business_type,
+      businessName: parsed.business_type,
+      businessType: parsed.business_type,
+      source: parsed.source,
+      funnelStage: 'survey_submitted',
+    },
+    useTestCollection,
+  );
+
+  await logActivity(
+    contactId,
+    'survey_submitted',
+    `Survey submitted via ${parsed.source} (interest ${parsed.interest}/10)`,
+    useTestCollection,
+    { surveySource: parsed.source, interest: parsed.interest },
+  );
+
+  const createdAt = new Date().toISOString();
+
   const surveyData = {
     ...parsed,
-    created_at: new Date().toISOString(),
+    contactId,
+    created_at: createdAt,
   };
 
   const docRef = await addDoc(collection(db, surveysColl), surveyData);
+
+  await createSurveySubmitActions(
+    contactId,
+    parsed.email,
+    docRef.id,
+    parsed.source,
+    createdAt,
+    useTestCollection,
+  );
+
   return docRef.id;
 }
 

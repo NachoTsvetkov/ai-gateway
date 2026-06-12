@@ -1,5 +1,7 @@
 import { collection, getDocs, query, limit, setDoc, doc } from 'firebase/firestore';
 import { db, ORDERS_COLLECTION, TEST_ORDERS_COLLECTION } from './firebase';
+import { logActivity, upsertContact } from './journey';
+import { createOrderSubmitActions } from './journey-actions';
 import { z } from 'zod';
 
 // Zod schema for order/purchase records from the /checkout + PayPal flow.
@@ -91,12 +93,10 @@ export async function saveOrder(data: OrderData, useTestCollection = false): Pro
   const safeData = stripUndefined(writeData);
 
   const collectionName = useTestCollection ? TEST_ORDERS_COLLECTION : ORDERS_COLLECTION;
-
-  // Stable ID so we can create early (at button click) and update status later.
   const stableId = `${parsed.paypal.kind}_${parsed.paypal.id}`;
 
   console.log('Attempting to save order to Firestore:', {
-    collection: useTestCollection ? 'orders_test' : 'orders',
+    collection: collectionName,
     docId: stableId,
     ref: safeData.buyable.reference,
     paypal: safeData.paypal,
@@ -104,8 +104,42 @@ export async function saveOrder(data: OrderData, useTestCollection = false): Pro
     email: safeData.customer.email,
   });
 
+  const funnelStage = parsed.status === 'paid' ? 'order_paid' : 'order_created';
+  const contactId = await upsertContact(
+    {
+      email: parsed.customer.email,
+      name: parsed.customer.name,
+      businessName: parsed.customer.business,
+      businessType: parsed.customer.business,
+      phone: parsed.customer.phone,
+      source: `order:${parsed.buyable.reference}`,
+      funnelStage,
+    },
+    useTestCollection,
+  );
+
+  await logActivity(
+    contactId,
+    parsed.status === 'paid' ? 'order_paid' : 'order_created',
+    `${parsed.buyable.name} — €${parsed.totalEur} (${parsed.status})`,
+    useTestCollection,
+    { orderRef: parsed.buyable.reference, paypalId: parsed.paypal.id, status: parsed.status },
+  );
+
+  const submittedAt = safeData.created_at ?? writeData.updated_at ?? new Date().toISOString();
+  await createOrderSubmitActions(
+    contactId,
+    parsed.customer.email,
+    stableId,
+    parsed.buyable.name,
+    parsed.totalEur,
+    parsed.status,
+    submittedAt,
+    useTestCollection,
+  );
+
   const ref = doc(db, collectionName, stableId);
-  await setDoc(ref, safeData, { merge: true });
+  await setDoc(ref, { ...safeData, contactId }, { merge: true });
 
   return stableId;
 }

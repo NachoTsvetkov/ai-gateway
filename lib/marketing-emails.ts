@@ -1,5 +1,7 @@
 import { addDoc, collection, getDocs, query, limit, setDoc, doc } from 'firebase/firestore';
 import { db, MARKETING_EMAILS_COLLECTION, TEST_MARKETING_EMAILS_COLLECTION } from './firebase';
+import { logActivity, upsertContact } from './journey';
+import { createMarketingLeadAction } from './journey-actions';
 import { z } from 'zod';
 
 // Basic Zod schema for marketing email / subscriber records.
@@ -35,16 +37,35 @@ export async function saveMarketingEmail(data: MarketingEmailData, useTestCollec
     : MARKETING_EMAILS_COLLECTION;
 
   console.log('Attempting to save marketing email to Firestore:', {
-    collection: useTestCollection ? 'marketing_emails_test' : 'marketing_emails',
+    collection: collectionName,
     email: parsed.email,
     source: parsed.source,
   });
 
-  // Use stable ID based on email + source if you want to avoid duplicates on re-subscribe.
-  // For simplicity we use addDoc here (like the surveys pattern).
-  // If you prefer idempotent "upsert", switch to setDoc with a composite key.
+  const contactId = await upsertContact(
+    {
+      email: parsed.email,
+      name: parsed.name,
+      businessName: parsed.business,
+      source: parsed.source,
+      funnelStage: 'marketing_lead',
+    },
+    useTestCollection,
+  );
+
+  await logActivity(
+    contactId,
+    'marketing_lead',
+    `Marketing signup via ${parsed.source}`,
+    useTestCollection,
+    { pageUrl: parsed.page_url },
+  );
+
+  await createMarketingLeadAction(contactId, parsed.email, parsed.source, useTestCollection);
+
   const docRef = await addDoc(collection(db, collectionName), {
     ...parsed,
+    contactId,
     created_at: new Date().toISOString(),
   });
 
