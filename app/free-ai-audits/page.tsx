@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChaosSurveyForm } from '@/components/chaos/ChaosSurveyForm';
+import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
 
 export const metadata = {
   title: 'Free AI Audits & Experiments for Small Businesses | Choose Your Focus',

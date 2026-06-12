@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
-import { ChaosSurveySchema, type ChaosSurveyData, saveChaosSurveyResponse } from '@/lib/surveys';
-import { track } from '@/lib/pixel/client';
+import { ChaosSurveySchema, type ChaosSurveyData, saveChaosSurveyResponse } from 'lib/surveys';
+import { track } from 'lib/pixel/client';
 
 interface Props {
   source: string; // e.g. 'revenue-audit'

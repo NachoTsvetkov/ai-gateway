@@ -1,4 +1,4 @@
-import { ChaosSurveyForm } from '@/components/chaos/ChaosSurveyForm';
+import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
 
 export const metadata = {
   title: 'Free AI Time Back & Freedom Audit | Reclaim Your Evenings & Weekends',

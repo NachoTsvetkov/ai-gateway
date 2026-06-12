@@ -1,4 +1,4 @@
-import { ChaosSurveyForm } from '@/components/chaos/ChaosSurveyForm';
+import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
 
 export const metadata = {
   title: 'Free AI Revenue Leak Audit for Small Businesses | Get 3 Quick Wins in 48 Hours',

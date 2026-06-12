@@ -1,4 +1,4 @@
-import { ChaosSurveyForm } from '@/components/chaos/ChaosSurveyForm';
+import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
 
 export const metadata = {
   title: 'Free AI Lead & Sales Machine Audit | Turn Your Website into a 24/7 Revenue Engine',

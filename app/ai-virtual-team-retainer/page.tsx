@@ -1,4 +1,4 @@
-import { ChaosSurveyForm } from '@/components/chaos/ChaosSurveyForm';
+import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
 
 export const metadata = {
   title: 'Free AI Virtual Team Member Audit | Get an AI Team That Works Every Month',
