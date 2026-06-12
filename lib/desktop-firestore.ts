@@ -19,6 +19,8 @@ import {
   surveysCollection,
 } from './desktop-collections';
 import { ACTIVITIES_COLLECTION, TEST_ACTIVITIES_COLLECTION } from './firebase';
+import type { ReportRecord } from './report-records';
+import { reportDocIdFromSurvey } from './report-records';
 
 /** Firestore via public client SDK — matches desktop-data and works without Admin credentials. */
 export async function getSurveyDoc(surveyId: string, useTest: boolean) {
@@ -40,6 +42,27 @@ export async function createReportDoc(
   return ref.id;
 }
 
+/** Upsert canonical report for a survey (deterministic doc id). */
+export async function saveReportRecord(
+  surveyId: string,
+  useTest: boolean,
+  record: ReportRecord,
+): Promise<string> {
+  const id = reportDocIdFromSurvey(surveyId);
+  const ref = doc(db, reportsCollection(useTest), id);
+  const existing = await getDoc(ref);
+  const payload: ReportRecord = existing.exists()
+    ? { ...record, created_at: (existing.data().created_at as string) || record.created_at }
+    : record;
+  await setDoc(ref, payload, { merge: true });
+  return id;
+}
+
+export async function findReportBySurveyId(surveyId: string, useTest: boolean) {
+  const id = reportDocIdFromSurvey(surveyId);
+  return getReportDoc(id, useTest);
+}
+
 export async function getReportDoc(reportId: string, useTest: boolean) {
   const ref = doc(db, reportsCollection(useTest), reportId);
   const snap = await getDoc(ref);
@@ -48,7 +71,7 @@ export async function getReportDoc(reportId: string, useTest: boolean) {
 
 export async function markReportSent(reportId: string, useTest: boolean, sentAt: string) {
   const ref = doc(db, reportsCollection(useTest), reportId);
-  await updateDoc(ref, { status: 'sent', sentAt });
+  await updateDoc(ref, { status: 'sent', sentAt, updated_at: sentAt });
 }
 
 export async function getContactDoc(contactId: string, useTest: boolean) {
@@ -106,6 +129,22 @@ export async function logReportSentActivity(
     type: 'report_sent',
     description,
     metadata,
+    created_at: now,
+  });
+}
+
+export async function logReportGeneratedActivity(
+  contactId: string,
+  surveyId: string,
+  reportId: string,
+  useTest: boolean,
+  now: string,
+) {
+  await addDoc(collection(db, useTest ? TEST_ACTIVITIES_COLLECTION : ACTIVITIES_COLLECTION), {
+    contactId,
+    type: 'report_generated',
+    description: `HTML report generated for survey ${surveyId}`,
+    metadata: { reportId, surveyId },
     created_at: now,
   });
 }

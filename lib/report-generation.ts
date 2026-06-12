@@ -13,7 +13,7 @@ const ReportContentSchema = z.object({
       z.object({
         title: z.string().min(3),
         bodyHtml: z.string().min(10),
-        bullets: z.array(z.string()).optional(),
+        bullets: z.array(z.string()),
       }),
     )
     .min(6)

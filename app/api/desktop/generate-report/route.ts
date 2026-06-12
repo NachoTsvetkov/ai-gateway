@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authorizeDesktopRequest, desktopUnauthorizedResponse } from 'lib/desktop-auth';
 import {
-  createReportDoc,
-  getSurveyDoc,
+  authorizeDesktopRequest,
+  desktopUnauthorizedResponse,
+} from 'lib/desktop-auth';
+import {
+  findReportBySurveyId,
+  getReportDoc,
+  logReportGeneratedActivity,
+  saveReportRecord,
   setSurveyMonitorStatus,
+  getSurveyDoc,
 } from 'lib/desktop-firestore';
 import { generateOpportunityReportHtml } from 'lib/report-generation';
 import { contactIdFromEmail } from 'lib/journey';
+import { buildReportRecord } from 'lib/report-records';
 import type { ReportRequestData } from 'lib/surveys';
 
 export const maxDuration = 120;
@@ -70,17 +77,17 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
     const contactId = surveyData.contactId || contactIdFromEmail(surveyData.email);
 
-    const reportId = await createReportDoc(useTest, {
+    const record = buildReportRecord(
+      { ...surveyData, id: body.surveyId },
       contactId,
-      surveyResponseId: body.surveyId,
-      status: 'ready',
-      content: generated.html,
-      contentFormat: 'html',
-      subject: generated.subject,
-      created_at: now,
-    });
+      generated,
+      generated.content,
+    );
+
+    const reportId = await saveReportRecord(body.surveyId, useTest, record);
 
     await setSurveyMonitorStatus(body.surveyId, 'ReportReady', useTest);
+    await logReportGeneratedActivity(contactId, body.surveyId, reportId, useTest, now);
 
     return NextResponse.json({
       success: true,
@@ -89,6 +96,7 @@ export async function POST(request: NextRequest) {
       contactId,
       toEmail: surveyData.email.trim().toLowerCase(),
       subject: generated.subject,
+      headline: record.headline,
       html: generated.html,
     });
   } catch (err: unknown) {
@@ -103,4 +111,51 @@ export async function POST(request: NextRequest) {
     console.error('POST /api/desktop/generate-report error', err);
     return NextResponse.json({ error: { code: 'GENERATION_FAILED', message } }, { status: 500 });
   }
+}
+
+/**
+ * GET /api/desktop/generate-report?reportId=... or ?surveyId=...
+ * Fetch a saved report (full HTML) for desktop preview/resend.
+ */
+export async function GET(request: NextRequest) {
+  if (!authorizeDesktopRequest(request)) return desktopUnauthorizedResponse();
+
+  const reportId = request.nextUrl.searchParams.get('reportId');
+  const surveyId = request.nextUrl.searchParams.get('surveyId');
+  const useTest = request.nextUrl.searchParams.get('test') === 'true';
+
+  if (!reportId && !surveyId) {
+    return NextResponse.json(
+      { error: { code: 'BAD_REQUEST', message: 'Pass reportId or surveyId' } },
+      { status: 400 },
+    );
+  }
+
+  const doc = reportId
+    ? await getReportDoc(reportId, useTest)
+    : await findReportBySurveyId(surveyId!, useTest);
+
+  if (!doc) {
+    return NextResponse.json(
+      { error: { code: 'NOT_FOUND', message: 'Report not found' } },
+      { status: 404 },
+    );
+  }
+
+  const data = doc.data;
+  return NextResponse.json({
+    success: true,
+    reportId: reportId ?? doc.ref.id,
+    surveyId: data.surveyResponseId ?? null,
+    contactId: data.contactId,
+    toEmail: data.toEmail ?? null,
+    subject: data.subject ?? null,
+    headline: data.headline ?? null,
+    status: data.status ?? null,
+    contentFormat: data.contentFormat ?? 'html',
+    html: data.content ?? '',
+    bodyPreview: data.bodyPreview ?? null,
+    created_at: data.created_at ?? null,
+    sentAt: data.sentAt ?? null,
+  });
 }
