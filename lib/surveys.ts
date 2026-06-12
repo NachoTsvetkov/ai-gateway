@@ -7,13 +7,13 @@ import { z } from 'zod';
 // "tried_so_far" added per the recommended structure (Step 4).
 export const ReportRequestSchema = z.object({
   source: z.string().min(1), // e.g. "revenue-audit", "lead-machine" etc. (used to track which focus area)
-  business_type: z.string().min(1),
-  pain: z.string().min(1),           // Current situation / biggest frustration (customized per page via painLabel)
-  desired_results: z.string().min(1), // What success / results they want
+  business_type: z.string().min(1, "Please tell us what type of business you run."),
+  pain: z.string().min(1, "Please describe your current situation or biggest frustration."),
+  desired_results: z.string().min(1, "Please share the results you'd like to see."),
   tried_so_far: z.string().optional(), // What they have already tried (Step 4 – recommended by Priestley)
-  budget: z.string().min(1),
-  interest: z.number().min(1).max(10),
-  email: z.string().email(),
+  budget: z.string().min(1, "Please enter a fair price, range, or even 'not sure yet'."),
+  interest: z.number().min(1, "Please select a number from 1 to 10.").max(10, "Please select a number from 1 to 10."),
+  email: z.string().email("Please enter a valid email address."),
   additional_details: z.string().optional(),
   utm_source: z.string().optional(),
   utm_campaign: z.string().optional(),

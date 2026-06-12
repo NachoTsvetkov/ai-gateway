@@ -43,8 +43,11 @@ export function ReportRequestForm({
     formState: { errors },
     reset,
     trigger,
+    clearErrors,
   } = useForm<ReportRequestData>({
     resolver: zodResolver(ReportRequestSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     defaultValues: {
       source,
       page_url: typeof window !== 'undefined' ? window.location.href : undefined,
@@ -53,12 +56,32 @@ export function ReportRequestForm({
 
   const goToStep = async (newStep: number) => {
     if (newStep > currentStep) {
-      // Validate current step fields before advancing (basic client check)
+      // Validate current step fields before advancing (basic client check).
+      // This is the "check" action: validation (and error display) only happens here or on final submit.
       const fieldsToValidate = getFieldsForStep(currentStep);
       const isValid = await trigger(fieldsToValidate as any);
       if (!isValid) return;
     }
+    // On every successful step change (Next after passing validation, or any Back), clear *all* errors.
+    // This guarantees that every step starts completely "right by default" (no error messages).
+    // Errors for a step's fields only get populated (and thus shown) after an explicit check:
+    //   - clicking Next from that step, or
+    //   - clicking Submit on the final step.
+    // Combined with mode/reValidateMode: 'onSubmit', the text inputs are never live-validated.
+    clearErrors();
     setCurrentStep(Math.max(1, Math.min(totalSteps, newStep)));
+  };
+
+  // Explicit handler for the final "submit" button on step 5.
+  // This makes the last tab consistent with the others: we only validate (and show errors for)
+  // the last tab's fields when the user explicitly clicks the big CTA button.
+  // We pre-validate the step-5 fields with trigger(); only if they pass do we proceed to the real submit.
+  const handleLastStepSubmit = async () => {
+    const fieldsToValidate = getFieldsForStep(5);
+    const isValid = await trigger(fieldsToValidate as any);
+    if (!isValid) return;
+    // Validation for this tab passed — now let RHF handle the actual submit (will call onSubmit).
+    handleSubmit(onSubmit)();
   };
 
   function getFieldsForStep(step: number): string[] {
@@ -66,7 +89,7 @@ export function ReportRequestForm({
       case 1: return ['business_type'];
       case 2: return ['desired_results'];
       case 3: return ['pain'];
-      case 4: return ['tried_so_far']; // optional, always allow advance
+      case 4: return []; // optional – always allow advancing with no validation block
       case 5: return ['budget', 'interest', 'email'];
       default: return [];
     }
@@ -146,7 +169,18 @@ export function ReportRequestForm({
   const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={(e) => {
+        // Prevent Enter key in inputs/textareas from auto-submitting the form.
+        // This ensures validation for any tab (especially the last one) only happens
+        // when the user explicitly clicks the tab's "Next" or final CTA button.
+        if (e.key === 'Enter' && (e.target as HTMLElement)?.tagName !== 'BUTTON') {
+          e.preventDefault();
+        }
+      }}
+      className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900"
+    >
       <div>
         <h3 className="text-2xl font-semibold text-neutral-900 dark:text-white">{title}</h3>
         <p className="mt-2 text-neutral-600 dark:text-neutral-400">
@@ -300,7 +334,8 @@ export function ReportRequestForm({
           </button>
         ) : (
           <button
-            type="submit"
+            type="button"
+            onClick={handleLastStepSubmit}
             disabled={isSubmitting}
             className="w-full sm:w-auto rounded-2xl bg-blue-600 px-8 py-3 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 hover:-translate-y-0.5 disabled:opacity-50"
           >
