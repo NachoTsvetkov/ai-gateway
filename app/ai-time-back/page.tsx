@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
+import { ReportRequestForm } from 'components/reports/ReportRequestForm';
 import { ViewContentTracker } from 'components/analytics/view-content-tracker';
 
 export const metadata = {
-  title: 'Free AI Time Back & Freedom Audit | Reclaim Your Evenings & Weekends',
-  description: 'Find out how custom AI automation can handle repetitive work so you get time back to focus on growth (or actually rest). Get personalized automation ideas within 48 hours.',
+  title: 'Free Personalized AI Opportunity Report | Get Time Back for Small Business Owners',
+  description: 'Get a free personalized AI Opportunity Report with specific automation ideas to reclaim your evenings and weekends. Reviewed personally and sent within 48 hours.',
 };
 
 export default function TimeBackAudit() {
@@ -16,12 +16,19 @@ export default function TimeBackAudit() {
         contentType="audit"
       />
 
+      {/* Hero / Header - gradient background consistent with the main landing page hero */}
       <section
         aria-labelledby="audit-hero-heading"
-        className="relative isolate overflow-hidden border-b border-neutral-200 bg-white py-16 sm:py-20 dark:border-neutral-800 dark:bg-neutral-950"
+        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20"
       >
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/20" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
+        {/* Mask: knocks the saturated bg back to a usable surface on light/dark */}
+        <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
+        {/* Bottom fade — softens the seam into content below */}
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
+        {/* Top-right blue glow - matching landing page */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
+        {/* Bottom-left violet glow - matching landing page */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
         <div className="mx-auto max-w-3xl px-6">
           <div className="mb-4">
@@ -94,15 +101,15 @@ export default function TimeBackAudit() {
 
       <div className="mx-auto max-w-3xl px-6 py-12 lg:py-16">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">Get Your Free AI Time Back Recommendations</h2>
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">Get Your Free Personalized AI Opportunity Report</h2>
           <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            Find out how AI can handle repetitive tasks so you get time back to focus on growth (or actually rest). Get personalized automation ideas within 48 hours.
+            Answer a few short questions and I'll personally review them and send you a tailored AI Opportunity Report with specific automation ideas to get time back — within 48 hours. 100% free, no obligation.
           </p>
         </div>
 
-        <ChaosSurveyForm
+        <ReportRequestForm
           source="time-back"
-          title="Time Back & Freedom Audit"
+          title="Time & Freedom Report"
           painLabel="What’s your single biggest frustration or challenge right now with time or repetitive work?"
           useTestCollection={false}
         />

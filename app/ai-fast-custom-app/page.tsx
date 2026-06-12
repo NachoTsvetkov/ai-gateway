@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
+import { ReportRequestForm } from 'components/reports/ReportRequestForm';
 import { ViewContentTracker } from 'components/analytics/view-content-tracker';
 
 export const metadata = {
-  title: 'Free AI Lead & Sales Machine Audit | Turn Your Website into a 24/7 Revenue Engine',
-  description: 'See exactly how a custom AI chatbot + automation can qualify leads, book appointments, and recover sales 24/7 — even while you sleep. Get personalized recommendations free.',
+  title: 'Free Personalized AI Opportunity Report | Fast Custom AI App for Your Business',
+  description: 'Get a free personalized AI Opportunity Report with specific ideas for a fast custom AI solution built for your small business. Delivered in 48 hours, personally reviewed.',
 };
 
 export default function FastCustomAppAudit() {
@@ -16,12 +16,19 @@ export default function FastCustomAppAudit() {
         contentType="audit"
       />
 
+      {/* Hero / Header - gradient background consistent with the main landing page hero */}
       <section
         aria-labelledby="audit-hero-heading"
-        className="relative isolate overflow-hidden border-b border-neutral-200 bg-white py-16 sm:py-20 dark:border-neutral-800 dark:bg-neutral-950"
+        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20"
       >
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/20" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
+        {/* Mask: knocks the saturated bg back to a usable surface on light/dark */}
+        <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
+        {/* Bottom fade — softens the seam into content below */}
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
+        {/* Top-right blue glow - matching landing page */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
+        {/* Bottom-left violet glow - matching landing page */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
         <div className="mx-auto max-w-3xl px-6">
           <div className="mb-4">
@@ -94,15 +101,15 @@ export default function FastCustomAppAudit() {
 
       <div className="mx-auto max-w-3xl px-6 py-12 lg:py-16">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">Get Your Free AI Fast Custom App Recommendations</h2>
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">Get Your Free Personalized AI Opportunity Report</h2>
           <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            Tell me about your current lead and sales process. I'll personally analyze it and send you a custom AI roadmap (including chatbot/automation ideas) within 48 hours — completely free.
+            Answer a few short questions and I'll personally review them and send you a tailored AI Opportunity Report with specific ideas for a fast custom AI solution — within 48 hours. 100% free, no obligation.
           </p>
         </div>
 
-        <ChaosSurveyForm
+        <ReportRequestForm
           source="fast-custom-app"
-          title="Fast Custom AI App"
+          title="Fast Custom AI App Report"
           painLabel="What's your single biggest frustration right now with development or tools?"
           useTestCollection={false}
         />

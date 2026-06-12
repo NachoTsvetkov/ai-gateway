@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
+import { ReportRequestForm } from 'components/reports/ReportRequestForm';
 import { ViewContentTracker } from 'components/analytics/view-content-tracker';
 
 export const metadata = {
-  title: 'Free AI Revenue Leak Audit for Small Businesses | Get 3 Quick Wins in 48 Hours',
-  description: 'Discover exactly where your small business is losing revenue from manual processes or missed leads. Get a personalized AI audit + 3 actionable quick wins — free.',
+  title: 'Free Personalized AI Opportunity Report for Revenue Protection | Small Business',
+  description: 'Get a free personalized AI Opportunity Report with specific ideas to stop losing revenue to manual processes and missed leads. Reviewed personally and delivered in 48 hours.',
 };
 
 export default function RevenueLeakAudit() {
@@ -16,13 +16,19 @@ export default function RevenueLeakAudit() {
         contentType="audit"
       />
 
-      {/* Hero / Header - modeled after bundles hero for consistency */}
+      {/* Hero / Header - gradient background consistent with the main landing page hero */}
       <section
         aria-labelledby="audit-hero-heading"
-        className="relative isolate overflow-hidden border-b border-neutral-200 bg-white py-16 sm:py-20 dark:border-neutral-800 dark:bg-neutral-950"
+        className="relative isolate overflow-hidden bg-blue-500 border-b border-blue-600/30 dark:border-blue-400/20"
       >
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/20" />
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
+        {/* Mask: knocks the saturated bg back to a usable surface on light/dark */}
+        <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
+        {/* Bottom fade — softens the seam into content below */}
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
+        {/* Top-right blue glow - matching landing page */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
+        {/* Bottom-left violet glow - matching landing page */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
         <div className="mx-auto max-w-3xl px-6">
           <div className="mb-4">
@@ -97,15 +103,15 @@ export default function RevenueLeakAudit() {
       {/* Form section */}
       <div className="mx-auto max-w-3xl px-6 py-12 lg:py-16">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">Get Your Free Personalized AI Revenue Leak Audit</h2>
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white">Get Your Free Personalized AI Opportunity Report</h2>
           <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-            Answer a few quick questions about your business. I'll review every response personally and email you 3 specific AI ideas or quick wins within 48 hours. This is 100% free — no obligation.
+            Answer a few short questions and I'll personally review them and send you a tailored AI Opportunity Report with specific ideas for protecting and growing your revenue — within 48 hours. 100% free, no obligation.
           </p>
         </div>
 
-        <ChaosSurveyForm
+        <ReportRequestForm
           source="revenue-audit"
-          title="Revenue Leak Audit"
+          title="Revenue Protection Report"
           painLabel="What's your biggest current frustration or revenue leak?"
           useTestCollection={false}
         />

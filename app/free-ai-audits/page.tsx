@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { ChaosSurveyForm } from 'components/chaos/ChaosSurveyForm';
+import { ReportRequestForm } from 'components/reports/ReportRequestForm';
 import { ViewContentTracker } from 'components/analytics/view-content-tracker';
 
 export const metadata = {
-  title: 'Free AI Audits & Experiments for Small Businesses | Choose Your Focus',
-  description: 'Pick the area where you lose the most time or revenue. Answer a short survey and get personalized AI recommendations from Nacho within 48 hours — completely free.',
+  title: 'Free Personalized AI Opportunity Reports for Small Businesses',
+  description: 'Choose your focus area. Answer a short guided survey and receive a free personalized AI Opportunity Report with tailored ideas within 48 hours — reviewed personally by Nacho.',
 };
 
 export default function FreeAIAuditsHub() {
@@ -54,27 +54,44 @@ export default function FreeAIAuditsHub() {
         contentName="Free AI Audits Hub"
         contentType="page"
       />
-      <div className="mx-auto max-w-7xl px-6 py-16 lg:py-20">
-        <div className="mx-auto max-w-3xl text-center">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-green-500 dark:bg-green-400" />
-            Free • Personalized • 48 hours
-          </div>
 
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Choose the Free AI Audit That Solves Your Biggest Small Business Problem
-          </h1>
-          <p className="mt-6 text-lg text-neutral-600 dark:text-neutral-400">
-            Pick the area where you lose the most time or revenue. Answer a short survey and get personalized AI recommendations from Nacho within 48 hours — completely free.
-          </p>
+      {/* Hero section with gradient background consistent with the main landing page */}
+      <section
+        aria-labelledby="hub-hero-heading"
+        className="relative isolate overflow-hidden bg-blue-500"
+      >
+        {/* Mask: knocks the saturated bg back to a usable surface on light/dark */}
+        <div className="absolute inset-0 -z-10 bg-white/85 dark:bg-neutral-950/80" />
+        {/* Bottom fade — softens the seam into content below */}
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-gradient-to-b from-transparent to-white dark:to-neutral-950" />
+        {/* Top-right blue glow */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-500/15 via-transparent to-transparent dark:from-blue-600/25" />
+        {/* Bottom-left violet glow */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
+
+        <div className="mx-auto max-w-7xl px-6 py-16 lg:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-green-500 dark:bg-green-400" />
+              Free • Personalized • 48 hours
+            </div>
+
+            <h1 id="hub-hero-heading" className="text-4xl font-bold tracking-tight sm:text-6xl">
+              Get a Free Personalized AI Opportunity Report for Your Biggest Challenge
+            </h1>
+            <p className="mt-6 text-lg text-neutral-600 dark:text-neutral-400">
+              Choose the focus area that matters most right now. Answer a short guided survey and I’ll personally review your answers and send you a tailored AI Opportunity Report with specific ideas within 48 hours — completely free.
+            </p>
+          </div>
         </div>
+      </section>
 
         <div className="mx-auto mt-12 max-w-2xl text-center">
           <h2 className="text-xl font-semibold">How it works</h2>
           <div className="mt-6 grid gap-8 sm:grid-cols-3 text-left">
             <div>
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400">1</div>
-              <div className="mt-2 font-medium">Choose the audit that matches your biggest challenge</div>
+              <div className="mt-2 font-medium">Choose the focus area that matches your biggest challenge</div>
             </div>
             <div>
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400">2</div>
@@ -82,7 +99,7 @@ export default function FreeAIAuditsHub() {
             </div>
             <div>
               <div className="text-sm font-medium text-blue-600 dark:text-blue-400">3</div>
-              <div className="mt-2 font-medium">Get personalized AI ideas + next steps in 48 hours</div>
+              <div className="mt-2 font-medium">Receive your free personalized AI Opportunity Report in 48 hours</div>
             </div>
           </div>
         </div>
@@ -101,7 +118,7 @@ export default function FreeAIAuditsHub() {
                 {audit.description}
               </p>
               <div className="mt-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                Start this audit →
+                Get my free report →
               </div>
             </Link>
           ))}
@@ -121,13 +138,12 @@ export default function FreeAIAuditsHub() {
           <div className="mb-4 text-center text-sm font-medium uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
             Quick test (writes to test collection)
           </div>
-          <ChaosSurveyForm 
+          <ReportRequestForm 
             source="hub-test" 
-            title="Test the Chaos Survey Form"
+            title="Quick internal test form"
             useTestCollection={true}  // true = local/custom test bucket; default=false=prod. ?test=false in URL forces local/custom on any page.
           />
         </div>
-      </div>
     </main>
   );
 }

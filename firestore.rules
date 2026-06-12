@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Report request / Personalized AI Opportunity Report responses.
+    // Only allow create from the public web forms (client SDK + the /api/report-request route).
+    // No public reads, updates, or deletes — owner reviews in Firebase Console.
+    // IMPORTANT: Deploy these rules (or paste into console) AFTER creating the database.
+
+    match /chaos_survey_responses/{docId} {
+      allow create: if
+        request.resource.data.keys().hasAll([
+          'source', 'business_type', 'pain', 'desired_results', 'budget', 'interest', 'email'
+        ])
+        && request.resource.data.interest is number
+        && request.resource.data.interest >= 1 && request.resource.data.interest <= 10
+        && request.resource.data.email is string
+        // source etc are non-empty strings (Zod already enforces on client+server)
+        ;
+      allow read, update, delete: if false; // console only for Nacho
+    }
+
+    match /chaos_survey_responses_test/{docId} {
+      allow create: if
+        request.resource.data.keys().hasAll([
+          'source', 'business_type', 'pain', 'desired_results', 'budget', 'interest', 'email'
+        ])
+        && request.resource.data.interest is number
+        && request.resource.data.interest >= 1 && request.resource.data.interest <= 10
+        && request.resource.data.email is string;
+      allow read, update, delete: if false;
+    }
+
+    // Add other app rules here as needed (never open /*/* broadly).
+  }
+}

@@ -7,7 +7,10 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "test": "pnpm prettier:check",
-    "paypal:setup": "tsx scripts/paypal-setup-plans.ts"
+    "paypal:setup": "tsx scripts/paypal-setup-plans.ts",
+    "firestore:create-db": "firebase firestore:databases:create \"(default)\" --location nam5 --project nachotsvetkov-cbaa7",
+    "firestore:deploy-rules": "firebase deploy --only firestore:rules --project nachotsvetkov-cbaa7",
+    "firestore:setup": "npm run firestore:create-db && npm run firestore:deploy-rules"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",
@@ -41,6 +44,7 @@
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4.0.14",
     "tsx": "^4.21.0",
-    "typescript": "5.8.2"
+    "typescript": "5.8.2",
+    "firebase-tools": "^13.0.0"
   }
 }

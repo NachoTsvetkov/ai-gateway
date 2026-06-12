@@ -14,11 +14,16 @@ const firebaseConfig = {
 // Initialize Firebase only once
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Export Firestore instance for survey data storage
+// Export Firestore instance for survey data storage.
+// IMPORTANT: Before any writes can succeed you must (in Firebase Console):
+// 1. Create a Firestore database (Native mode) for the project.
+// 2. Deploy/paste rules from the firestore.rules file in repo root (allows only create for the two collections with required fields).
+// See scripts/test-chaos-firebase.ts for the exact URLs + copy-paste rule example + test that does write + read-back.
 export const db = getFirestore(app);
 
-// Collection name for Chaos Phase survey responses
-// Prod (default on live LPs): chaos_survey_responses
+// Collection names (kept for data continuity with any existing responses).
+// Prod (default on live report request pages): chaos_survey_responses
 // Local/custom testing: chaos_survey_responses_test (activated via useTestCollection=true or ?test=false on forms)
+// These are internal names only — visitor-facing language never mentions them.
 export const SURVEYS_COLLECTION = 'chaos_survey_responses';
 export const TEST_SURVEYS_COLLECTION = 'chaos_survey_responses_test';
