@@ -34,29 +34,48 @@ const PLACEHOLDER_EXACT = new Set([
   'fake',
   'temp',
   'string',
-  'business',
-  'company',
-  'my business',
-  'my company',
-  'not sure',
-  'idk',
-  "i don't know",
-  'dont know',
-  'unknown',
-  'no idea',
-  'anything',
-  'something',
-  'whatever',
   'help',
   'please help',
   'need help',
 ]);
 
+/** Legitimate short survey answers — allowed even below field min length. */
+const VALID_SHORT_PHRASES = new Set([
+  'more sales',
+  'more leads',
+  'more clients',
+  'more revenue',
+  'more traffic',
+  'more bookings',
+  'more customers',
+  'more orders',
+  'more profit',
+  'grow sales',
+  'grow revenue',
+  'save time',
+  'less admin',
+  'automate tasks',
+  'get leads',
+  'find clients',
+  'increase sales',
+  'increase revenue',
+  'reduce costs',
+  'save money',
+  'software',
+  'ecommerce',
+  'e-commerce',
+  'consulting',
+  'coaching',
+  'agency',
+  'saas',
+]);
+
+/** Minimum length when not a known short phrase (kept low — form already requires non-empty). */
 const MIN = {
-  business_type: 5,
-  pain: 25,
-  desired_results: 25,
-  budget: 3,
+  business_type: 3,
+  pain: 10,
+  desired_results: 6,
+  budget: 2,
 } as const;
 
 export class SurveyQualityError extends Error {
@@ -64,13 +83,14 @@ export class SurveyQualityError extends Error {
   readonly reasons: string[];
 
   constructor(reasons: string[]) {
+    const unique = [...new Set(reasons)];
     super(
-      reasons.length === 1
-        ? reasons[0]
-        : `Survey answers are too vague to generate a personalized report:\n• ${reasons.join('\n• ')}`,
+      unique.length === 1
+        ? unique[0]
+        : `Survey answers are too vague to generate a personalized report:\n• ${unique.join('\n• ')}`,
     );
     this.name = 'SurveyQualityError';
-    this.reasons = reasons;
+    this.reasons = unique;
   }
 }
 
@@ -86,9 +106,23 @@ function normalize(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+/** Trim and normalize whitespace / invisible characters from survey text fields. */
+export function sanitizeSurveyAnswer(value: string | undefined): string {
+  if (value == null) return '';
+  return value
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .replace(/\u00a0/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+}
+
 function alphaRatio(value: string): number {
   const letters = (value.match(/[a-zA-Z]/g) ?? []).length;
   return letters / Math.max(value.length, 1);
+}
+
+function isKnownShortPhrase(norm: string): boolean {
+  return VALID_SHORT_PHRASES.has(norm);
 }
 
 /** True when the string looks like a real answer, not a placeholder or stub. */
@@ -96,19 +130,22 @@ export function isMeaningfulAnswer(
   value: string | undefined,
   field: keyof typeof MIN,
 ): boolean {
-  const raw = value?.trim() ?? '';
-  if (raw.length < MIN[field]) return false;
+  const raw = sanitizeSurveyAnswer(value);
+  if (!raw) return false;
 
   const norm = normalize(raw);
   if (PLACEHOLDER_EXACT.has(norm)) return false;
+  if (isKnownShortPhrase(norm)) return true;
 
-  if (!/\s/.test(norm) && norm.length < 12 && alphaRatio(raw) < 0.5) return false;
+  if (raw.length < MIN[field]) return false;
+
+  if (!/\s/.test(norm) && norm.length < 8 && alphaRatio(raw) < 0.5) return false;
 
   if (/^(.)\1{3,}$/.test(norm.replace(/\s/g, ''))) return false;
 
   const words = norm.split(/\s+/).filter(Boolean);
   const firstWord = words[0];
-  if (words.length >= 2 && new Set(words).size === 1 && firstWord !== undefined && firstWord.length < 8) {
+  if (words.length >= 3 && new Set(words).size === 1 && firstWord !== undefined && firstWord.length < 8) {
     return false;
   }
 
@@ -116,8 +153,8 @@ export function isMeaningfulAnswer(
 }
 
 function buildPersonalizedNote(pain: string, goal: string): string | undefined {
-  const p = pain.trim();
-  const g = goal.trim();
+  const p = sanitizeSurveyAnswer(pain);
+  const g = sanitizeSurveyAnswer(goal);
   if (!isMeaningfulAnswer(p, 'pain') || !isMeaningfulAnswer(g, 'desired_results')) {
     return undefined;
   }
@@ -151,17 +188,25 @@ export function firstNameFromValidSurvey(email: string, businessType?: string): 
   return 'there';
 }
 
+function isPlaceholderDuplicate(a: string, b: string): boolean {
+  const na = normalize(a);
+  const nb = normalize(b);
+  if (na !== nb) return false;
+  return PLACEHOLDER_EXACT.has(na) || na.length < 15;
+}
+
 /**
  * Validates whether a survey has enough real content to generate a personalized PDF report.
- * Placeholder / test answers (e.g. business_type "Test", pain "test") fail validation.
+ * Sanitizes input and blocks obvious placeholders (e.g. "Test") but allows short real answers
+ * like "more sales" or "Software".
  */
 export function assessSurveyForReport(survey: ReportRequestData): SurveyQualityAssessment {
   const reasons: string[] = [];
 
-  const business = survey.business_type?.trim() ?? '';
-  const pain = survey.pain?.trim() ?? '';
-  const goal = survey.desired_results?.trim() ?? '';
-  const budget = survey.budget?.trim() ?? '';
+  const business = sanitizeSurveyAnswer(survey.business_type);
+  const pain = sanitizeSurveyAnswer(survey.pain);
+  const goal = sanitizeSurveyAnswer(survey.desired_results);
+  const budget = sanitizeSurveyAnswer(survey.budget);
 
   if (!isMeaningfulAnswer(business, 'business_type')) {
     reasons.push(
@@ -187,13 +232,13 @@ export function assessSurveyForReport(survey: ReportRequestData): SurveyQualityA
   const normGoal = normalize(goal);
 
   const distinct = new Set([normBusiness, normPain, normGoal]);
-  if (distinct.size === 1 && normBusiness.length < 40) {
+  if (distinct.size === 1 && (PLACEHOLDER_EXACT.has(normBusiness) || normBusiness.length < 12)) {
     reasons.push('Business type, pain, and goals are identical — answers look like test data.');
   } else {
-    if (normBusiness === normPain && normBusiness.length < 30) {
+    if (isPlaceholderDuplicate(business, pain)) {
       reasons.push('Business type and pain point are the same — need distinct, specific answers.');
     }
-    if (normPain === normGoal && normPain.length < 30) {
+    if (isPlaceholderDuplicate(pain, goal)) {
       reasons.push('Pain point and desired results are the same — need distinct, specific answers.');
     }
   }

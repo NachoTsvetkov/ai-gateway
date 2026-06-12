@@ -27,6 +27,17 @@ const validSurvey: ReportRequestData = {
   tried_so_far: 'Basic email templates in Gmail',
 };
 
+/** Real prod-style survey with short desired results (e.g. oPEmNKI…). */
+const shortGoalSurvey: ReportRequestData = {
+  source: 'revenue-audit',
+  business_type: 'Software',
+  pain: "I don't have traffic on my website and struggle to convert visitors into paying customers.",
+  desired_results: 'more sales',
+  budget: 'not sure yet',
+  interest: 8,
+  email: 'nacho.tsvetkov@gmail.com',
+};
+
 function print(label: string, survey: ReportRequestData) {
   const result = assessSurveyForReport(survey);
   console.log(`\n${label}: valid=${result.valid}`);
@@ -42,6 +53,7 @@ function print(label: string, survey: ReportRequestData) {
 
 print('Placeholder survey (should FAIL)', placeholderSurvey);
 print('Valid survey (should PASS)', validSurvey);
+print('Short goal survey (should PASS)', shortGoalSurvey);
 
 const invalid = assessSurveyForReport(placeholderSurvey);
 if (invalid.valid) {
@@ -52,6 +64,13 @@ if (invalid.valid) {
 const valid = assessSurveyForReport(validSurvey);
 if (!valid.valid) {
   console.error('\nFAIL: valid survey should pass validation');
+  process.exit(1);
+}
+
+const shortGoal = assessSurveyForReport(shortGoalSurvey);
+if (!shortGoal.valid) {
+  console.error('\nFAIL: short-goal survey should pass validation');
+  console.error(shortGoal.reasons);
   process.exit(1);
 }
 
