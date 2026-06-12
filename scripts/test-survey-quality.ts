@@ -45,8 +45,9 @@ function print(label: string, survey: ReportRequestData) {
     console.log('Reasons:');
     result.reasons.forEach((r) => console.log(`  • ${r}`));
   } else {
-    console.log(`  businessName: ${result.businessName}`);
-    console.log(`  firstName: ${result.firstName}`);
+    console.log(`  businessType: ${result.businessType}`);
+    console.log(`  businessName: ${result.businessName ?? '(none)'}`);
+    console.log(`  firstName: ${result.firstName || '(none — use Hi,)'}`);
     console.log(`  personalizedNote: ${result.personalizedNote ?? '(none)'}`);
   }
 }
@@ -71,6 +72,18 @@ const shortGoal = assessSurveyForReport(shortGoalSurvey);
 if (!shortGoal.valid) {
   console.error('\nFAIL: short-goal survey should pass validation');
   console.error(shortGoal.reasons);
+  process.exit(1);
+}
+if (shortGoal.firstName) {
+  console.error('\nFAIL: short-goal survey should not use business type as first name');
+  process.exit(1);
+}
+if (shortGoal.businessName) {
+  console.error('\nFAIL: generic business type should not be stored as businessName');
+  process.exit(1);
+}
+if (!shortGoal.personalizedNoteHtml?.includes('<strong>')) {
+  console.error('\nFAIL: personalized note HTML should bold key phrases');
   process.exit(1);
 }
 

@@ -3,6 +3,8 @@
  * Matches audit pages: light hero, blue accents, solid colors (IE preview safe).
  */
 
+import { formatReportBulletHtml, sanitizeReportInlineHtml } from './report-html-sanitize';
+
 export type ReportSection = {
   title: string;
   bodyHtml: string;
@@ -48,7 +50,7 @@ function escapeHtml(text: string): string {
 function renderBullets(bullets: string[] | undefined): string {
   if (!bullets?.length) return '';
   const items = bullets
-    .map((b) => `<li style="margin:0 0 8px 0;">${escapeHtml(b)}</li>`)
+    .map((b) => `<li style="margin:0 0 8px 0;">${formatReportBulletHtml(b)}</li>`)
     .join('');
   return `<ul style="margin:12px 0 0 0;padding-left:20px;color:${BRAND.neutral700};font-size:15px;line-height:1.6;">${items}</ul>`;
 }
@@ -61,7 +63,7 @@ function renderSections(sections: ReportSection[]): string {
         <h2 style="margin:0 0 10px 0;font-size:18px;font-weight:600;color:${BRAND.neutral900};letter-spacing:-0.02em;">
           ${i + 1}. ${escapeHtml(s.title)}
         </h2>
-        <div style="font-size:15px;line-height:1.65;color:${BRAND.neutral700};">${s.bodyHtml}</div>
+        <div style="font-size:15px;line-height:1.65;color:${BRAND.neutral700};">${sanitizeReportInlineHtml(s.bodyHtml)}</div>
         ${renderBullets(s.bullets)}
       </section>`,
     )
@@ -72,9 +74,10 @@ function renderSections(sections: ReportSection[]): string {
 export function wrapReportHtml(content: ReportTemplateContent): string {
   const kicker = escapeHtml(content.kicker);
   const headline = escapeHtml(content.headline);
-  const business = escapeHtml(content.businessName || content.recipientName || 'Your business');
   const source = content.sourceLabel ? escapeHtml(content.sourceLabel) : 'AI Opportunity Audit';
-  const preparedFor = content.recipientName ? escapeHtml(content.recipientName) : business;
+  const preparedFor = content.recipientName?.trim()
+    ? escapeHtml(content.recipientName.trim())
+    : 'you';
 
   return `<!DOCTYPE html>
 <html lang="en">

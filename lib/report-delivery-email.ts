@@ -3,7 +3,7 @@
  * See Email_Template_for_AI_Opportunity_Report.md
  */
 
-import { firstNameFromValidSurvey, isMeaningfulAnswer } from './survey-quality';
+import { businessDisplayLabel, firstNameFromValidSurvey, isMeaningfulAnswer } from './survey-quality';
 
 const CALENDLY_URL = 'https://calendly.com/nacho-tsvetkov/30min';
 const CALENDLY_LINK_LABEL = 'Book a 30-minute call';
@@ -15,10 +15,12 @@ const P_STYLE = 'margin:0 0 16px 0;font-size:15px;line-height:1.65;color:#404040
 const LINK_STYLE = 'color:#2563eb;text-decoration:underline;';
 
 export type DeliveryEmailParams = {
-  firstName: string;
-  businessName: string;
-  /** Optional one-line personalization from survey (pain/goal). */
+  /** From email local part only; omit for "Hi," greeting. */
+  firstName?: string;
+  /** e.g. "your business" or a descriptive company name — never a bare category like "Software". */
+  businessLabel: string;
   personalizedNote?: string;
+  personalizedNoteHtml?: string;
   attachmentFileName: string;
 };
 
@@ -36,6 +38,16 @@ function paragraph(innerHtml: string): string {
 
 function emailLink(href: string, label: string): string {
   return `<a href="${escapeHtml(href)}" style="${LINK_STYLE}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+}
+
+function greetingText(firstName?: string): string {
+  const name = firstName?.trim();
+  return name ? `Hi ${name},` : 'Hi,';
+}
+
+function greetingHtml(firstName?: string): string {
+  const name = firstName?.trim();
+  return name ? `Hi ${escapeHtml(name)},` : 'Hi,';
 }
 
 function friendlySiteLabel(url: string): string {
@@ -68,21 +80,29 @@ function signatureBlockHtml(): string {
   );
 }
 
-export function firstNameFromSurvey(email: string, businessType?: string): string {
-  return firstNameFromValidSurvey(email, businessType);
+export function firstNameFromSurvey(email: string): string {
+  return firstNameFromValidSurvey(email);
 }
 
-export function reportAttachmentFileName(businessName: string): string {
-  const safe = businessName
+export function reportAttachmentFileName(businessType?: string): string {
+  const label = businessDisplayLabel(businessType);
+  if (label === 'your business') {
+    return 'AI-Opportunity-Report.pdf';
+  }
+  const safe = label
     .replace(/[^a-zA-Z0-9\s-]/g, '')
     .trim()
     .replace(/\s+/g, '-')
-    .slice(0, 40) || 'Business';
-  return `AI-Opportunity-Report-${safe}.pdf`;
+    .slice(0, 40);
+  return safe ? `AI-Opportunity-Report-${safe}.pdf` : 'AI-Opportunity-Report.pdf';
 }
 
-export function defaultReportSubject(businessName: string): string {
-  return `Your Personalized AI Opportunity Report for ${businessName}`;
+export function defaultReportSubject(businessType?: string): string {
+  const label = businessDisplayLabel(businessType);
+  if (label === 'your business') {
+    return 'Your Personalized AI Opportunity Report';
+  }
+  return `Your Personalized AI Opportunity Report for ${label}`;
 }
 
 export function insufficientSurveySubject(): string {
@@ -91,7 +111,7 @@ export function insufficientSurveySubject(): string {
 
 /** Follow-up when survey answers are placeholders — no PDF attachment. */
 export function buildInsufficientSurveyEmailText(firstName: string): string {
-  return `Hi ${firstName},
+  return `${greetingText(firstName)}
 
 Thank you for filling out the questionnaire.
 
@@ -117,10 +137,8 @@ ${SITE_URL}`;
 
 export function buildInsufficientSurveyEmailHtml(firstName: string): string {
   const body = [
-    paragraph(`Hi ${escapeHtml(firstName)},`),
-    paragraph(
-      "Thank you for filling out the questionnaire.",
-    ),
+    paragraph(greetingHtml(firstName)),
+    paragraph('Thank you for filling out the questionnaire.'),
     paragraph(
       "I started reviewing your answers, but a few responses look incomplete or like placeholders — so I haven't attached a Personalized AI Opportunity Report yet. I prepare each report by hand from your specific business context, and I need a bit more detail to make it genuinely useful for you.",
     ),
@@ -144,16 +162,16 @@ export function isValidBusinessNameForReport(businessType?: string): boolean {
 
 /** Plain-text delivery email when a valid PDF report is attached. */
 export function buildDeliveryEmailText(params: DeliveryEmailParams): string {
-  const { firstName, businessName, personalizedNote, attachmentFileName } = params;
+  const { firstName, businessLabel, personalizedNote, attachmentFileName } = params;
   const note = personalizedNote ? `\n${personalizedNote}\n` : '';
 
-  return `Hi ${firstName},
+  return `${greetingText(firstName)}
 
 Thank you for filling out the questionnaire. I've reviewed your answers and put together a short Personalized AI Opportunity Report based on your business and goals.
 ${note}
 You can find it attached to this email (${attachmentFileName}).
 
-In the report, I've outlined a few areas where AI and automation could potentially help ${businessName}, along with some initial ideas that might be worth exploring.
+In the report, I've outlined a few areas where AI and automation could potentially help ${businessLabel}, along with some initial ideas that might be worth exploring.
 
 If any of this resonates with you, I'd be happy to jump on a quick 15–20 minute call to walk through the ideas and see if there's a good fit to go deeper.
 
@@ -172,19 +190,26 @@ ${SITE_URL}`;
 
 /** HTML delivery email with clickable Calendly, phone, and website links. */
 export function buildDeliveryEmailHtml(params: DeliveryEmailParams): string {
-  const { firstName, businessName, personalizedNote, attachmentFileName } = params;
+  const { firstName, businessLabel, personalizedNote, personalizedNoteHtml, attachmentFileName } =
+    params;
+
+  const noteParagraph = personalizedNoteHtml
+    ? paragraph(personalizedNoteHtml)
+    : personalizedNote
+      ? paragraph(escapeHtml(personalizedNote))
+      : null;
 
   const body = [
-    paragraph(`Hi ${escapeHtml(firstName)},`),
+    paragraph(greetingHtml(firstName)),
     paragraph(
-      "Thank you for filling out the questionnaire. I've reviewed your answers and put together a short Personalized AI Opportunity Report based on your business and goals.",
+      'Thank you for filling out the questionnaire. I\'ve reviewed your answers and put together a short <strong>Personalized AI Opportunity Report</strong> based on your business and goals.',
     ),
-    ...(personalizedNote ? [paragraph(escapeHtml(personalizedNote))] : []),
+    ...(noteParagraph ? [noteParagraph] : []),
     paragraph(
-      `You can find it attached to this email (${escapeHtml(attachmentFileName)}).`,
+      `You can find it attached to this email (<strong>${escapeHtml(attachmentFileName)}</strong>).`,
     ),
     paragraph(
-      `In the report, I've outlined a few areas where AI and automation could potentially help ${escapeHtml(businessName)}, along with some initial ideas that might be worth exploring.`,
+      `In the report, I've outlined a few areas where AI and automation could potentially help <strong>${escapeHtml(businessLabel)}</strong>, along with some initial ideas that might be worth exploring.`,
     ),
     paragraph(
       "If any of this resonates with you, I'd be happy to jump on a quick 15–20 minute call to walk through the ideas and see if there's a good fit to go deeper.",

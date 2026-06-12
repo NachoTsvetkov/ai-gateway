@@ -97,9 +97,14 @@ export class SurveyQualityError extends Error {
 export type SurveyQualityAssessment = {
   valid: boolean;
   reasons: string[];
+  /** Raw survey field — what type of business they run. */
+  businessType?: string;
+  /** Descriptive company name when distinct from category; otherwise undefined. */
   businessName?: string;
+  /** Recipient first name from email only; empty when unknown. */
   firstName?: string;
   personalizedNote?: string;
+  personalizedNoteHtml?: string;
 };
 
 function normalize(value: string): string {
@@ -114,6 +119,23 @@ export function sanitizeSurveyAnswer(value: string | undefined): string {
     .replace(/\u00a0/g, ' ')
     .trim()
     .replace(/\s+/g, ' ');
+}
+
+/** Single-word or category-style business_type values — not used as a person or company name. */
+export function isGenericBusinessCategory(value: string | undefined): boolean {
+  const raw = sanitizeSurveyAnswer(value);
+  if (!raw) return true;
+  const norm = normalize(raw);
+  if (VALID_SHORT_PHRASES.has(norm)) return true;
+  if (!/\s/.test(raw) && raw.length <= 24) return true;
+  return false;
+}
+
+/** How to refer to the business in emails/PDF when we have no real company name. */
+export function businessDisplayLabel(businessType: string | undefined): string {
+  const raw = sanitizeSurveyAnswer(businessType);
+  if (!raw || isGenericBusinessCategory(raw)) return 'your business';
+  return raw;
 }
 
 function alphaRatio(value: string): number {
@@ -160,12 +182,37 @@ function buildPersonalizedNote(pain: string, goal: string): string | undefined {
   }
   if (normalize(p) === normalize(g)) return undefined;
 
-  const painSnippet = p.length > 80 ? `${p.slice(0, 77)}…` : p;
-  const goalSnippet = g.length > 80 ? `${g.slice(0, 77)}…` : g;
-  return `I noticed you're focused on ${goalSnippet.charAt(0).toLowerCase()}${goalSnippet.slice(1)} while working through ${painSnippet.charAt(0).toLowerCase()}${painSnippet.slice(1)} — I've kept that front and centre in the report.`;
+  const painSnippet = snippetCase(p);
+  const goalSnippet = snippetCase(g);
+  return `I noticed you're focused on ${goalSnippet} while working through ${painSnippet} — I've kept that front and centre in the report.`;
 }
 
-export function firstNameFromValidSurvey(email: string, businessType?: string): string {
+function buildPersonalizedNoteHtml(pain: string, goal: string): string | undefined {
+  const p = sanitizeSurveyAnswer(pain);
+  const g = sanitizeSurveyAnswer(goal);
+  if (!isMeaningfulAnswer(p, 'pain') || !isMeaningfulAnswer(g, 'desired_results')) {
+    return undefined;
+  }
+  if (normalize(p) === normalize(g)) return undefined;
+
+  const painSnippet = escapeHtmlForNote(snippetCase(p));
+  const goalSnippet = escapeHtmlForNote(snippetCase(g));
+  return `I noticed you're focused on <strong>${goalSnippet}</strong> while working through <strong>${painSnippet}</strong> — I've kept that front and centre in the report.`;
+}
+
+function snippetCase(text: string): string {
+  const t = text.length > 80 ? `${text.slice(0, 77)}…` : text;
+  return t.charAt(0).toLowerCase() + t.slice(1);
+}
+
+function escapeHtmlForNote(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+export function firstNameFromValidSurvey(email: string): string {
   const local = email.split('@')[0]?.trim() ?? '';
   const localNorm = local.toLowerCase();
 
@@ -178,14 +225,7 @@ export function firstNameFromValidSurvey(email: string, businessType?: string): 
     return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
   }
 
-  if (businessType && isMeaningfulAnswer(businessType, 'business_type')) {
-    const firstWord = businessType.trim().split(/\s+/)[0] ?? '';
-    if (firstWord.length >= 3) {
-      return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
-    }
-  }
-
-  return 'there';
+  return '';
 }
 
 function isPlaceholderDuplicate(a: string, b: string): boolean {
@@ -250,9 +290,11 @@ export function assessSurveyForReport(survey: ReportRequestData): SurveyQualityA
   return {
     valid: true,
     reasons: [],
-    businessName: business,
-    firstName: firstNameFromValidSurvey(survey.email, business),
+    businessType: business,
+    businessName: isGenericBusinessCategory(business) ? undefined : business,
+    firstName: firstNameFromValidSurvey(survey.email),
     personalizedNote: buildPersonalizedNote(pain, goal),
+    personalizedNoteHtml: buildPersonalizedNoteHtml(pain, goal),
   };
 }
 

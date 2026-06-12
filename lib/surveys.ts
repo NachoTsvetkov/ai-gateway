@@ -50,8 +50,6 @@ export async function saveReportRequestResponse(data: ReportRequestData, useTest
   const contactId = await upsertContact(
     {
       email: parsed.email,
-      name: parsed.business_type,
-      businessName: parsed.business_type,
       businessType: parsed.business_type,
       source: parsed.source,
       funnelStage: 'survey_submitted',

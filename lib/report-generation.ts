@@ -9,7 +9,7 @@ import {
 } from './report-delivery-email';
 import { wrapReportHtml, type ReportTemplateContent } from './report-email-template';
 import { renderReportPdf } from './report-pdf';
-import { assertSurveyQualityForReport } from './survey-quality';
+import { assertSurveyQualityForReport, businessDisplayLabel } from './survey-quality';
 
 const ReportContentSchema = z.object({
   headline: z.string().min(10).max(120),
@@ -69,7 +69,11 @@ Write a personalized, professional **AI Opportunity Report** based on the survey
 **HTML rules for bodyHtml:**
 - Use only: <p>, <strong>, <em>, <br> — no markdown, no headings inside bodyHtml (section titles are separate).
 - No external CSS, scripts, images, or div/class/id attributes.
-- Keep paragraphs short (2–4 sentences). Use bullets array for lists (plain text strings).
+- Keep paragraphs short (2–4 sentences). Use bullets array for lists.
+
+**Bullets array rules:**
+- Each bullet is PLAIN TEXT only — no HTML tags, no <li>, no <strong>.
+- Format: "Solution name: one sentence benefit" (the template adds bold to the title before the colon).
 
 **Personalization:** Reference business type, goals, challenges, budget, and what they've tried. Only use details that appear in the survey — never invent specifics.
 
@@ -123,9 +127,11 @@ export async function generateOpportunityReport(
   survey: ReportRequestData & { id?: string; created_at?: string },
 ): Promise<GeneratedReport> {
   const quality = assertSurveyQualityForReport(survey);
-  const businessName = quality.businessName!;
-  const firstName = quality.firstName!;
+  const businessType = quality.businessType!;
+  const businessLabel = businessDisplayLabel(businessType);
+  const firstName = quality.firstName || undefined;
   const personalizedNote = quality.personalizedNote;
+  const personalizedNoteHtml = quality.personalizedNoteHtml;
 
   const { object } = await generateObject({
     model: gateway('openai/gpt-4o'),
@@ -134,25 +140,26 @@ export async function generateOpportunityReport(
     prompt: buildUserPrompt(survey),
   });
 
-  const subject = defaultReportSubject(businessName);
+  const subject = defaultReportSubject(businessType);
 
   const content: ReportTemplateContent = {
     subject,
     kicker: 'Personalized AI Opportunity Report',
     headline: object.headline,
     sections: object.sections,
-    recipientName: businessName,
-    businessName,
+    recipientName: quality.businessName,
+    businessName: quality.businessName,
     sourceLabel: SOURCE_LABELS[survey.source] || survey.source,
   };
 
   const reportHtml = wrapReportHtml(content);
-  const attachmentFileName = reportAttachmentFileName(businessName);
+  const attachmentFileName = reportAttachmentFileName(businessType);
 
   const deliveryParams = {
     firstName,
-    businessName,
+    businessLabel,
     personalizedNote,
+    personalizedNoteHtml,
     attachmentFileName,
   };
 
