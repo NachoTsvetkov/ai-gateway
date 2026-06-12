@@ -82,19 +82,23 @@ See the companion `ai-agents` user skill for deep details. Project-specific high
 
 - **Always** run the build locally (`npm run build` — matches what Vercel uses) and verify it completes successfully with no errors or module-not-found issues **before** committing or pushing any code.
 - Do this **every time** before deploy.
-- Check that all new routes (e.g. the Chaos audit pages) appear in the build output under "Route (app)".
+- Check that all new routes (e.g. the report request pages + /api/report-request) appear in the build output under "Route (app)".
 - If using pnpm for other tasks, still validate the npm build since that's the CI/deploy command.
 - Update this skill or add notes if new build requirements (e.g. env vars, deps) are introduced.
 
-## Chaos Phase LP Experiments (Free AI Audits / surveys)
+## Personalized AI Opportunity Report / Audit LPs (Free Reports for 6 Focus Areas)
 
-- The 6 VP audit LPs + hub at /free-ai-audits and /ai-*-* use ChaosSurveyForm + Firebase (prod collection `chaos_survey_responses` by default).
+- The 6 specialized LPs + hub at /free-ai-audits and /ai-*-* use ReportRequestForm + Firebase (prod collection `chaos_survey_responses` by default — internal name only).
 - Prod default: useTestCollection={false} (or no ?test) on the 6 live pages writes to main prod collection.
 - Local/custom/test bucket (`chaos_survey_responses_test`): activate with useTestCollection={true} in code, or via URL param `?test=false` (this is "the local/custom one").
-- The hub includes a visible "Quick test" form wired to test bucket.
+- The hub includes a visible quick test form wired to the test bucket (labeled neutrally).
 - Always use the Firebase config from .env (NEXT_PUBLIC_FIREBASE_*); test writes locally with the script; enable Firestore in console + rules before real use.
-- These are marketing surfaces (not /projects/* shells), so full global nav + consistent site styling (rounded-2xl cards, blue accents, hover lifts, matching home/bundles) apply.
-- New routes must be verified in `npm run build` output.
+  - Script (test-report-request.ts) does write + immediate read-back (getRecentReportRequests) + also exercises the HTTP API roundtrip.
+- **API**: submissions go through `POST /api/report-request` (and GET for recent for verification). Forms call the API. The route re-validates with Zod at the boundary, chooses collection via ?test= (same convention), returns structured success/error. Test the API with the script or directly:
+  - curl -X POST http://localhost:3000/api/report-request?test=false -H "Content-Type: application/json" -d '{ "source":"t", "business_type":"x", ... full schema fields ... }'
+- These are marketing surfaces (not /projects/* shells), so full global nav + consistent site styling apply.
+- New routes must be verified in `npm run build` output (including the report-request API).
+- **CRITICAL for any data/API work (per api development skills)**: Before considering "done", you MUST actually submit real data (via form, script or curl) AND retrieve/read it back (confirm the exact saved fields are queryable and correct). The test script enforces this. Update tests + this skill + the Priestley survey questions doc when changing questions or flow. No "it compiled" excuses.
 
 ## How to Use This Skill
 
