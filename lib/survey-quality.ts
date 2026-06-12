@@ -107,7 +107,10 @@ export function isMeaningfulAnswer(
   if (/^(.)\1{3,}$/.test(norm.replace(/\s/g, ''))) return false;
 
   const words = norm.split(/\s+/).filter(Boolean);
-  if (words.length >= 2 && new Set(words).size === 1 && words[0].length < 8) return false;
+  const firstWord = words[0];
+  if (words.length >= 2 && new Set(words).size === 1 && firstWord !== undefined && firstWord.length < 8) {
+    return false;
+  }
 
   return true;
 }

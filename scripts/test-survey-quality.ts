@@ -11,7 +11,7 @@ const placeholderSurvey: ReportRequestData = {
   pain: 'Test',
   desired_results: 'Test',
   budget: '1000',
-  interest: 'yes',
+  interest: 8,
   email: 'nacho.tsvetkov@gmail.com',
 };
 
@@ -22,7 +22,7 @@ const validSurvey: ReportRequestData = {
   desired_results:
     'Automate repetitive customer support and inventory alerts so I can focus on product development and marketing.',
   budget: '2000-5000',
-  interest: 'yes',
+  interest: 8,
   email: 'client@example.com',
   tried_so_far: 'Basic email templates in Gmail',
 };
