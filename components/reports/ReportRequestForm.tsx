@@ -105,6 +105,8 @@ export function ReportRequestForm({
     track('Lead', {
       content_name: title,
       content_category: source,
+    }, {
+      email: data.email?.trim(),
     });
 
     // Fire the API call in the background (optimistic UI).

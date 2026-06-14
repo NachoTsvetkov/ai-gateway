@@ -42,6 +42,8 @@ export type PixelCustomData = {
    *  Meta's value optimisation works. */
   value?: number;
   currency?: "USD" | "EUR";
+  /** PayPal order / subscription id — standard Purchase parameter. */
+  orderId?: string;
 };
 
 /**
@@ -54,4 +56,12 @@ export type PixelUserData = {
   phone?: string;
   firstName?: string;
   lastName?: string;
+};
+
+/** Non-PII parameters Meta uses for event matching (CAPI user_data). */
+export type PixelMatchData = {
+  fbp?: string;
+  fbc?: string;
+  externalId?: string;
+  fbLoginId?: string;
 };

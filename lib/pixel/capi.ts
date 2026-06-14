@@ -1,15 +1,20 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
 import type {
   PixelCustomData,
   PixelEvent,
   PixelUserData,
 } from "./types";
+import {
+  hashedArray,
+  normalizeEmail,
+  normalizeName,
+  normalizePhone,
+} from "./normalize";
 
 // Meta Conversions API endpoint. Pin a version so the request shape
 // is stable; bump intentionally when migrating to a newer API revision.
-const FB_GRAPH_API = "https://graph.facebook.com/v19.0";
+const FB_GRAPH_API = "https://graph.facebook.com/v21.0";
 
 type CapiEventInput = {
   event: PixelEvent;
@@ -17,33 +22,25 @@ type CapiEventInput = {
   eventId: string;
   /** Unix seconds. Defaults to "now" if omitted. */
   eventTime?: number;
-  /** Full URL the visitor was on when the event fired. Helps Meta
-   *  attribute conversions to specific landing pages. */
+  /** Required for website events per Meta CAPI docs. */
   eventSourceUrl?: string;
-  /** Forwarded from the request — Meta uses these for matching. */
+  /** Optional; improves attribution when present. */
+  referrerUrl?: string;
+  /** Required for website events — forwarded from the browser request. */
   clientIp?: string;
   clientUserAgent?: string;
-  /** _fbp / _fbc cookies set by the browser pixel. Big match-quality
-   *  boost when present. */
   fbp?: string;
   fbc?: string;
+  externalId?: string;
+  fbLoginId?: string;
   user?: PixelUserData;
   custom?: PixelCustomData | null;
-  /** Set this when running through Meta's Test Events tab — only
-   *  events tagged with the matching code show up there. Drop in
-   *  production. */
   testEventCode?: string;
 };
 
 /**
- * Send one event to Meta's Conversions API. Returns true on a 2xx
- * response, false on any failure (callers don't block on this — the
- * browser pixel already recorded the hit).
- *
- * No-ops cleanly when `FB_PIXEL_ID` or `FB_CAPI_ACCESS_TOKEN` are
- * unset, so the entire integration boots into a "configure later"
- * state without throwing. Useful for local dev + preview deploys
- * that don't carry the secret.
+ * Send one event to Meta's Conversions API.
+ * @see https://developers.facebook.com/docs/marketing-api/conversions-api/parameters
  */
 export async function sendCapiEvent(input: CapiEventInput): Promise<boolean> {
   const pixelId = process.env.FB_PIXEL_ID;
@@ -52,24 +49,48 @@ export async function sendCapiEvent(input: CapiEventInput): Promise<boolean> {
     return false;
   }
 
-  const body = {
-    data: [
-      {
-        event_name: input.event,
-        event_time: input.eventTime ?? Math.floor(Date.now() / 1000),
-        event_id: input.eventId,
-        event_source_url: input.eventSourceUrl,
-        action_source: "website" as const,
-        user_data: buildUserData(input),
-        custom_data:
-          input.custom !== null && input.custom !== undefined
-            ? mapCustomData(input.custom)
-            : undefined,
-      },
-    ],
-    test_event_code: input.testEventCode,
+  if (!input.eventSourceUrl) {
+    console.warn(
+      `[capi] missing event_source_url for event=${input.event} — required for website events`,
+    );
+  }
+  if (!input.clientUserAgent) {
+    console.warn(
+      `[capi] missing client_user_agent for event=${input.event} — required for website events`,
+    );
+  }
+
+  const userData = buildUserData(input);
+  const customData =
+    input.custom !== null && input.custom !== undefined
+      ? mapCustomData(input.custom)
+      : undefined;
+
+  const serverEvent: Record<string, unknown> = {
+    event_name: input.event,
+    event_time: input.eventTime ?? Math.floor(Date.now() / 1000),
+    event_id: input.eventId,
+    action_source: "website",
+    user_data: userData,
+  };
+
+  if (input.eventSourceUrl) {
+    serverEvent.event_source_url = input.eventSourceUrl;
+  }
+  if (input.referrerUrl) {
+    serverEvent.referrer_url = input.referrerUrl;
+  }
+  if (customData && Object.keys(customData).length > 0) {
+    serverEvent.custom_data = customData;
+  }
+
+  const body: Record<string, unknown> = {
+    data: [serverEvent],
     access_token: token,
   };
+  if (input.testEventCode) {
+    body.test_event_code = input.testEventCode;
+  }
 
   try {
     const res = await fetch(`${FB_GRAPH_API}/${pixelId}/events`, {
@@ -96,19 +117,36 @@ export async function sendCapiEvent(input: CapiEventInput): Promise<boolean> {
 
 function buildUserData(input: CapiEventInput): Record<string, unknown> {
   const u: Record<string, unknown> = {};
+
+  // Do not hash — required / recommended browser-side match parameters.
   if (input.clientIp) u.client_ip_address = input.clientIp;
   if (input.clientUserAgent) u.client_user_agent = input.clientUserAgent;
   if (input.fbp) u.fbp = input.fbp;
   if (input.fbc) u.fbc = input.fbc;
+  if (input.fbLoginId) u.fb_login_id = input.fbLoginId;
+  // external_id: hashing recommended but not required; UUID is fine unhashed.
+  if (input.externalId) u.external_id = input.externalId;
 
-  // Meta requires PII fields to be SHA-256 hashed (lowercase, trimmed)
-  // before hitting the wire. The phone normalisation strips everything
-  // but digits per Meta's spec. First/last names follow the same
-  // lowercase+trim rule.
-  if (input.user?.email) u.em = sha256(input.user.email.trim().toLowerCase());
-  if (input.user?.phone) u.ph = sha256(input.user.phone.replace(/\D/g, ""));
-  if (input.user?.firstName) u.fn = sha256(input.user.firstName.trim().toLowerCase());
-  if (input.user?.lastName) u.ln = sha256(input.user.lastName.trim().toLowerCase());
+  // Hashed PII — Meta expects array form in Graph API payloads.
+  const em = hashedArray(
+    input.user?.email ? normalizeEmail(input.user.email) : undefined,
+  );
+  if (em) u.em = em;
+
+  const ph = hashedArray(
+    input.user?.phone ? normalizePhone(input.user.phone) : undefined,
+  );
+  if (ph) u.ph = ph;
+
+  const fn = hashedArray(
+    input.user?.firstName ? normalizeName(input.user.firstName) : undefined,
+  );
+  if (fn) u.fn = fn;
+
+  const ln = hashedArray(
+    input.user?.lastName ? normalizeName(input.user.lastName) : undefined,
+  );
+  if (ln) u.ln = ln;
 
   return u;
 }
@@ -121,9 +159,6 @@ function mapCustomData(c: PixelCustomData): Record<string, unknown> {
   if (c.content_category) out.content_category = c.content_category;
   if (typeof c.value === "number") out.value = c.value;
   if (c.currency) out.currency = c.currency;
+  if (c.orderId) out.order_id = c.orderId;
   return out;
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
 }

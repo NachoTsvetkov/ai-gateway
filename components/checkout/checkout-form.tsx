@@ -47,6 +47,16 @@ import {
 const NACHO_EMAIL = "nacho.tsvetkov@gmail.com";
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
+function splitCustomerName(name: string): {
+  firstName?: string;
+  lastName?: string;
+} {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return {};
+  if (parts.length === 1) return { firstName: parts[0] };
+  return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+}
+
 type Props = {
   buyable: Buyable;
   upsells: ReadonlyArray<Upsell>;
@@ -239,6 +249,9 @@ export function CheckoutForm({
     // upsells) as the conversion value, which is what shows up in
     // Ads Manager's purchase column. For pure-monthly retainers
     // that's the same number as one month's fee — fine.
+    const customerSnap = getCustomer();
+    const { firstName, lastName } = splitCustomerName(customerSnap.name);
+
     track(
       "Purchase",
       {
@@ -247,8 +260,14 @@ export function CheckoutForm({
         content_type: buyable.kind,
         value: oneTimeTotalEur,
         currency,
+        orderId: args.id,
       },
-      email ? { email } : undefined,
+      {
+        email: customerSnap.email || undefined,
+        phone: customerSnap.phone,
+        firstName,
+        lastName,
+      },
     );
 
     // Persist the completed order to our Firebase (orders / orders_test).
@@ -258,7 +277,7 @@ export function CheckoutForm({
     // customer + buyable snapshot + upsells + PayPal proof.
     // Server route re-validates; we never trust the client for totals in
     // other PayPal paths, but here the record is primarily for owner follow-up.
-    const customerSnap = getCustomer();
+    // customerSnap captured above for pixel match + order persistence
     const orderPayload = {
       customer: customerSnap,
       buyable: {

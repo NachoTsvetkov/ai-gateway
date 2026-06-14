@@ -17,6 +17,7 @@
 "use client";
 
 import { readConsentClient } from "./consent";
+import { collectMatchPayload } from "./match-data.client";
 import type { PixelCustomData, PixelEvent, PixelUserData } from "./types";
 
 declare global {
@@ -40,6 +41,7 @@ export function track(
   if (readConsentClient() !== "accepted") return null;
 
   const eventId = generateEventId();
+  const match = collectMatchPayload();
 
   // Browser pixel hit. The custom data + eventID pattern matches
   // Meta's recommended snippet exactly so dedup against CAPI works
@@ -55,12 +57,15 @@ export function track(
   void fetch("/api/pixel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
     body: JSON.stringify({
       event,
       eventId,
       url: window.location.href,
+      referrerUrl: document.referrer || undefined,
       custom: custom ?? null,
       user: user ?? null,
+      match,
     }),
     keepalive: true,
   }).catch(() => {

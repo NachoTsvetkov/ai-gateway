@@ -25,6 +25,7 @@ import {
   PIXEL_EVENTS,
   type PixelCustomData,
   type PixelEvent,
+  type PixelMatchData,
   type PixelUserData,
 } from "lib/pixel/types";
 
@@ -32,8 +33,10 @@ type RequestBody = {
   event?: unknown;
   eventId?: unknown;
   url?: unknown;
+  referrerUrl?: unknown;
   custom?: unknown;
   user?: unknown;
+  match?: unknown;
 };
 
 export async function POST(req: NextRequest) {
@@ -63,9 +66,19 @@ export async function POST(req: NextRequest) {
 
   const event = body.event as PixelEvent;
   const eventId = body.eventId;
-  const url = typeof body.url === "string" ? body.url : undefined;
+  const url =
+    (typeof body.url === "string" && body.url.length > 0
+      ? body.url
+      : undefined) ??
+    req.headers.get("referer") ??
+    undefined;
+  const referrerUrl =
+    typeof body.referrerUrl === "string" && body.referrerUrl.length > 0
+      ? body.referrerUrl
+      : undefined;
   const custom = isCustomData(body.custom) ? body.custom : null;
   const user = isUserData(body.user) ? body.user : undefined;
+  const match = isMatchData(body.match) ? body.match : undefined;
 
   // Forwarded headers from Vercel / proxy. `x-forwarded-for` is a
   // comma-separated list with the original client IP first; fall back
@@ -77,10 +90,12 @@ export async function POST(req: NextRequest) {
     undefined;
   const clientUserAgent = req.headers.get("user-agent") ?? undefined;
 
-  // Meta pixel cookies set browser-side. Forwarding them to CAPI is
-  // the single biggest match-quality lever for non-PII visitors.
-  const fbp = req.cookies.get("_fbp")?.value;
-  const fbc = req.cookies.get("_fbc")?.value;
+  // Meta pixel cookies set browser-side. Body values win when present
+  // (client reads cookies at event time; request cookies are a fallback).
+  const fbp = match?.fbp ?? req.cookies.get("_fbp")?.value;
+  const fbc = match?.fbc ?? req.cookies.get("_fbc")?.value;
+  const externalId = match?.externalId;
+  const fbLoginId = match?.fbLoginId;
 
   // When `FB_CAPI_TEST_EVENT_CODE` is set, every event is tagged so
   // Meta routes it to the Test Events tab in real time instead of
@@ -99,10 +114,13 @@ export async function POST(req: NextRequest) {
     event,
     eventId,
     eventSourceUrl: url,
+    referrerUrl,
     clientIp,
     clientUserAgent,
     fbp,
     fbc,
+    externalId,
+    fbLoginId,
     custom,
     user,
     testEventCode,
@@ -141,6 +159,9 @@ function isCustomData(value: unknown): value is PixelCustomData {
   if (v.currency !== undefined && typeof v.currency !== "string") {
     return false;
   }
+  if (v.orderId !== undefined && typeof v.orderId !== "string") {
+    return false;
+  }
   return true;
 }
 
@@ -148,6 +169,17 @@ function isUserData(value: unknown): value is PixelUserData {
   if (!value || typeof value !== "object") return false;
   const v = value as Record<string, unknown>;
   for (const key of ["email", "phone", "firstName", "lastName"] as const) {
+    if (v[key] !== undefined && typeof v[key] !== "string") {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isMatchData(value: unknown): value is PixelMatchData {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  for (const key of ["fbp", "fbc", "externalId", "fbLoginId"] as const) {
     if (v[key] !== undefined && typeof v[key] !== "string") {
       return false;
     }

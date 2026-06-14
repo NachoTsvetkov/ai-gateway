@@ -23,6 +23,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { readConsentClient, type ConsentValue } from "lib/pixel/consent";
+import { ensureFbcCookie } from "lib/pixel/match-data.client";
 import { track } from "lib/pixel/client";
 
 type Props = {
@@ -48,9 +49,15 @@ export function MetaPixel({ pixelId }: Props) {
   // without a page reload.
   useEffect(() => {
     setConsent(readConsentClient());
+    if (readConsentClient() === "accepted") {
+      ensureFbcCookie();
+    }
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ value: ConsentValue }>).detail;
       setConsent(detail.value);
+      if (detail.value === "accepted") {
+        ensureFbcCookie();
+      }
     };
     window.addEventListener("consent-change", handler as EventListener);
     return () =>
