@@ -35,6 +35,8 @@ export type AnalyticsRootProps = {
     reject: string;
     message: string;
     ariaLabel: string;
+    privacyPolicyHref?: string;
+    privacyPolicyLabel?: string;
   };
 };
 
@@ -58,6 +60,8 @@ export function AnalyticsRoot({
         rejectLabel={consent.reject}
         message={consent.message}
         ariaLabel={consent.ariaLabel}
+        privacyPolicyHref={consent.privacyPolicyHref}
+        privacyPolicyLabel={consent.privacyPolicyLabel}
       />
     </>
   );

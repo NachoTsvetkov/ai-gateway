@@ -24,7 +24,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { readConsentClient, type ConsentValue } from "lib/pixel/consent";
 import { ensureFbcCookie } from "lib/pixel/match-data.client";
-import { track } from "lib/pixel/client";
+import { syncPixelAdvancedMatching, track } from "lib/pixel/client";
 
 type Props = {
   /** When null/empty (env var missing) the loader stays mounted but
@@ -51,12 +51,14 @@ export function MetaPixel({ pixelId }: Props) {
     setConsent(readConsentClient());
     if (readConsentClient() === "accepted") {
       ensureFbcCookie();
+      syncPixelAdvancedMatching();
     }
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<{ value: ConsentValue }>).detail;
       setConsent(detail.value);
       if (detail.value === "accepted") {
         ensureFbcCookie();
+        syncPixelAdvancedMatching();
       }
     };
     window.addEventListener("consent-change", handler as EventListener);

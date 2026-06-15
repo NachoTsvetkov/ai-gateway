@@ -1,24 +1,23 @@
 // Browser-side `track()` helper. Two responsibilities:
 //
-//   1. Fire the event through the global `window.fbq()` queue so the
-//      Meta browser pixel records it (cookies, retargeting audiences,
-//      etc.). The fbq snippet creates the queue immediately on script
-//      execution, so calling fbq() before fbevents.js finishes
-//      loading is safe — events queue and replay.
+//   1. Fire the event through the global `window.fbq()` queue with
+//      advanced matching (em, ph, fb_login_id) when available.
 //
-//   2. Mirror the same event to our /api/pixel route handler, which
-//      forwards it to the Conversions API. A shared `eventID` allows
-//      Meta to dedupe the two hits on its end (recommended pattern
-//      per the Conversions API docs).
+//   2. Mirror the same event to our /api/pixel route handler (CAPI).
 //
-// Both calls are guarded by the consent cookie. If the visitor hasn't
-// clicked Accept on the banner, both branches no-op silently.
+// Both calls are guarded by the consent cookie.
 
 "use client";
 
 import { readConsentClient } from "./consent";
 import { collectMatchPayload } from "./match-data.client";
 import type { PixelCustomData, PixelEvent, PixelUserData } from "./types";
+import {
+  buildBrowserAdvancedMatching,
+  getStoredPixelUserData,
+  mergePixelUserData,
+  setStoredPixelUserData,
+} from "./user-data.client";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
@@ -27,10 +26,11 @@ declare global {
   }
 }
 
+const PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? "";
+
 /**
  * Fire a Meta Pixel event browser-side AND mirror it to CAPI.
- * Returns the eventId used so callers can correlate (e.g. log a
- * Purchase id ↔ pixel eventId mapping for debugging).
+ * User PII is merged with any previously stored values (same session).
  */
 export function track(
   event: PixelEvent,
@@ -40,20 +40,30 @@ export function track(
   if (typeof window === "undefined") return null;
   if (readConsentClient() !== "accepted") return null;
 
-  const eventId = generateEventId();
-  const match = collectMatchPayload();
-
-  // Browser pixel hit. The custom data + eventID pattern matches
-  // Meta's recommended snippet exactly so dedup against CAPI works
-  // out of the box.
-  if (typeof window.fbq === "function") {
-    window.fbq("track", event, custom ?? {}, { eventID: eventId });
+  if (user && (user.email || user.phone || user.firstName || user.lastName)) {
+    setStoredPixelUserData(user);
   }
 
-  // CAPI mirror. Fire-and-forget — the browser already recorded the
-  // hit, so a CAPI failure never blocks the user. `keepalive` lets
-  // the request survive a navigation away from the page (important
-  // for InitiateCheckout right before redirecting to PayPal).
+  const userData = mergePixelUserData(getStoredPixelUserData(), user);
+  const eventId = generateEventId();
+  const match = collectMatchPayload();
+  const advanced = buildBrowserAdvancedMatching(
+    userData,
+    match.fbLoginId,
+    match.externalId,
+  );
+
+  if (typeof window.fbq === "function") {
+    // Refresh init advanced matching when PII becomes available.
+    if (PIXEL_ID && Object.keys(advanced).length > 0) {
+      window.fbq("init", PIXEL_ID, advanced);
+    }
+    window.fbq("track", event, custom ?? {}, {
+      eventID: eventId,
+      ...advanced,
+    });
+  }
+
   void fetch("/api/pixel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -64,22 +74,45 @@ export function track(
       url: window.location.href,
       referrerUrl: document.referrer || undefined,
       custom: custom ?? null,
-      user: user ?? null,
+      user: hasUserPayload(userData) ? userData : null,
       match,
     }),
     keepalive: true,
   }).catch(() => {
-    // Swallow. The browser pixel hit is already in flight; CAPI
-    // dropouts only hurt deduplication, not measurement.
+    // Swallow — browser pixel hit already recorded.
   });
 
   return eventId;
 }
 
+/** Sync advanced matching on pixel load (e.g. returning visitor with stored email). */
+export function syncPixelAdvancedMatching(): void {
+  if (typeof window === "undefined") return;
+  if (readConsentClient() !== "accepted") return;
+  if (!PIXEL_ID || typeof window.fbq !== "function") return;
+
+  const userData = getStoredPixelUserData();
+  const match = collectMatchPayload();
+  const advanced = buildBrowserAdvancedMatching(
+    userData,
+    match.fbLoginId,
+    match.externalId,
+  );
+  if (Object.keys(advanced).length > 0) {
+    window.fbq("init", PIXEL_ID, advanced);
+  }
+}
+
+function hasUserPayload(user: PixelUserData): boolean {
+  return Boolean(
+    user.email?.trim() ||
+      user.phone?.trim() ||
+      user.firstName?.trim() ||
+      user.lastName?.trim(),
+  );
+}
+
 function generateEventId(): string {
-  // crypto.randomUUID is available in all evergreen browsers + Node 16+.
-  // The fallback handles ancient browsers and any edge case where the
-  // Web Crypto API is unavailable (very rare).
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
     return crypto.randomUUID();
   }

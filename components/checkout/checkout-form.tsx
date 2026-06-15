@@ -27,6 +27,7 @@
 
 import {
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -38,6 +39,8 @@ import type { Upsell } from "lib/bundles-data";
 import { type Locale, createT, DEFAULT_LOCALE } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
 import { track } from "lib/pixel/client";
+import { readConsentClient } from "lib/pixel/consent";
+import { setStoredPixelUserData } from "lib/pixel/user-data.client";
 import {
   PayPalCheckoutButtons,
   type CheckoutCustomerInput,
@@ -122,6 +125,19 @@ export function CheckoutForm({
     notes: string;
   }>({ name: "", business: "", email: "", phone: "", notes: "" });
   formRef.current = { name, business, email, phone, notes };
+
+  // Keep Meta advanced matching (em/ph) warm as the visitor fills checkout.
+  useEffect(() => {
+    if (readConsentClient() !== "accepted") return;
+    if (!email.trim() && !phone.trim()) return;
+    const { firstName, lastName } = splitCustomerName(name);
+    setStoredPixelUserData({
+      email: email.trim() || undefined,
+      phone: phone.trim() || undefined,
+      firstName,
+      lastName,
+    });
+  }, [email, phone, name]);
 
   const getCustomer = useCallback((): CheckoutCustomerInput => {
     const c = formRef.current;

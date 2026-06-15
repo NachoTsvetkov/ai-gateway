@@ -2,12 +2,15 @@ import Link from "next/link";
 
 import FooterMenu from "components/layout/footer-menu";
 import LogoSquare from "components/logo-square";
+import { DICT } from "lib/i18n/dict";
+import { detectLocale } from "lib/i18n/locale.server";
 import { getMenu } from "lib/shopify";
 import { Suspense } from "react";
 
 const { COMPANY_NAME, SITE_NAME } = process.env;
 
 export default async function Footer() {
+  const locale = await detectLocale();
   const currentYear = new Date().getFullYear();
   const copyrightDate = 2023 + (currentYear > 2023 ? `-${currentYear}` : "");
   const skeleton = "w-full h-6 animate-pulse rounded-sm bg-neutral-300 dark:bg-neutral-700";
@@ -70,6 +73,14 @@ export default async function Footer() {
             >
               View the source
             </a>
+          </p>
+          <p className="md:ml-4">
+            <Link
+              href="/privacy-policy"
+              className="text-neutral-500 transition-colors hover:text-neutral-700 dark:hover:text-neutral-300"
+            >
+              {DICT.legal.privacyPolicy[locale]}
+            </Link>
           </p>
           <p className="mt-2 text-neutral-500 md:ml-auto md:mt-0">
             Next.js 16 · Shopify · OpenAI · Vercel AI SDK · Tailwind 4

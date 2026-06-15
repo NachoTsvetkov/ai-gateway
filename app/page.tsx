@@ -1110,6 +1110,14 @@ export default async function HomePage() {
             </a>{" "}
             · {t(DICT.home.footerLocation)}
           </p>
+          <p className="mt-2">
+            <Link
+              href="/privacy-policy"
+              className="text-xs text-neutral-500 transition-colors hover:text-neutral-800 dark:text-neutral-600 dark:hover:text-neutral-300"
+            >
+              {t(DICT.legal.privacyPolicy)}
+            </Link>
+          </p>
         </div>
       </footer>
     </>

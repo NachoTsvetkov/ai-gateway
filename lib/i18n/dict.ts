@@ -871,5 +871,10 @@ export const DICT = {
     accept: s("Accept", "Приемам"),
     reject: s("Reject", "Отказвам"),
     ariaLabel: s("Cookie consent", "Съгласие за бисквитки"),
+    privacyPolicy: s("Privacy Policy", "Политика за поверителност"),
+  },
+
+  legal: {
+    privacyPolicy: s("Privacy Policy", "Политика за поверителност"),
   },
 } as const;

@@ -125,6 +125,8 @@ export default async function RootLayout({
               reject: DICT.consent.reject[locale],
               message: DICT.consent.message[locale],
               ariaLabel: DICT.consent.ariaLabel[locale],
+              privacyPolicyHref: "/privacy-policy",
+              privacyPolicyLabel: DICT.consent.privacyPolicy[locale],
             }}
           />
         </CartProvider>

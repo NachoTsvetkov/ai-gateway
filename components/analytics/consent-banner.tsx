@@ -9,6 +9,7 @@
 // real focusable elements (no DIV-with-onClick) so keyboard users
 // can navigate Tab → Reject / Accept naturally.
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import {
@@ -22,6 +23,8 @@ type Props = {
   message: string;
   /** Localized aria-label for the dialog wrapper. */
   ariaLabel: string;
+  privacyPolicyHref?: string;
+  privacyPolicyLabel?: string;
 };
 
 export function ConsentBanner({
@@ -29,6 +32,8 @@ export function ConsentBanner({
   rejectLabel,
   message,
   ariaLabel,
+  privacyPolicyHref,
+  privacyPolicyLabel,
 }: Props) {
   // SSR-safe: start hidden, then re-evaluate from the cookie on
   // mount. Showing the banner during SSR would briefly flash for
@@ -56,6 +61,16 @@ export function ConsentBanner({
       <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-200">
         {message}
       </p>
+      {privacyPolicyHref && privacyPolicyLabel ? (
+        <p className="mt-2 text-xs">
+          <Link
+            href={privacyPolicyHref}
+            className="font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-neutral-900 dark:text-neutral-300 dark:decoration-neutral-600 dark:hover:text-white"
+          >
+            {privacyPolicyLabel}
+          </Link>
+        </p>
+      ) : null}
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
         <button
           type="button"
