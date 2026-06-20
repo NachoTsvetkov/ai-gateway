@@ -10,6 +10,7 @@
 "use client";
 
 import { readConsentClient } from "./consent";
+import { getClientCurrency } from "./currency.client";
 import { collectMatchPayload } from "./match-data.client";
 import type { PixelCustomData, PixelEvent, PixelUserData } from "./types";
 import {
@@ -45,6 +46,7 @@ export function track(
   }
 
   const userData = mergePixelUserData(getStoredPixelUserData(), user);
+  const payload = enrichCustomData(event, custom);
   const eventId = generateEventId();
   const match = collectMatchPayload();
   const advanced = buildBrowserAdvancedMatching(
@@ -58,7 +60,7 @@ export function track(
     if (PIXEL_ID && Object.keys(advanced).length > 0) {
       window.fbq("init", PIXEL_ID, advanced);
     }
-    window.fbq("track", event, custom ?? {}, {
+    window.fbq("track", event, payload ?? {}, {
       eventID: eventId,
       ...advanced,
     });
@@ -73,7 +75,7 @@ export function track(
       eventId,
       url: window.location.href,
       referrerUrl: document.referrer || undefined,
-      custom: custom ?? null,
+      custom: payload ?? null,
       user: hasUserPayload(userData) ? userData : null,
       match,
     }),
@@ -101,6 +103,20 @@ export function syncPixelAdvancedMatching(): void {
   if (Object.keys(advanced).length > 0) {
     window.fbq("init", PIXEL_ID, advanced);
   }
+}
+
+/** Meta requires a valid ISO currency on Lead (and whenever `value` is set). */
+function enrichCustomData(
+  event: PixelEvent,
+  custom?: PixelCustomData,
+): PixelCustomData | undefined {
+  const needsCurrency =
+    event === "Lead" ||
+    (typeof custom?.value === "number" && !custom.currency);
+
+  if (!needsCurrency) return custom;
+
+  return { ...custom, currency: custom?.currency ?? getClientCurrency() };
 }
 
 function hasUserPayload(user: PixelUserData): boolean {

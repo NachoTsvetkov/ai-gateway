@@ -11,6 +11,7 @@ import { baseUrl } from "lib/utils";
 import { detectLocaleAndCountry } from "lib/i18n/locale.server";
 import { BG_COUNTRY } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { getCurrency } from "lib/currency";
 import { detectTheme } from "lib/theme/theme.server";
 
 // Routes where the global marketing navbar should NOT render. Each of
@@ -69,6 +70,7 @@ export default async function RootLayout({
     detectTheme(),
   ]);
   const showLanguageToggle = country === BG_COUNTRY;
+  const currency = getCurrency(country);
 
   // Pull every navbar string from the central dictionary in the
   // resolved locale. Keeps the navbar component itself fully
@@ -96,7 +98,7 @@ export default async function RootLayout({
   const htmlClassName = `${GeistSans.variable} scroll-smooth${theme === "dark" ? " dark" : ""}`;
 
   return (
-    <html lang={locale} className={htmlClassName}>
+    <html lang={locale} className={htmlClassName} data-currency={currency}>
       <body suppressHydrationWarning className="bg-neutral-50 text-black selection:bg-blue-200 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
           <NavbarGate hideOnPrefix={HIDE_NAVBAR_ON}>

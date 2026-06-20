@@ -14,8 +14,9 @@
 //   - Call sites only need one extra attribute (`data-pixel-lead`)
 //     to opt in. No imports, no client-component wrapping.
 //
-// Lead is a coarse-grained "they want to talk" signal — we don't
-// attach value/currency, since the call hasn't been booked yet.
+// Lead is a coarse-grained "they want to talk" signal. Currency is
+// injected automatically in `track()` from the server-resolved geo
+// currency on `<html data-currency>`.
 
 import { useEffect } from "react";
 
