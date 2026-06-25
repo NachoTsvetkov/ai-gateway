@@ -157,6 +157,7 @@ function mapCustomData(c: PixelCustomData): Record<string, unknown> {
   if (c.content_name) out.content_name = c.content_name;
   if (c.content_type) out.content_type = c.content_type;
   if (c.content_category) out.content_category = c.content_category;
+  if (typeof c.step === "number") out.step = c.step;
   if (typeof c.value === "number") out.value = c.value;
   if (c.currency) out.currency = c.currency;
   else if (typeof c.value === "number") out.currency = "EUR";

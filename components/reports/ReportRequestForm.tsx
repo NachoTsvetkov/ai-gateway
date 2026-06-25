@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
 import { ReportRequestSchema, type ReportRequestData } from 'lib/surveys';
 import { collectionQueryString } from 'lib/collection-mode';
 import { track } from 'lib/pixel/client';
+import type { PixelCustomData } from 'lib/pixel/types';
 
 interface Props {
   source: string; // e.g. 'revenue-audit'
@@ -39,6 +40,8 @@ export function ReportRequestForm({
   const [submitted, setSubmitted] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5;
+  const surveyStartFiredRef = useRef(false);
+  const trackedSurveyStepsRef = useRef<Set<number>>(new Set());
 
   const {
     register,
@@ -57,6 +60,29 @@ export function ReportRequestForm({
     },
   });
 
+  function buildSurveyPixelCustom(step?: number): PixelCustomData {
+    const custom: PixelCustomData = {
+      content_ids: [source],
+      content_name: title,
+      content_category: source,
+      content_type: 'audit',
+    };
+    if (typeof step === 'number') custom.step = step;
+    return custom;
+  }
+
+  function trackSurveyAdvance(completedStep: number) {
+    if (completedStep === 1) {
+      if (surveyStartFiredRef.current) return;
+      surveyStartFiredRef.current = true;
+      track('SurveyStart', buildSurveyPixelCustom());
+      return;
+    }
+    if (trackedSurveyStepsRef.current.has(completedStep)) return;
+    trackedSurveyStepsRef.current.add(completedStep);
+    track('SurveyStep', buildSurveyPixelCustom(completedStep));
+  }
+
   const goToStep = async (newStep: number) => {
     if (newStep > currentStep) {
       // Validate current step fields before advancing (basic client check).
@@ -64,6 +90,7 @@ export function ReportRequestForm({
       const fieldsToValidate = getFieldsForStep(currentStep);
       const isValid = await trigger(fieldsToValidate as any);
       if (!isValid) return;
+      trackSurveyAdvance(currentStep);
     }
     // On every successful step change (Next after passing validation, or any Back), clear *all* errors.
     // This guarantees that every step starts completely "right by default" (no error messages).

@@ -153,6 +153,12 @@ function isCustomData(value: unknown): value is PixelCustomData {
   if (v.content_type !== undefined && typeof v.content_type !== "string") {
     return false;
   }
+  if (v.content_category !== undefined && typeof v.content_category !== "string") {
+    return false;
+  }
+  if (v.step !== undefined && typeof v.step !== "number") {
+    return false;
+  }
   if (v.value !== undefined && typeof v.value !== "number") {
     return false;
   }

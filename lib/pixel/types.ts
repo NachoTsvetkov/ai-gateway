@@ -4,6 +4,8 @@
 //   PageView         — every navigation (auto, browser + CAPI)
 //   ViewContent      — service / bundle detail page mount
 //   Lead             — Calendly click + sales-assistant lead capture
+//   SurveyStart      — report form: first successful advance (step 1 → 2)
+//   SurveyStep       — report form: each later step completed (step 2–4)
 //   InitiateCheckout — "Buy" CTA before PayPal redirect
 //   Purchase         — PayPal capture / approve success
 //
@@ -15,11 +17,22 @@ export const PIXEL_EVENTS = [
   "PageView",
   "ViewContent",
   "Lead",
+  "SurveyStart",
+  "SurveyStep",
   "InitiateCheckout",
   "Purchase",
 ] as const;
 
 export type PixelEvent = (typeof PIXEL_EVENTS)[number];
+
+/** Meta standard events — use `fbq('track', …)`. */
+export const STANDARD_PIXEL_EVENTS: ReadonlySet<PixelEvent> = new Set([
+  "PageView",
+  "ViewContent",
+  "Lead",
+  "InitiateCheckout",
+  "Purchase",
+]);
 
 /**
  * Optional per-event metadata. Every field is optional — Meta only
@@ -38,6 +51,8 @@ export type PixelCustomData = {
    *  to track it (currently excluded). */
   content_type?: "product" | "service" | "bundle" | "page" | "audit";
   content_category?: string;
+  /** Survey funnel: step just completed (2–4) on `SurveyStep`. */
+  step?: number;
   /** Monetary value of the event. ALWAYS pair with `currency` so
    *  Meta's value optimisation works. */
   value?: number;

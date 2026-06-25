@@ -12,7 +12,12 @@
 import { readConsentClient } from "./consent";
 import { getClientCurrency } from "./currency.client";
 import { collectMatchPayload } from "./match-data.client";
-import type { PixelCustomData, PixelEvent, PixelUserData } from "./types";
+import {
+  STANDARD_PIXEL_EVENTS,
+  type PixelCustomData,
+  type PixelEvent,
+  type PixelUserData,
+} from "./types";
 import {
   buildBrowserAdvancedMatching,
   getStoredPixelUserData,
@@ -60,7 +65,8 @@ export function track(
     if (PIXEL_ID && Object.keys(advanced).length > 0) {
       window.fbq("init", PIXEL_ID, advanced);
     }
-    window.fbq("track", event, payload ?? {}, {
+    const fbqMethod = STANDARD_PIXEL_EVENTS.has(event) ? "track" : "trackCustom";
+    window.fbq(fbqMethod, event, payload ?? {}, {
       eventID: eventId,
       ...advanced,
     });
