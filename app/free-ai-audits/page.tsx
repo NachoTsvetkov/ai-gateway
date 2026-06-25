@@ -9,6 +9,14 @@ export const metadata = {
 export default function FreeAIAuditsHub() {
   const audits = [
     {
+      href: '/free-ai-audits/win-free-website',
+      title: 'Win a Free Website + AI Chatbot',
+      description:
+        'Enter the monthly giveaway — professional website + AI chatbot that books clients 24/7. Instant free guide included.',
+      source: 'free-website-giveaway',
+      featured: true,
+    },
+    {
       href: '/ai-revenue-audit',
       title: 'Find Hidden Revenue Leaks',
       description: 'Identify exactly where manual processes and missed leads are costing you money.',
@@ -108,8 +116,17 @@ export default function FreeAIAuditsHub() {
             <Link
               key={audit.href}
               href={audit.href}
-              className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
+              className={`group flex h-full flex-col rounded-2xl border p-6 transition-all hover:-translate-y-0.5 hover:shadow-lg ${
+                audit.featured
+                  ? 'border-green-300 bg-green-50/50 hover:border-green-400 hover:shadow-green-600/10 dark:border-green-500/40 dark:bg-green-500/5 dark:hover:border-green-400/50'
+                  : 'border-neutral-200 bg-white hover:border-blue-300 hover:shadow-blue-600/5 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30'
+              }`}
             >
+              {audit.featured && (
+                <span className="mb-3 inline-flex self-start rounded-full bg-green-600 px-2.5 py-0.5 text-xs font-semibold text-white dark:bg-green-500">
+                  Monthly giveaway
+                </span>
+              )}
               <h3 className="text-lg font-semibold text-neutral-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                 {audit.title}
               </h3>
@@ -117,7 +134,7 @@ export default function FreeAIAuditsHub() {
                 {audit.description}
               </p>
               <div className="mt-4 text-sm font-semibold text-blue-600 dark:text-blue-400">
-                Get my free report →
+                {audit.featured ? 'Enter the giveaway →' : 'Get my free report →'}
               </div>
             </Link>
           ))}

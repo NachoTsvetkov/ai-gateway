@@ -24,6 +24,24 @@ interface Props {
   painLabel?: string;
   useTestCollection?: boolean;
   onSuccess?: () => void;
+  /** Final submit button label on step 5. */
+  submitLabel?: string;
+  /** Thank-you heading after submit. */
+  successTitle?: string;
+  /** Thank-you body after submit. */
+  successMessage?: string;
+  /** Optional free guide shown as step 2 after survey completion. */
+  freeGuide?: {
+    href: string;
+    title: string;
+    description?: string;
+  };
+  emailLabel?: string;
+  showCalendlyLink?: boolean;
+  /** Tighter layout for single-screen landing pages. */
+  compact?: boolean;
+  /** When false, page-level title/intro replace the in-form heading. */
+  showFormHeader?: boolean;
 }
 
 export function ReportRequestForm({ 
@@ -32,7 +50,15 @@ export function ReportRequestForm({
   intro = "Answer a few short questions and I'll send you a free personalized AI Opportunity Report with ideas tailored to your business within 48 hours. 100% free — no obligation.",
   painLabel = "What's your biggest current frustration or revenue leak?",
   useTestCollection: propUseTest = false, // false (default) = prod; true or ?test=true = test bucket
-  onSuccess 
+  onSuccess,
+  submitLabel = 'Get My Free Personalized AI Opportunity Report →',
+  successTitle = 'Thank you!',
+  successMessage = "I'll personally review your answers and email you a free personalized AI Opportunity Report with tailored ideas within 48 hours.",
+  freeGuide,
+  emailLabel = 'Best email to send your personalized AI Opportunity Report',
+  showCalendlyLink = true,
+  compact = false,
+  showFormHeader = true,
 }: Props) {
   const searchParams = useSearchParams();
   const urlTestParam = searchParams?.get('test');
@@ -192,22 +218,59 @@ export function ReportRequestForm({
 
   if (submitted) {
     return (
-      <div className="rounded-2xl border border-green-200 bg-green-50 p-8 text-center dark:border-green-800 dark:bg-green-950">
-        <h3 className="text-xl font-semibold text-green-800 dark:text-green-200">Thank you!</h3>
-        <p className="mt-2 text-green-700 dark:text-green-300">
-          I'll personally review your answers and email you a free personalized AI Opportunity Report with tailored ideas within 48 hours.
-        </p>
-        <a
-          href="https://calendly.com/nacho-tsvetkov/30min"
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-green-600/25 transition-all hover:bg-green-500 hover:-translate-y-0.5"
+      <div className={compact ? 'space-y-3' : 'space-y-6'}>
+        <div
+          className={`rounded-2xl border border-green-200 bg-green-50 text-center dark:border-green-800 dark:bg-green-950 ${
+            compact ? 'p-5' : 'p-8'
+          }`}
         >
-          While you wait — book your free 15-min discovery call →
-        </a>
+          <h3 className="text-xl font-semibold text-green-800 dark:text-green-200">{successTitle}</h3>
+          <p className="mt-2 text-green-700 dark:text-green-300">{successMessage}</p>
+        </div>
+
+        {freeGuide && (
+          <div
+            className={`rounded-2xl border border-blue-200 bg-blue-50 text-center dark:border-blue-800 dark:bg-blue-950/40 ${
+              compact ? 'p-5' : 'p-8'
+            }`}
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
+              Step 2 — Your free guide
+            </p>
+            <h3 className="mt-2 text-xl font-semibold text-neutral-900 dark:text-white">
+              {freeGuide.title}
+            </h3>
+            {freeGuide.description && (
+              <p className="mt-2 text-neutral-700 dark:text-neutral-300">{freeGuide.description}</p>
+            )}
+            <a
+              href={freeGuide.href}
+              download
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 hover:-translate-y-0.5"
+            >
+              Download the free guide (PDF) →
+            </a>
+          </div>
+        )}
+
+        {showCalendlyLink && (
+          <div className="text-center">
+            <a
+              href="https://calendly.com/nacho-tsvetkov/30min"
+              className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
+            >
+              Book your free 15-min discovery call →
+            </a>
+          </div>
+        )}
       </div>
     );
   }
 
   const progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+  const businessChips = compact ? 4 : 8;
+  const fieldChips = compact ? 4 : 6;
+  const textRows = compact ? 2 : 3;
 
   return (
     <form
@@ -220,14 +283,20 @@ export function ReportRequestForm({
           e.preventDefault();
         }
       }}
-      className="space-y-6 rounded-2xl border border-neutral-200 bg-white p-8 dark:border-neutral-800 dark:bg-neutral-900"
+      className={`rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 ${
+        compact ? 'space-y-3 p-4 sm:p-5' : 'space-y-6 p-8'
+      }`}
     >
-      <div>
-        <h3 className="text-2xl font-semibold text-neutral-900 dark:text-white">{title}</h3>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-          {intro}
-        </p>
-      </div>
+      {showFormHeader && (
+        <div>
+          <h3 className={`font-semibold text-neutral-900 dark:text-white ${compact ? 'text-lg' : 'text-2xl'}`}>
+            {title}
+          </h3>
+          <p className={`mt-1 text-neutral-600 dark:text-neutral-400 ${compact ? 'text-sm' : ''}`}>
+            {intro}
+          </p>
+        </div>
+      )}
 
       {/* Progress indicator */}
       <div>
@@ -259,7 +328,7 @@ export function ReportRequestForm({
                   onBlur={field.onBlur}
                   suggestions={BUSINESS_TYPE_SUGGESTIONS}
                   placeholder="e.g. Fashion boutique, metallurgy, fitness studio…"
-                  chipCount={8}
+                  chipCount={businessChips}
                 />
               )}
             />
@@ -285,8 +354,8 @@ export function ReportRequestForm({
                   suggestions={DESIRED_RESULTS_SUGGESTIONS}
                   placeholder="More bookings, higher conversions, time back…"
                   multiline
-                  rows={3}
-                  chipCount={6}
+                  rows={textRows}
+                  chipCount={fieldChips}
                 />
               )}
             />
@@ -312,8 +381,8 @@ export function ReportRequestForm({
                   suggestions={PAIN_SUGGESTIONS}
                   placeholder="Missed leads, manual booking, slow follow-ups…"
                   multiline
-                  rows={3}
-                  chipCount={6}
+                  rows={textRows}
+                  chipCount={fieldChips}
                 />
               )}
             />
@@ -340,8 +409,8 @@ export function ReportRequestForm({
                   placeholder="Hired help, tried software, ran ads, nothing yet…"
                   helperText="Optional but very helpful — pick a suggestion or type your own."
                   multiline
-                  rows={3}
-                  chipCount={6}
+                  rows={textRows}
+                  chipCount={fieldChips}
                 />
               )}
             />
@@ -351,7 +420,7 @@ export function ReportRequestForm({
 
       {/* Step 5: Budget & Next Steps */}
       {currentStep === 5 && (
-        <div className="space-y-6">
+        <div className={compact ? 'space-y-3' : 'space-y-6'}>
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What would feel like a fair price for a solution that delivers these results for your business?</label>
             <Controller
@@ -365,7 +434,7 @@ export function ReportRequestForm({
                   onBlur={field.onBlur}
                   suggestions={BUDGET_SUGGESTIONS}
                   placeholder="e.g. $3,000 – $5,000 or not sure yet"
-                  chipCount={7}
+                  chipCount={compact ? 5 : 7}
                 />
               )}
             />
@@ -395,7 +464,7 @@ export function ReportRequestForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">Best email to send your personalized AI Opportunity Report</label>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{emailLabel}</label>
             <input
               type="email"
               {...register('email')}
@@ -433,14 +502,16 @@ export function ReportRequestForm({
             disabled={isSubmitting}
             className="w-full sm:w-auto rounded-2xl bg-blue-600 px-8 py-3 text-base font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500 hover:-translate-y-0.5 disabled:opacity-50"
           >
-            {isSubmitting ? 'Sending your request...' : 'Get My Free Personalized AI Opportunity Report →'}
+            {isSubmitting ? 'Sending your request...' : submitLabel}
           </button>
         )}
       </div>
 
-      <p className="text-center text-xs text-neutral-500">
-        Your answers are private and reviewed personally by Nacho. No spam — just useful ideas for your business.
-      </p>
+      {!compact && (
+        <p className="text-center text-xs text-neutral-500">
+          Your answers are private and reviewed personally by Nacho. No spam — just useful ideas for your business.
+        </p>
+      )}
     </form>
   );
 }

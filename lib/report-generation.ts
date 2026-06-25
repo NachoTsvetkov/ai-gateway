@@ -43,6 +43,7 @@ const SOURCE_LABELS: Record<string, string> = {
   'fast-custom-app': 'Fast Custom App Audit',
   'affordable-non-tech': 'Affordable AI for Non-Tech Audit',
   'virtual-team-retainer': 'AI Virtual Team Retainer Audit',
+  'free-website-giveaway': 'Free Website + AI Chatbot Giveaway',
 };
 
 const REQUIRED_SECTION_TITLES = [
