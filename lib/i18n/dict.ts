@@ -26,8 +26,8 @@ export const DICT = {
   // -------------------------------------------------------------------
   nav: {
     moneyGenerator: s(
-      "Money Generator",
-      "Машина за пари",
+      "Get More Clients",
+      "Повече клиенти",
     ),
     forSmallBusinesses: s("for Small Businesses", "за малък бизнес"),
     services: s("Services", "Услуги"),
@@ -116,44 +116,22 @@ export const DICT = {
       "Get More Clients While You Sleep",
       "Повече клиенти, докато спиш",
     ),
-    heroLine2: s("Without Lifting a Finger", "без да вдигаш пръст"),
-    heroBullet1: s(
-      "Professional website + AI chatbot that qualifies leads 24/7",
-      "Професионален сайт + AI чатбот, който квалифицира клиенти 24/7",
+    heroSubheadlineBefore: s(
+      "Professional website + AI chatbot that qualifies leads and books appointments 24/7. Starting at",
+      "Професионален сайт + AI чатбот, който квалифицира клиенти и резервира срещи 24/7. От",
     ),
-    heroBullet2: s(
-      "Instant bookings and follow-ups — even when you're closed",
-      "Моментални резервации и последващи стъпки — дори когато си затворен",
-    ),
-    heroBullet3: s(
-      "Launch packages for small businesses — no enterprise budget required",
-      "Стартови пакети за малък бизнес — без корпоративен бюджет",
-    ),
-    heroSubBefore: s(
-      "Professional website + smart automation that books clients while you sleep — starting at",
-      "Професионален уебсайт + автоматизация, която резервира клиенти докато спиш — от",
-    ),
-    heroSubJustPrefix: s("just ", "само "),
-    heroSubAfter: s(".", "."),
-    heroPreviewKicker: s(
-      "In the next 60 seconds you’ll see",
-      "В следващите 60 секунди ще видиш",
-    ),
-    heroPreviewItem1: s(
-      "The exact services that grow your revenue",
-      "Точно услугите, които ще ти увеличат приходите",
-    ),
-    heroPreviewItem2: s(
-      "3 done-for-you bundles (Startup → Enterprise)",
-      "3 готови пакета (Startup → Enterprise)",
-    ),
-    heroPreviewItem3: s(
-      "Live proof that this actually works",
-      "Реални проекти и резултати",
+    heroSubheadlineAfter: s(
+      ". Delivered in 5–7 days. No tech skills required.",
+      ". Доставка за 5–7 дни. Без технически умения.",
     ),
     heroFooter: s(
-      "Sofia, Bulgaria · remote worldwide · usually delivering in under 2 weeks",
-      "София, България · работа от разстояние · обикновено доставям за под 2 седмици",
+      "Sofia, Bulgaria · remote worldwide · delivered in 5–7 business days",
+      "София, България · работа от разстояние · доставка за 5–7 работни дни",
+    ),
+    whatHappensNextKicker: s("What happens next", "Какво следва"),
+    whatHappensNextHeadline: s(
+      "Simple process — no tech skills required",
+      "Прост процес — без технически умения",
     ),
 
     beforeAfterKicker: s("The shift", "Промяната"),
@@ -266,6 +244,14 @@ export const DICT = {
       "Tell me on a 15-min call →",
       "Кажи ми на 15-минутен разговор →",
     ),
+    bundlesGuaranteeHeadline: s(
+      "Delivered in 5–7 business days — or your one-time fee back",
+      "Доставка за 5–7 работни дни — или възстановяване на еднократната сума",
+    ),
+    bundlesGuaranteeBody: s(
+      "Clear scope before we start. If we miss the agreed deadline without a mutually agreed extension, you get a full refund of the one-time fee.",
+      "Ясен обхват преди старт. Ако пропуснем срока без споразумено удължение, получаваш пълно възстановяване на еднократната сума.",
+    ),
 
     servicesKicker: s("À la carte", "По избор"),
     servicesHeadline: s(
@@ -311,8 +297,8 @@ export const DICT = {
       "Спри да губиш пари заради бавен сайт и ръчна работа.",
     ),
     finalSub: s(
-      "Book a free 15-minute discovery call. I'll map your biggest leak, quote it on the spot, and you'll know within 24 hours whether we're a fit.",
-      "Запази безплатен 15-минутен разговор. Ще намерим най-голямата ти дупка, ще ти дам цена на момента и до 24 часа ще знаеш дали ще си паснем.",
+      "Book a free 15-minute discovery call — or enter the monthly giveaway for a free website + AI chatbot.",
+      "Запази безплатен 15-минутен разговор — или влез в месечната томбола за безплатен сайт + AI чатбот.",
     ),
     finalNote: s(
       "Most calls booked today get a proposal back tomorrow.",
@@ -936,6 +922,52 @@ export const DICT = {
       "Complete the survey and unlock Stop Losing Leads While You Sleep — practical steps to capture and follow up on leads automatically.",
       "Попълни анкетата и получи „Stop Losing Leads While You Sleep“ — практични стъпки за улавяне и последващи стъпки с клиенти автоматично.",
     ),
+    scarcityBadge: s(
+      "Only 1–3 winners every month",
+      "Само 1–3 победители всеки месец",
+    ),
+    whatYouWinKicker: s("The prize", "Наградата"),
+    whatYouWinHeadline: s("What Winners Receive", "Какво получават победителите"),
+    whatYouWin1: s(
+      "Custom professional website — up to 5 pages, mobile-first",
+      "Персонален професионален сайт — до 5 страници, mobile-first",
+    ),
+    whatYouWin2: s(
+      "AI chatbot trained on your business — answers & books 24/7",
+      "AI чатбот, обучен на бизнеса — отговаря и резервира 24/7",
+    ),
+    whatYouWin3: s(
+      "Online booking integration + contact form",
+      "Онлайн резервации + форма за контакт",
+    ),
+    whatYouWin4: s(
+      "Hosted, deployed, and Google Analytics setup",
+      "Хостинг, пускане на живо и настройка на Google Analytics",
+    ),
+    timelineKicker: s("Timeline", "График"),
+    timelineHeadline: s("How the Giveaway Works", "Как работи томболата"),
+    timelineStep1: s(
+      "Enter anytime — complete the 2-minute survey",
+      "Влез по всяко време — попълни 2-минутната анкета",
+    ),
+    timelineStep2: s(
+      "Winners announced by email within the first week of each month",
+      "Победителите се обявят по имейл в първата седмица на месеца",
+    ),
+    timelineStep3: s(
+      "Winners receive their site in 5–7 business days after providing content",
+      "Победителите получават сайта за 5–7 работни дни след като предоставят съдържание",
+    ),
+    exitOfferTitle: s(
+      "Before you go — grab the free lead guide",
+      "Преди да излезеш — вземи безплатния наръчник",
+    ),
+    exitOfferBody: s(
+      "Stop Losing Leads While You Sleep — practical steps to capture leads automatically.",
+      "„Stop Losing Leads While You Sleep“ — практични стъпки за автоматично улавяне на клиенти.",
+    ),
+    exitOfferCta: s("Get the free guide →", "Вземи наръчника →"),
+    exitOfferGiveaway: s("Or enter the monthly giveaway", "Или влез в месечната томбола"),
   },
 
   bundleLanding: {

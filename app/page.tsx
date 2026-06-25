@@ -19,10 +19,9 @@ import { MARKETING_IMAGES } from "lib/marketing-images";
 // The visible page content below is locale + currency-aware (BG copy
 // for Bulgarian visitors, EUR for EU, USD for everyone else).
 export const metadata = {
-  title:
-    "Nacho Tsvetkov – Money Generator for Small Businesses",
+  title: "Nacho Tsvetkov – Get More Clients While You Sleep",
   description:
-    "Professional website + smart automation that turns small businesses into 24/7 money generators. No more missed leads, no more manual work. Starting at €59.",
+    "Professional website + AI chatbot that qualifies leads and books appointments 24/7. Delivered in 5–7 days. Startup bundles for small businesses.",
   openGraph: { type: "website" },
 };
 
@@ -49,12 +48,8 @@ function renderBundlePricingNote(
   return `${DICT.home.bundlesOneTimePlus[locale]}${formatPrice(b.retainerEur, currency)}${DICT.home.bundlesPerMonthRetainer[locale]}`;
 }
 
-function renderBundleRoi(
-  b: Bundle,
-  currency: Currency,
-  locale: Locale,
-): string {
-  return `${b.roiHook}. ${DICT.home.bundlesRoiSuffix[locale]} ~${formatPrice(b.roiSavingsEur, currency)}+`;
+function renderBundleRoi(b: Bundle): string {
+  return b.roiHook;
 }
 
 // Per-bundle "what's included" lines, kept compact for the listing card.
@@ -221,6 +216,7 @@ export default async function HomePage() {
   const steps = buildSteps(locale);
   const renderedFaqs = buildFaqs(currency, locale);
   const bundles = getLocalizedBundles(locale);
+  const startupBundle = bundles.find((b) => b.id === "startup")!;
   const bundleCardIncludes = buildBundleCardIncludes(locale);
   const caseStudies = buildCaseStudies(locale);
   const renderedTestimonials = buildTestimonials(currency, locale);
@@ -269,42 +265,39 @@ export default async function HomePage() {
             id="hero-heading"
             className="mx-auto max-w-5xl text-4xl font-bold leading-[1.05] tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl dark:text-white"
           >
-            <span className="sm:whitespace-nowrap">
-              {t(DICT.home.heroLine1)}
-            </span>{" "}
-            {/* Gradient span needs its OWN looser leading + pb so
-                descenders (y in "Money", g in "Generators") aren't
-                clipped by the bg-clip-text bounding box. The parent
-                h1's leading-[1.05] is too tight for clipped text. */}
-            <span className="block bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text pb-1 leading-[1.15] text-transparent dark:from-blue-400 dark:to-violet-400">
-              {t(DICT.home.heroLine2)}
-            </span>
+            {t(DICT.home.heroLine1)}
           </h1>
 
-          <div className="mx-auto mt-7 max-w-2xl space-y-1 text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
-            <p>{t(DICT.home.heroBullet1)}</p>
-            <p>{t(DICT.home.heroBullet2)}</p>
-            <p>{t(DICT.home.heroBullet3)}</p>
-          </div>
-
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
-            {t(DICT.home.heroSubBefore)}{" "}
-            <Link
-              href="/services/website"
-              className="font-semibold text-neutral-900 underline decoration-blue-500/50 decoration-2 underline-offset-4 transition-colors hover:text-blue-700 hover:decoration-blue-600 dark:text-white dark:decoration-blue-400/40 dark:hover:text-blue-200 dark:hover:decoration-blue-300"
-            >
-              {t(DICT.home.heroSubJustPrefix)}
-              {formatPrice(59, currency)}
-            </Link>
-            {t(DICT.home.heroSubAfter)}
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300 lg:mx-0 lg:max-w-xl lg:text-left">
+            {t(DICT.home.heroSubheadlineBefore)}{" "}
+            <span className="font-semibold text-neutral-900 dark:text-white">
+              {formatPrice(startupBundle.oneTimeEur, currency)}
+            </span>
+            {t(DICT.home.heroSubheadlineAfter)}
           </p>
+
+          <div className="mx-auto mt-6 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3 lg:mx-0">
+            {[
+              DICT.home.trustResult1,
+              DICT.home.trustResult2,
+              DICT.home.trustResult3,
+            ].map((stat, i) => (
+              <div
+                key={i}
+                className="rounded-xl border border-neutral-200/80 bg-white/80 px-3 py-2.5 text-center text-xs font-semibold leading-snug text-neutral-800 backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/50 dark:text-neutral-200 sm:text-sm"
+              >
+                {t(stat)}
+              </div>
+            ))}
+          </div>
 
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
             <Link
               href="/bundles/startup"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
-              {t(DICT.cta.seeMoneyBundles)}
+              See the {formatPrice(startupBundle.oneTimeEur, currency)} Startup
+              Bundle
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 20 20"
@@ -327,34 +320,26 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-200 bg-white/70 p-5 text-left backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/40 lg:mx-0">
-            <p className="text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
-              {t(DICT.home.heroPreviewKicker)}
+          <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-neutral-200/80 bg-white/70 p-4 backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/40 lg:mx-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.whatHappensNextKicker)}
             </p>
-            <ul className="mt-3 space-y-2 text-sm text-neutral-800 dark:text-neutral-200">
-              {[
-                t(DICT.home.heroPreviewItem1),
-                t(DICT.home.heroPreviewItem2),
-                t(DICT.home.heroPreviewItem3),
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                    className="mt-0.5 h-4 w-4 shrink-0 text-blue-400"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span>{item}</span>
+            <p className="mt-1 text-sm font-semibold text-neutral-900 dark:text-white">
+              {t(DICT.home.whatHappensNextHeadline)}
+            </p>
+            <ol className="mt-3 grid gap-2 sm:grid-cols-4">
+              {steps.map((step) => (
+                <li
+                  key={step.n}
+                  className="text-xs leading-snug text-neutral-600 dark:text-neutral-400"
+                >
+                  <span className="font-bold text-blue-600 dark:text-blue-400">
+                    {step.n}
+                  </span>{" "}
+                  {step.title}
                 </li>
               ))}
-            </ul>
+            </ol>
           </div>
 
           <p className="mt-8 text-xs text-neutral-600 sm:text-sm dark:text-neutral-400 lg:text-left">
@@ -451,159 +436,42 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* TRUST / RESULTS VISUAL --------------------------------------- */}
+      {/* HOW IT WORKS ------------------------------------------------- */}
       <section
-        aria-labelledby="trust-visual-heading"
-        className="border-t border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900/50"
-      >
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="grid items-center gap-10 lg:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                {t(DICT.home.trustResultsKicker)}
-              </p>
-              <h2
-                id="trust-visual-heading"
-                className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white"
-              >
-                {t(DICT.home.trustResultsHeadline)}
-              </h2>
-              <ul className="mt-6 space-y-3 text-base text-neutral-700 dark:text-neutral-300">
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
-                  {t(DICT.home.trustResult1)}
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
-                  {t(DICT.home.trustResult2)}
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
-                  {t(DICT.home.trustResult3)}
-                </li>
-              </ul>
-            </div>
-            <MarketingImage
-              src={MARKETING_IMAGES.relaxedResults.src}
-              alt={MARKETING_IMAGES.relaxedResults.alt}
-              width={MARKETING_IMAGES.relaxedResults.width}
-              height={MARKETING_IMAGES.relaxedResults.height}
-              className="mx-auto max-w-md rounded-2xl shadow-lg ring-1 ring-neutral-200 dark:ring-neutral-700"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* PROVEN RESULTS ----------------------------------------------- */}
-      {/* Sits directly under the hero so the visitor's first scroll
-          earns numeric proof BEFORE we ask for money. Three case
-          studies with hard metrics ("+47% bookings", "€4k saved",
-          etc.) — the Curated. shop is the centerpiece (featured = a
-          blue-haloed treatment that draws the eye to the live demo).
-          Pairs with the Testimonials block lower down: numbers here,
-          quoted humans there, so social proof brackets the pricing
-          on both sides. */}
-      <section
-        aria-labelledby="results-heading"
-        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
+        aria-labelledby="process-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
       >
         <div className="mx-auto max-w-7xl px-6">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.resultsKicker)}
+              {t(DICT.home.processKicker)}
             </p>
             <h2
-              id="results-heading"
+              id="process-heading"
               className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
             >
-              {t(DICT.home.resultsHeadline)}
+              {t(DICT.home.processHeadline)}
             </h2>
           </div>
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {caseStudies.map((c) => (
-              <article
-                key={c.title}
-                className={`relative flex flex-col rounded-2xl p-6 ${
-                  c.featured
-                    ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/15 ring-1 ring-blue-500/20 dark:border-blue-400 dark:from-blue-950/50 dark:to-neutral-950 dark:shadow-blue-500/20 dark:ring-blue-400/30"
-                    : "border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
-                }`}
+          <ol className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step) => (
+              <li
+                key={step.n}
+                className="rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:border-blue-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
               >
-                {c.featured && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                    {c.badge}
-                  </span>
-                )}
-                {!c.featured && (
-                  <span
-                    className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      c.real
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-                    }`}
-                  >
-                    <span
-                      className={`h-1.5 w-1.5 rounded-full ${
-                        c.real ? "bg-green-500" : "bg-neutral-400"
-                      }`}
-                    />
-                    {c.badge}
-                  </span>
-                )}
-                <h3
-                  className={`text-lg font-bold text-neutral-900 dark:text-white ${
-                    c.featured ? "mt-3" : "mt-4"
-                  }`}
-                >
-                  {c.title}
+                <div className="text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400">
+                  {step.n}
+                </div>
+                <h3 className="mt-2 text-base font-bold text-neutral-900 dark:text-white">
+                  {step.title}
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {c.summary}
+                  {step.body}
                 </p>
-                <p className="mt-4 text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {c.metric}
-                </p>
-                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
-                  {c.tech}
-                </p>
-                {c.href && (
-                  <Link
-                    href={c.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${c.cta} (opens in a new tab)`}
-                    className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
-                      c.featured
-                        ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
-                        : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                    }`}
-                  >
-                    {c.cta}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-3.5 w-3.5"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
-                        clipRule="evenodd"
-                      />
-                      <path
-                        fillRule="evenodd"
-                        d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                )}
-              </article>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </section>
 
@@ -735,7 +603,7 @@ export default async function HomePage() {
                     <span className="font-semibold text-neutral-900 dark:text-white">
                       {t(DICT.home.bundlesRoiLabel)}
                     </span>{" "}
-                    {renderBundleRoi(b, currency, locale)}
+                    {renderBundleRoi(b)}
                   </p>
 
                   <Link
@@ -767,6 +635,15 @@ export default async function HomePage() {
             })}
           </div>
 
+          <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-blue-200 bg-blue-50/80 px-6 py-5 text-center dark:border-blue-500/30 dark:bg-blue-950/40">
+            <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+              {t(DICT.home.bundlesGuaranteeHeadline)}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+              {t(DICT.home.bundlesGuaranteeBody)}
+            </p>
+          </div>
+
           <p className="mt-10 text-center text-sm text-neutral-600 dark:text-neutral-400">
             {t(DICT.home.bundlesCustomNeed)}{" "}
             <a
@@ -779,6 +656,154 @@ export default async function HomePage() {
               {t(DICT.home.bundlesCustomCta)}
             </a>
           </p>
+        </div>
+      </section>
+
+      {/* PROVEN RESULTS ----------------------------------------------- */}
+      <section
+        aria-labelledby="results-heading"
+        className="border-t border-neutral-200 bg-white py-20 dark:border-neutral-800 dark:bg-neutral-900"
+      >
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.resultsKicker)}
+            </p>
+            <h2
+              id="results-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              {t(DICT.home.resultsHeadline)}
+            </h2>
+          </div>
+
+          <div className="mt-12 grid gap-6 lg:grid-cols-3">
+            {caseStudies.map((c) => (
+              <article
+                key={c.title}
+                className={`relative flex flex-col rounded-2xl p-6 ${
+                  c.featured
+                    ? "border-2 border-blue-500 bg-gradient-to-b from-blue-50 to-white shadow-2xl shadow-blue-600/15 ring-1 ring-blue-500/20 dark:border-blue-400 dark:from-blue-950/50 dark:to-neutral-950 dark:shadow-blue-500/20 dark:ring-blue-400/30"
+                    : "border border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
+                }`}
+              >
+                {c.featured && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-md shadow-blue-600/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    {c.badge}
+                  </span>
+                )}
+                {!c.featured && (
+                  <span
+                    className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                      c.real
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        c.real ? "bg-green-500" : "bg-neutral-400"
+                      }`}
+                    />
+                    {c.badge}
+                  </span>
+                )}
+                <h3
+                  className={`text-lg font-bold text-neutral-900 dark:text-white ${
+                    c.featured ? "mt-3" : "mt-4"
+                  }`}
+                >
+                  {c.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                  {c.summary}
+                </p>
+                <p className="mt-4 text-sm font-bold text-blue-600 dark:text-blue-400">
+                  {c.metric}
+                </p>
+                <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
+                  {c.tech}
+                </p>
+                {c.href && (
+                  <Link
+                    href={c.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${c.cta} (opens in a new tab)`}
+                    className={`mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold transition-colors ${
+                      c.featured
+                        ? "text-blue-700 hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200"
+                        : "text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                    }`}
+                  >
+                    {c.cta}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-3.5 w-3.5"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.25 5.5a.75.75 0 0 0-.75.75v8.5c0 .414.336.75.75.75h8.5a.75.75 0 0 0 .75-.75v-4a.75.75 0 0 1 1.5 0v4A2.25 2.25 0 0 1 12.75 17h-8.5A2.25 2.25 0 0 1 2 14.75v-8.5A2.25 2.25 0 0 1 4.25 4h5a.75.75 0 0 1 0 1.5h-5Z"
+                        clipRule="evenodd"
+                      />
+                      <path
+                        fillRule="evenodd"
+                        d="M6.194 12.753a.75.75 0 0 0 1.06.053L16.5 4.44v2.81a.75.75 0 0 0 1.5 0v-4.5a.75.75 0 0 0-.75-.75h-4.5a.75.75 0 0 0 0 1.5h2.553l-9.056 8.194a.75.75 0 0 0-.053 1.06Z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TRUST / RESULTS VISUAL --------------------------------------- */}
+      <section
+        aria-labelledby="trust-visual-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900/50"
+      >
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                {t(DICT.home.trustResultsKicker)}
+              </p>
+              <h2
+                id="trust-visual-heading"
+                className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white"
+              >
+                {t(DICT.home.trustResultsHeadline)}
+              </h2>
+              <ul className="mt-6 space-y-3 text-base text-neutral-700 dark:text-neutral-300">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult1)}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult2)}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult3)}
+                </li>
+              </ul>
+            </div>
+            <MarketingImage
+              src={MARKETING_IMAGES.relaxedResults.src}
+              alt={MARKETING_IMAGES.relaxedResults.alt}
+              width={MARKETING_IMAGES.relaxedResults.width}
+              height={MARKETING_IMAGES.relaxedResults.height}
+              className="mx-auto max-w-md rounded-2xl shadow-lg ring-1 ring-neutral-200 dark:ring-neutral-700"
+            />
+          </div>
         </div>
       </section>
 
@@ -888,51 +913,6 @@ export default async function HomePage() {
               {t(DICT.home.servicesGroupedBy)}
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS ------------------------------------------------- */}
-      {/* Process clarity goes BEFORE testimonials + about: visitors who
-          like the offer above need to know how the engagement flows
-          before they trust voices or the founder. The 4-step "discover
-          → build → polish → launch" track resolves the "what happens
-          after I click" friction so the testimonials below land on a
-          visitor who can already picture the project running. */}
-      <section
-        aria-labelledby="process-heading"
-        className="border-t border-neutral-200 bg-neutral-50 py-20 dark:border-neutral-800 dark:bg-neutral-950"
-      >
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
-              {t(DICT.home.processKicker)}
-            </p>
-            <h2
-              id="process-heading"
-              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
-            >
-              {t(DICT.home.processHeadline)}
-            </h2>
-          </div>
-
-          <ol className="mx-auto mt-12 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step) => (
-              <li
-                key={step.n}
-                className="rounded-xl border border-neutral-200 bg-white p-6 transition-all hover:border-blue-300 dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-blue-500/30"
-              >
-                <div className="text-xs font-bold tracking-widest text-blue-600 dark:text-blue-400">
-                  {step.n}
-                </div>
-                <h3 className="mt-2 text-base font-bold text-neutral-900 dark:text-white">
-                  {step.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                  {step.body}
-                </p>
-              </li>
-            ))}
-          </ol>
         </div>
       </section>
 
@@ -1162,6 +1142,12 @@ export default async function HomePage() {
             >
               {t(DICT.cta.emailMe)}
             </a>
+            <Link
+              href="/free-ai-audits/win-free-website"
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
+            >
+              {t(DICT.cta.enterGiveaway)}
+            </Link>
           </div>
           <p className="mt-6 text-xs text-blue-100">
             {t(DICT.home.finalNote)}

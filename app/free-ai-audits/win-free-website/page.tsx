@@ -19,6 +19,19 @@ export default async function WinFreeWebsiteGiveaway() {
   const locale = await detectLocale();
   const t = createT(locale);
 
+  const whatYouWin = [
+    DICT.giveaway.whatYouWin1,
+    DICT.giveaway.whatYouWin2,
+    DICT.giveaway.whatYouWin3,
+    DICT.giveaway.whatYouWin4,
+  ];
+
+  const timeline = [
+    DICT.giveaway.timelineStep1,
+    DICT.giveaway.timelineStep2,
+    DICT.giveaway.timelineStep3,
+  ];
+
   return (
     <main className="flex min-h-[calc(100dvh-4rem)] flex-col bg-white dark:bg-neutral-950">
       <ViewContentTracker
@@ -49,27 +62,87 @@ export default async function WinFreeWebsiteGiveaway() {
         </Link>
 
         <header className="mt-3 text-center">
-          <div className="mx-auto mb-4 max-w-md">
+          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            {t(DICT.giveaway.scarcityBadge)}
+          </span>
+          <div className="mx-auto mt-4 max-w-md">
             <MarketingImage
-              src={MARKETING_IMAGES.relaxedResults.src}
-              alt={MARKETING_IMAGES.relaxedResults.alt}
-              width={MARKETING_IMAGES.relaxedResults.width}
-              height={MARKETING_IMAGES.relaxedResults.height}
+              src={MARKETING_IMAGES.heroGrowth.src}
+              alt={MARKETING_IMAGES.heroGrowth.alt}
+              width={MARKETING_IMAGES.heroGrowth.width}
+              height={MARKETING_IMAGES.heroGrowth.height}
               className="h-auto w-full rounded-xl shadow-md ring-1 ring-neutral-200 dark:ring-neutral-700"
             />
           </div>
-          <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900 sm:text-2xl dark:text-white">
+          <h1 className="mt-4 text-xl font-bold leading-snug tracking-tight text-neutral-900 sm:text-2xl dark:text-white">
             Win a Free Basic Website + AI Chatbot That Books Clients While You Sleep
           </h1>
           <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-            Fill this quick 2-minute survey and get entered to win a professional website + AI chatbot
-            (1–3 winners picked every month). Plus get instant access to the free guide after you submit.
+            Fill this quick 2-minute survey and get entered to win the full Startup Bundle prize
+            (website + AI chatbot + booking). Plus get instant access to the free guide after you
+            submit.
           </p>
         </header>
 
         <section
+          aria-labelledby="what-you-win-heading"
+          className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 dark:border-neutral-700 dark:bg-neutral-900/50"
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t(DICT.giveaway.whatYouWinKicker)}
+          </p>
+          <h2
+            id="what-you-win-heading"
+            className="mt-1 text-sm font-semibold text-neutral-900 dark:text-white"
+          >
+            {t(DICT.giveaway.whatYouWinHeadline)}
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {whatYouWin.map((item, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-2 text-xs leading-relaxed text-neutral-700 dark:text-neutral-300"
+              >
+                <span className="mt-0.5 text-blue-600 dark:text-blue-400">✓</span>
+                {t(item)}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section
+          aria-labelledby="timeline-heading"
+          className="mt-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-700 dark:bg-neutral-900"
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t(DICT.giveaway.timelineKicker)}
+          </p>
+          <h2
+            id="timeline-heading"
+            className="mt-1 text-sm font-semibold text-neutral-900 dark:text-white"
+          >
+            {t(DICT.giveaway.timelineHeadline)}
+          </h2>
+          <ol className="mt-3 space-y-2">
+            {timeline.map((step, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-2 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400"
+              >
+                <span
+                  className="flex h-5 w-5 flex-none items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300"
+                >
+                  {i + 1}
+                </span>
+                {t(step)}
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section
           aria-labelledby="free-guide-heading"
-          className="mt-4 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-3 text-center dark:border-blue-500/30 dark:bg-blue-950/40"
+          className="mt-3 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-3 text-center dark:border-blue-500/30 dark:bg-blue-950/40"
         >
           <p className="text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
             {t(DICT.giveaway.freeGuideKicker)}
@@ -94,7 +167,7 @@ export default async function WinFreeWebsiteGiveaway() {
             painLabel="What's the biggest lead or booking problem you're trying to fix?"
             submitLabel="Enter the giveaway →"
             successTitle="You're in the draw!"
-            successMessage="Thanks — your entry is recorded. Winners are picked monthly (1–3 per month) and notified by email. Grab your free guide in step 2 below."
+            successMessage="Thanks — your entry is recorded. Winners are announced in the first week of each month. Grab your free guide in step 2 below."
             emailLabel="Email to enter the giveaway and receive winner updates"
             freeGuide={{
               href: FREE_GUIDE_PATH,

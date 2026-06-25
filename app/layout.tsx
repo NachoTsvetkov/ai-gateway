@@ -2,6 +2,7 @@ import { CartProvider } from "components/cart/cart-context";
 import { Navbar, type NavbarLabels } from "components/layout/navbar";
 import { NavbarGate } from "components/layout/navbar/navbar-gate";
 import { AnalyticsRoot } from "components/analytics/analytics-root";
+import { FreeGuideExitOffer } from "components/marketing/free-guide-exit-offer";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
 import { ReactNode } from "react";
@@ -37,11 +38,17 @@ const HIDE_NAVBAR_ON: ReadonlyArray<string> = [
 export const metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Nacho Tsvetkov – Money Generator for Small Businesses",
+    default: "Nacho Tsvetkov – Get More Clients While You Sleep",
     template: "%s | Nacho Tsvetkov",
   },
   description:
-    "Professional website + smart automation that turns small businesses into 24/7 money generators. No more missed leads, no more manual work. Starting at 59 €.",
+    "Professional website + AI chatbot that qualifies leads and books appointments 24/7. Startup bundles delivered in 5–7 days.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+  },
   robots: {
     follow: true,
     index: true,
@@ -130,6 +137,12 @@ export default async function RootLayout({
               privacyPolicyHref: "/privacy-policy",
               privacyPolicyLabel: DICT.consent.privacyPolicy[locale],
             }}
+          />
+          <FreeGuideExitOffer
+            title={DICT.giveaway.exitOfferTitle[locale]}
+            body={DICT.giveaway.exitOfferBody[locale]}
+            ctaLabel={DICT.giveaway.exitOfferCta[locale]}
+            giveawayLabel={DICT.giveaway.exitOfferGiveaway[locale]}
           />
         </CartProvider>
       </body>

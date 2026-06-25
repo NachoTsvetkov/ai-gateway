@@ -166,7 +166,7 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
   {
     id: "scaleup",
     name: "Scale-Up Bundle",
-    tagline: "The Complete Growth System",
+    tagline: "Grow and Automate",
     pain: "The complete growth system for businesses ready to scale — advanced automation, CRM, and monthly support that replaces manual work.",
     oneTimeEur: 354,
     retainerEur: 97,
