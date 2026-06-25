@@ -1,13 +1,21 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
 import { ReportRequestSchema, type ReportRequestData } from 'lib/surveys';
 import { collectionQueryString } from 'lib/collection-mode';
 import { track } from 'lib/pixel/client';
 import type { PixelCustomData } from 'lib/pixel/types';
+import {
+  BUDGET_SUGGESTIONS,
+  BUSINESS_TYPE_SUGGESTIONS,
+  DESIRED_RESULTS_SUGGESTIONS,
+  PAIN_SUGGESTIONS,
+  TRIED_SO_FAR_SUGGESTIONS,
+} from 'lib/survey-field-options';
+import { SurveyComboField } from './survey-combo-field';
 
 interface Props {
   source: string; // e.g. 'revenue-audit'
@@ -45,6 +53,7 @@ export function ReportRequestForm({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
@@ -239,10 +248,20 @@ export function ReportRequestForm({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What type of business do you run?</label>
-            <input
-              {...register('business_type')}
-              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-              placeholder="Fitness studio, boutique, consulting, e-commerce…"
+            <Controller
+              name="business_type"
+              control={control}
+              render={({ field }) => (
+                <SurveyComboField
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  suggestions={BUSINESS_TYPE_SUGGESTIONS}
+                  placeholder="e.g. Fashion boutique, metallurgy, fitness studio…"
+                  chipCount={8}
+                />
+              )}
             />
             {errors.business_type && <p className="text-sm text-red-600 dark:text-red-400">{errors.business_type.message}</p>}
           </div>
@@ -254,11 +273,22 @@ export function ReportRequestForm({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What results would make the biggest difference in the next 3–6 months?</label>
-            <textarea
-              {...register('desired_results')}
-              rows={3}
-              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-              placeholder="More bookings and sales, higher conversions, time back for the things that matter…"
+            <Controller
+              name="desired_results"
+              control={control}
+              render={({ field }) => (
+                <SurveyComboField
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  suggestions={DESIRED_RESULTS_SUGGESTIONS}
+                  placeholder="More bookings, higher conversions, time back…"
+                  multiline
+                  rows={3}
+                  chipCount={6}
+                />
+              )}
             />
             {errors.desired_results && <p className="text-sm text-red-600 dark:text-red-400">{errors.desired_results.message}</p>}
           </div>
@@ -270,11 +300,22 @@ export function ReportRequestForm({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">{painLabel}</label>
-            <textarea
-              {...register('pain')}
-              rows={3}
-              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-              placeholder="Missed leads, manual booking, slow follow-ups, repetitive admin work…"
+            <Controller
+              name="pain"
+              control={control}
+              render={({ field }) => (
+                <SurveyComboField
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  suggestions={PAIN_SUGGESTIONS}
+                  placeholder="Missed leads, manual booking, slow follow-ups…"
+                  multiline
+                  rows={3}
+                  chipCount={6}
+                />
+              )}
             />
             {errors.pain && <p className="text-sm text-red-600 dark:text-red-400">{errors.pain.message}</p>}
           </div>
@@ -286,13 +327,24 @@ export function ReportRequestForm({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What have you already tried to improve this?</label>
-            <textarea
-              {...register('tried_so_far')}
-              rows={3}
-              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-              placeholder="Hired help, tried software, ran ads, manual processes, nothing yet…"
+            <Controller
+              name="tried_so_far"
+              control={control}
+              render={({ field }) => (
+                <SurveyComboField
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  suggestions={TRIED_SO_FAR_SUGGESTIONS}
+                  placeholder="Hired help, tried software, ran ads, nothing yet…"
+                  helperText="Optional but very helpful — pick a suggestion or type your own."
+                  multiline
+                  rows={3}
+                  chipCount={6}
+                />
+              )}
             />
-            <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Optional but very helpful for tailoring the right ideas.</p>
           </div>
         </div>
       )}
@@ -302,10 +354,20 @@ export function ReportRequestForm({
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">What would feel like a fair price for a solution that delivers these results for your business?</label>
-            <input
-              {...register('budget')}
-              className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-              placeholder="e.g. $2,000 or whatever feels like a fair price for these results"
+            <Controller
+              name="budget"
+              control={control}
+              render={({ field }) => (
+                <SurveyComboField
+                  name={field.name}
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  suggestions={BUDGET_SUGGESTIONS}
+                  placeholder="e.g. $3,000 – $5,000 or not sure yet"
+                  chipCount={7}
+                />
+              )}
             />
             {errors.budget && <p className="text-sm text-red-600 dark:text-red-400">{errors.budget.message}</p>}
           </div>
