@@ -133,8 +133,8 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
   {
     id: "startup",
     name: "Startup Bundle",
-    tagline: "Launch Fast & Cheap",
-    pain: "You have nothing online — or your current site is so dated it's costing you customers every week.",
+    tagline: "Get Online Fast",
+    pain: "Get online fast with a professional website + AI that works while you sleep. Launch in 5–7 days — first booking often pays for the whole bundle.",
     oneTimeEur: 173,
     contents: [
       // The bundle's website inclusion is intentionally MORE generous
@@ -155,7 +155,7 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
       { kind: "bonus", label: "Google Analytics + Search Console setup" },
       { kind: "bonus", label: "Hosted & deployed for you" },
     ],
-    roiHook: "First booking pays it back",
+    roiHook: "Pays for itself with the first booking",
     roiSavingsEur: 600,
     cta: {
       primary: "Get the Startup Bundle",
@@ -166,8 +166,8 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
   {
     id: "scaleup",
     name: "Scale-Up Bundle",
-    tagline: "Upgrade & Automate What You Already Have",
-    pain: "Your business is running but drowning in manual work — emails, follow-ups, scheduling, data entry.",
+    tagline: "The Complete Growth System",
+    pain: "The complete growth system for businesses ready to scale — advanced automation, CRM, and monthly support that replaces manual work.",
     oneTimeEur: 354,
     retainerEur: 97,
     contents: [
@@ -192,7 +192,7 @@ export const BUNDLES: ReadonlyArray<Bundle> = [
     roiSavingsEur: 3000,
     highlight: true,
     nudge:
-      "Most clients pick Scale-Up — the sweet spot of upgrade + automation for businesses that already have customers.",
+      "Most growing businesses choose Scale-Up — automation + CRM for businesses that already have customers.",
     cta: {
       primary: "Start the Scale-Up process",
       helper: "Continue to checkout — pay securely online",

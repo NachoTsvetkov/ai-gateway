@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { ReportRequestForm } from 'components/reports/ReportRequestForm';
 import { ViewContentTracker } from 'components/analytics/view-content-tracker';
+import { MarketingImage } from 'components/marketing/marketing-image';
+import { DICT } from 'lib/i18n/dict';
+import { detectLocale } from 'lib/i18n/locale.server';
+import { createT } from 'lib/i18n/locale';
+import { GIVEAWAY_TERMS_URL, MARKETING_IMAGES } from 'lib/marketing-images';
 
 const FREE_GUIDE_PATH = '/guides/stop-losing-leads-while-you-sleep.pdf';
 
@@ -10,7 +15,10 @@ export const metadata = {
     'Enter to win a professional website + AI chatbot that books clients while you sleep. Fill a 2-minute survey — 1–3 winners every month. Plus get a free lead-capture guide instantly.',
 };
 
-export default function WinFreeWebsiteGiveaway() {
+export default async function WinFreeWebsiteGiveaway() {
+  const locale = await detectLocale();
+  const t = createT(locale);
+
   return (
     <main className="flex min-h-[calc(100dvh-4rem)] flex-col bg-white dark:bg-neutral-950">
       <ViewContentTracker
@@ -41,6 +49,15 @@ export default function WinFreeWebsiteGiveaway() {
         </Link>
 
         <header className="mt-3 text-center">
+          <div className="mx-auto mb-4 max-w-md">
+            <MarketingImage
+              src={MARKETING_IMAGES.relaxedResults.src}
+              alt={MARKETING_IMAGES.relaxedResults.alt}
+              width={MARKETING_IMAGES.relaxedResults.width}
+              height={MARKETING_IMAGES.relaxedResults.height}
+              className="h-auto w-full rounded-xl shadow-md ring-1 ring-neutral-200 dark:ring-neutral-700"
+            />
+          </div>
           <h1 className="text-xl font-bold leading-snug tracking-tight text-neutral-900 sm:text-2xl dark:text-white">
             Win a Free Basic Website + AI Chatbot That Books Clients While You Sleep
           </h1>
@@ -50,9 +67,28 @@ export default function WinFreeWebsiteGiveaway() {
           </p>
         </header>
 
+        <section
+          aria-labelledby="free-guide-heading"
+          className="mt-4 rounded-xl border border-blue-200 bg-blue-50/80 px-4 py-3 text-center dark:border-blue-500/30 dark:bg-blue-950/40"
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
+            {t(DICT.giveaway.freeGuideKicker)}
+          </p>
+          <h2
+            id="free-guide-heading"
+            className="mt-1 text-sm font-semibold text-neutral-900 dark:text-white"
+          >
+            {t(DICT.giveaway.freeGuideHeadline)}
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
+            {t(DICT.giveaway.freeGuideBody)}
+          </p>
+        </section>
+
         <div className="mt-4 flex-1">
           <ReportRequestForm
             source="free-website-giveaway"
+            title="Win Free Website + AI Chatbot Giveaway"
             showFormHeader={false}
             compact
             painLabel="What's the biggest lead or booking problem you're trying to fix?"
@@ -69,14 +105,33 @@ export default function WinFreeWebsiteGiveaway() {
             showCalendlyLink={false}
             useTestCollection={false}
           />
+
+          <section
+            aria-labelledby="winners-heading"
+            className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 dark:border-neutral-700 dark:bg-neutral-900/50"
+          >
+            <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.giveaway.winnersKicker)}
+            </p>
+            <h2
+              id="winners-heading"
+              className="mt-1 text-sm font-semibold text-neutral-900 dark:text-white"
+            >
+              {t(DICT.giveaway.winnersHeadline)}
+            </h2>
+            <p className="mt-2 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
+              {t(DICT.giveaway.winnersBody)}
+            </p>
+          </section>
+
           <p className="mt-3 text-center text-xs text-neutral-500 dark:text-neutral-400">
             By entering, you agree to the{' '}
-            <Link
-              href="/giveaway-terms"
+            <a
+              href={GIVEAWAY_TERMS_URL}
               className="font-medium text-neutral-700 underline underline-offset-2 hover:text-blue-600 dark:text-neutral-300 dark:hover:text-blue-400"
             >
               Giveaway Terms &amp; Conditions
-            </Link>
+            </a>
             . No purchase necessary.
           </p>
         </div>

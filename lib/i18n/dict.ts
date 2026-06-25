@@ -72,8 +72,12 @@ export const DICT = {
       "Виж пакетите (-60%+)",
     ),
     seeMoneyBundles: s(
-      "See the Bundles That Make Money",
-      "Виж пакетите, които правят пари",
+      "See the Startup Bundle",
+      "Виж Startup пакета",
+    ),
+    enterGiveaway: s(
+      "Enter the Monthly Giveaway",
+      "Влез в месечната томбола",
     ),
     talkFirst: s(
       "Or talk first — book a 15-min call",
@@ -109,25 +113,25 @@ export const DICT = {
   // -------------------------------------------------------------------
   home: {
     heroLine1: s(
-      "I Turn Small Businesses Into",
-      "Превръщам малките бизнеси в",
+      "Get More Clients While You Sleep",
+      "Повече клиенти, докато спиш",
     ),
-    heroLine2: s("Money Generators", "машини за пари"),
+    heroLine2: s("Without Lifting a Finger", "без да вдигаш пръст"),
     heroBullet1: s(
-      "No more missed leads at 2 AM.",
-      "Без пропуснати клиенти в 2 през нощта.",
+      "Professional website + AI chatbot that qualifies leads 24/7",
+      "Професионален сайт + AI чатбот, който квалифицира клиенти 24/7",
     ),
     heroBullet2: s(
-      "No more manual work killing your evenings.",
-      "Без скучна повтаряема ръчна работа",
+      "Instant bookings and follow-ups — even when you're closed",
+      "Моментални резервации и последващи стъпки — дори когато си затворен",
     ),
     heroBullet3: s(
-      "No more watching competitors scale while you stay stuck.",
-      "Без гледане как конкурентите растат, докато ти стоиш на едно място.",
+      "Launch packages for small businesses — no enterprise budget required",
+      "Стартови пакети за малък бизнес — без корпоративен бюджет",
     ),
     heroSubBefore: s(
-      "Get a professional website + smart automation that works 24/7 — starting at",
-      "Получаваш професионален уебсайт + умна автоматизация, която работи 24/7 — от",
+      "Professional website + smart automation that books clients while you sleep — starting at",
+      "Професионален уебсайт + автоматизация, която резервира клиенти докато спиш — от",
     ),
     heroSubJustPrefix: s("just ", "само "),
     heroSubAfter: s(".", "."),
@@ -152,6 +156,60 @@ export const DICT = {
       "София, България · работа от разстояние · обикновено доставям за под 2 седмици",
     ),
 
+    beforeAfterKicker: s("The shift", "Промяната"),
+    beforeAfterHeadline: s(
+      "Most Small Businesses Are Stuck Here…",
+      "Повечето малки бизнеси са заседнали тук…",
+    ),
+    beforeAfterRealityTitle: s(
+      "The reality most website builders won't tell you",
+      "Реалността, която повечето уеб студиа не казват",
+    ),
+    beforeAfterReality1: s(
+      "Slow, outdated websites lose leads every day",
+      "Бавните, остарели сайтове губят клиенти всеки ден",
+    ),
+    beforeAfterReality2: s(
+      "Manual follow-ups waste hours every week",
+      "Ръчните последващи стъпки губят часове всяка седмица",
+    ),
+    beforeAfterReality3: s(
+      "Competitors with AI book clients while you sleep",
+      "Конкурентите с AI резервират клиенти, докато спиш",
+    ),
+    beforeAfterSmartTitle: s(
+      "What smart businesses are moving to",
+      "Към какво преминават умните бизнеси",
+    ),
+    beforeAfterSmart: s(
+      "Modern fast websites + AI that works 24/7",
+      "Бързи модерни сайтове + AI, който работи 24/7",
+    ),
+
+    benefitsKicker: s("What you get", "Какво получаваш"),
+    benefitsHeadline: s(
+      "Everything You Need to Capture Leads Around the Clock",
+      "Всичко, за да уловиш клиенти денонощно",
+    ),
+
+    trustResultsKicker: s("Real results", "Реални резултати"),
+    trustResultsHeadline: s(
+      "Business Owners Who Stopped Losing Leads",
+      "Собственици, които спряха да губят клиенти",
+    ),
+    trustResult1: s(
+      "+340% bookings for a local fitness studio",
+      "+340% резервации за фитнес студио",
+    ),
+    trustResult2: s(
+      "2× conversion rate for an e-commerce store",
+      "2× конверсия за e-commerce магазин",
+    ),
+    trustResult3: s(
+      "28% cart recovery for a fashion brand",
+      "28% възстановени колички за моден бранд",
+    ),
+
     aboutKicker: s("About", "За мен"),
     aboutHeadline: s(
       "I’m Nacho Tsvetkov, Full-Stack Software Engineer with 20+ years building production systems for e-commerce, fintech, and startups.",
@@ -174,8 +232,12 @@ export const DICT = {
 
     bundlesKicker: s("Bundles", "Пакети"),
     bundlesHeadline: s(
-      "Pick the Bundle That Pays for Itself",
-      "Избери пакет, който се изплаща сам",
+      "Choose the System That Matches Where Your Business Is",
+      "Избери системата, която пасва на етапа на бизнеса",
+    ),
+    bundlesRecommendation: s(
+      "Most small businesses starting out choose the Startup Bundle. Growing businesses usually go with Scale-Up.",
+      "Повечето малки бизнеси започват със Startup пакета. Растящите бизнеси обикновено избират Scale-Up.",
     ),
     bundlesIntro1: s("Each bundle costs roughly", "Всеки пакет струва около"),
     bundlesIntroMid: s(
@@ -855,6 +917,73 @@ export const DICT = {
     fullPaymentsReady: s(
       "(full payments-ready site)",
       "(пълен сайт, готов за плащания)",
+    ),
+  },
+
+  giveaway: {
+    winnersKicker: s("Fair selection", "Честен избор"),
+    winnersHeadline: s("How Winners Are Chosen", "Как се избират победителите"),
+    winnersBody: s(
+      "Every month I personally review all entries and select 1–3 winners based on the quality of their answers and how well their business fits the prize. This helps ensure I can deliver great results for the businesses I build.",
+      "Всеки месец лично преглеждам всички заявки и избирам 1–3 победители според качеството на отговорите и дали бизнесът пасва на наградата. Така мога да доставя силни резултати за бизнесите, които изграждам.",
+    ),
+    freeGuideKicker: s("Instant bonus", "Моментален бонус"),
+    freeGuideHeadline: s(
+      "Free guide included with every entry",
+      "Безплатен наръчник с всяка заявка",
+    ),
+    freeGuideBody: s(
+      "Complete the survey and unlock Stop Losing Leads While You Sleep — practical steps to capture and follow up on leads automatically.",
+      "Попълни анкетата и получи „Stop Losing Leads While You Sleep“ — практични стъпки за улавяне и последващи стъпки с клиенти автоматично.",
+    ),
+  },
+
+  bundleLanding: {
+    startupHero: s(
+      "Professional Website + AI Chatbot in 7 Days",
+      "Професионален сайт + AI чатбот за 7 дни",
+    ),
+    startupSubheadline: s(
+      "Get online fast with a modern site and AI that qualifies leads and books appointments while you sleep. No tech skills required.",
+      "Онлайн бързо с модерен сайт и AI, който квалифицира клиенти и резервира срещи докато спиш. Без технически умения.",
+    ),
+    scaleupHero: s(
+      "The Complete Growth System for Serious Small Businesses",
+      "Пълната система за растеж на сериозни малки бизнеси",
+    ),
+    scaleupSubheadline: s(
+      "Everything in Startup plus marketing automation, CRM, and monthly support — replaces hours of manual work every week.",
+      "Всичко от Startup плюс маркетинг автоматизация, CRM и месечна поддръжка — замества часове ръчна работа всяка седмица.",
+    ),
+    whyWorksKicker: s("Why this works", "Защо работи"),
+    whyWorksHeadline: s("Why This Bundle Works", "Защо този пакет работи"),
+    whyWorksStartup1: s(
+      "First booking often pays for the entire bundle",
+      "Първата резервация често покрива целия пакет",
+    ),
+    whyWorksStartup2: s(
+      "Books clients while you sleep — 24/7 lead capture",
+      "Резервира клиенти докато спиш — улавяне на клиенти 24/7",
+    ),
+    whyWorksScaleup1: s(
+      "Replaces 1–2 part-time team members worth of manual work",
+      "Замества ръчната работа на 1–2 наполовина служители",
+    ),
+    whyWorksScaleup2: s(
+      "Automated follow-ups, CRM, and maintenance — pays for itself monthly",
+      "Автоматизирани последващи стъпки, CRM и поддръжка — се изплаща месечно",
+    ),
+    howItWorksKicker: s("How it works", "Как работи"),
+    howItWorksHeadline: s("Four Simple Steps", "Четири прости стъпки"),
+    step1: s("Discovery call — tell me about your business", "Разговор — сподели бизнеса"),
+    step2: s("We build your site + train the AI chatbot", "Изграждаме сайта + обучаваме AI чатбота"),
+    step3: s("You review — we tweak until it's right", "Преглеждаш — донастройваме до перфектно"),
+    step4: s("We launch — start capturing leads 24/7", "Пускаме на живо — клиенти 24/7"),
+    guaranteeKicker: s("Guarantee", "Гаранция"),
+    guaranteeHeadline: s("Delivered in 5–7 Business Days", "Доставка за 5–7 работни дни"),
+    guaranteeBody: s(
+      "Delivered in 5–7 business days after you provide content. If we miss the agreed deadline without a mutually agreed extension, you get a full refund of the one-time fee. No surprises — we align on scope before work begins.",
+      "Доставка за 5–7 работни дни след като предоставиш съдържание. Ако пропуснем срока без споразумено удължение, получаваш пълно възстановяване на еднократната сума. Без изненади — уточняваме обхвата преди работа.",
     ),
   },
 

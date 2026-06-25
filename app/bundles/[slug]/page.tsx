@@ -46,6 +46,8 @@ import {
 } from "lib/buyable";
 import { CheckoutIsland } from "components/checkout/checkout-island";
 import { ViewContentTracker } from "components/analytics/view-content-tracker";
+import { MarketingImage } from "components/marketing/marketing-image";
+import { MARKETING_IMAGES } from "lib/marketing-images";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -95,6 +97,9 @@ export default async function BundleDetailPage({
     detectLocale(),
   ]);
   const bundle = getLocalizedBundle(slug as BundleId, locale);
+  const isStartup = bundle.id === "startup";
+  const isScaleup = bundle.id === "scaleup";
+  const isProductBundle = isStartup || isScaleup;
 
   const separateEur = getBundleSeparatePriceEur(bundle);
   const savingsEur = getBundleSavingsEur(bundle);
@@ -122,11 +127,25 @@ export default async function BundleDetailPage({
         currency={currency}
         savingsEur={savingsEur}
         locale={locale}
+        isProductBundle={isProductBundle}
       />
+
+      {isProductBundle && (
+        <ProductBundleSections
+          variant={bundle.id as "startup" | "scaleup"}
+          locale={locale}
+          ctaLabel={bundle.cta.primary}
+        />
+      )}
 
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 lg:grid-cols-[1fr_minmax(360px,420px)] lg:gap-10 lg:py-20">
         <div className="space-y-12">
-          <Inclusions bundle={bundle} currency={currency} locale={locale} />
+          <Inclusions
+            bundle={bundle}
+            currency={currency}
+            locale={locale}
+            showProductVisual={isProductBundle}
+          />
           {showsSavings && (
             <ValueComparison
               bundle={bundle}
@@ -172,11 +191,13 @@ function Hero({
   currency,
   savingsEur,
   locale,
+  isProductBundle = false,
 }: {
   bundle: Bundle;
   currency: Currency;
   savingsEur: number;
   locale: Locale;
+  isProductBundle?: boolean;
 }) {
   const t = createT(locale);
   // Two short retainer-line variants in BG/EN. Inlined here because
@@ -192,6 +213,24 @@ function Hero({
       : "one-time payment";
   const allBundlesLabel = locale === "bg" ? "Всички пакети" : "All bundles";
   const saveLabel = locale === "bg" ? "Спести" : "Save";
+  const heroHeadline =
+    bundle.id === "startup"
+      ? t(DICT.bundleLanding.startupHero)
+      : bundle.id === "scaleup"
+        ? t(DICT.bundleLanding.scaleupHero)
+        : bundle.name;
+  const heroSubheadline =
+    bundle.id === "startup"
+      ? t(DICT.bundleLanding.startupSubheadline)
+      : bundle.id === "scaleup"
+        ? t(DICT.bundleLanding.scaleupSubheadline)
+        : bundle.pain;
+  const heroImage =
+    bundle.id === "startup"
+      ? MARKETING_IMAGES.startupBundleHero
+      : bundle.id === "scaleup"
+        ? MARKETING_IMAGES.scaleupBundleHero
+        : null;
   return (
     <section
       aria-labelledby="bundle-hero-heading"
@@ -223,7 +262,7 @@ function Hero({
           </Link>
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-700 dark:text-blue-400">
               {bundle.tagline}
@@ -232,22 +271,66 @@ function Hero({
               id="bundle-hero-heading"
               className="mt-3 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl dark:text-white"
             >
-              {bundle.name}
+              {heroHeadline}
             </h1>
             <p className="mt-5 max-w-xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
-              {bundle.pain}
+              {heroSubheadline}
             </p>
 
             <p className="mt-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300">
               <span className="h-1.5 w-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
               {bundle.roiHook}
             </p>
+
+            {isProductBundle && (
+              <div className="mt-8 rounded-2xl border border-blue-300 bg-gradient-to-b from-blue-50 to-white p-5 shadow-lg shadow-blue-600/10 sm:p-6 dark:border-blue-500/30 dark:from-blue-950/60 dark:to-neutral-900">
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-extrabold tracking-tight text-neutral-900 sm:text-5xl dark:text-white">
+                    {formatPrice(bundle.oneTimeEur, currency)}
+                  </span>
+                  {savingsEur > 0 && (
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
+                      {saveLabel} {formatPrice(savingsEur, currency)}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                  {oneTimeNote}
+                </p>
+                <a
+                  href="#upsells"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 sm:text-base"
+                >
+                  {bundle.cta.primary}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 10a.75.75 0 0 1 .75-.75h6.638L10.23 7.29a.75.75 0 1 1 1.04-1.08l3.5 3.25a.75.75 0 0 1 0 1.08l-3.5 3.25a.75.75 0 1 1-1.04-1.08l2.158-1.96H5.75A.75.75 0 0 1 5 10Z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </a>
+              </div>
+            )}
           </div>
 
-          {/* Pricing column. Big bold price, retainer note underneath,
-              "you save" pill aligned right when present. The pill is a
-              priced anchor — visitors who scroll no further than the
-              hero already see the comparative value. */}
+          {heroImage ? (
+            <MarketingImage
+              src={heroImage.src}
+              alt={heroImage.alt}
+              width={heroImage.width}
+              height={heroImage.height}
+              priority
+              className="h-auto w-full rounded-2xl shadow-xl shadow-blue-600/10 ring-1 ring-neutral-200/80 dark:ring-neutral-700/50"
+            />
+          ) : (
+          /* Pricing column for non-product bundles (Enterprise). */
           <div className="rounded-2xl border border-blue-300 bg-gradient-to-b from-blue-50 to-white p-6 shadow-2xl shadow-blue-600/15 sm:p-8 dark:border-blue-500/30 dark:from-blue-950/60 dark:to-neutral-900 dark:shadow-blue-600/20">
             <div className="flex items-baseline gap-3">
               <span className="text-5xl font-extrabold tracking-tight text-neutral-900 sm:text-6xl dark:text-white">
@@ -292,9 +375,243 @@ function Hero({
               {t(DICT.cta.talkFirst)}
             </a>
           </div>
+          )}
         </div>
+
+        {isProductBundle && (
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a
+              href={CALENDLY_URL}
+              data-pixel-lead
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 px-6 py-3 text-sm font-semibold text-neutral-900 transition-colors hover:border-neutral-500 dark:border-neutral-700 dark:text-white dark:hover:border-neutral-500"
+            >
+              {t(DICT.cta.talkFirst)}
+            </a>
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+// ---------------------------------------------------------------------
+// Startup / Scale-Up — product-style landing blocks
+// ---------------------------------------------------------------------
+
+function ProductBundleSections({
+  variant,
+  locale,
+  ctaLabel,
+}: {
+  variant: "startup" | "scaleup";
+  locale: Locale;
+  ctaLabel: string;
+}) {
+  const t = createT(locale);
+  const steps = [
+    DICT.bundleLanding.step1,
+    DICT.bundleLanding.step2,
+    DICT.bundleLanding.step3,
+    DICT.bundleLanding.step4,
+  ];
+  const whyWorks = [
+    variant === "startup"
+      ? DICT.bundleLanding.whyWorksStartup1
+      : DICT.bundleLanding.whyWorksScaleup1,
+    variant === "startup"
+      ? DICT.bundleLanding.whyWorksStartup2
+      : DICT.bundleLanding.whyWorksScaleup2,
+  ];
+
+  return (
+    <>
+      <section
+        aria-labelledby={`${variant}-why-works`}
+        className="border-b border-neutral-200 bg-neutral-50 py-10 dark:border-neutral-800 dark:bg-neutral-900/50"
+      >
+        <div className="mx-auto max-w-5xl px-6">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t(DICT.bundleLanding.whyWorksKicker)}
+          </p>
+          <h2
+            id={`${variant}-why-works`}
+            className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl"
+          >
+            {t(DICT.bundleLanding.whyWorksHeadline)}
+          </h2>
+          <ul className="mt-6 space-y-3">
+            {whyWorks.map((item, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-3 text-base text-neutral-700 dark:text-neutral-300"
+              >
+                <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+                  ✓
+                </span>
+                {t(item)}
+              </li>
+            ))}
+          </ul>
+          {variant === "startup" && (
+            <div className="mt-8 grid gap-6 sm:grid-cols-3">
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                  {t(DICT.home.trustResult1)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                  {t(DICT.home.trustResult2)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                  {t(DICT.home.trustResult3)}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section
+        aria-labelledby={`${variant}-before-after`}
+        className="border-b border-neutral-200 bg-white py-12 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.beforeAfterKicker)}
+            </p>
+            <h2
+              id={`${variant}-before-after`}
+              className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl"
+            >
+              {t(DICT.home.beforeAfterHeadline)}
+            </h2>
+          </div>
+          <div className="mt-8">
+            <MarketingImage
+              src={MARKETING_IMAGES.beforeAfter.src}
+              alt={MARKETING_IMAGES.beforeAfter.alt}
+              width={MARKETING_IMAGES.beforeAfter.width}
+              height={MARKETING_IMAGES.beforeAfter.height}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby={`${variant}-results`}
+        className="border-b border-neutral-200 bg-neutral-50 py-12 dark:border-neutral-800 dark:bg-neutral-900/50"
+      >
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="grid items-center gap-8 lg:grid-cols-2">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                {t(DICT.home.trustResultsKicker)}
+              </p>
+              <h2
+                id={`${variant}-results`}
+                className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white"
+              >
+                {t(DICT.home.trustResultsHeadline)}
+              </h2>
+              <ul className="mt-5 space-y-3 text-base text-neutral-700 dark:text-neutral-300">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult1)}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult2)}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult3)}
+                </li>
+              </ul>
+            </div>
+            <MarketingImage
+              src={MARKETING_IMAGES.relaxedResults.src}
+              alt={MARKETING_IMAGES.relaxedResults.alt}
+              width={MARKETING_IMAGES.relaxedResults.width}
+              height={MARKETING_IMAGES.relaxedResults.height}
+              className="mx-auto max-w-sm rounded-2xl shadow-lg ring-1 ring-neutral-200 dark:ring-neutral-700"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby={`${variant}-how-it-works`}
+        className="border-b border-neutral-200 bg-white py-12 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t(DICT.bundleLanding.howItWorksKicker)}
+          </p>
+          <h2
+            id={`${variant}-how-it-works`}
+            className="mt-3 text-2xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-3xl"
+          >
+            {t(DICT.bundleLanding.howItWorksHeadline)}
+          </h2>
+          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step, i) => (
+              <li
+                key={i}
+                className="rounded-xl border border-neutral-200 bg-white p-5 text-left dark:border-neutral-700 dark:bg-neutral-900"
+              >
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                  {i + 1}
+                </span>
+                <p className="mt-3 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                  {t(step)}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-10">
+            <MarketingImage
+              src={MARKETING_IMAGES.benefitsCards.src}
+              alt={MARKETING_IMAGES.benefitsCards.alt}
+              width={MARKETING_IMAGES.benefitsCards.width}
+              height={MARKETING_IMAGES.benefitsCards.height}
+              className="mx-auto max-w-3xl"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        aria-labelledby={`${variant}-guarantee`}
+        className="border-b border-neutral-200 bg-neutral-50 py-10 dark:border-neutral-800 dark:bg-neutral-900/50"
+      >
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t(DICT.bundleLanding.guaranteeKicker)}
+          </p>
+          <h2
+            id={`${variant}-guarantee`}
+            className="mt-3 text-xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-2xl"
+          >
+            {t(DICT.bundleLanding.guaranteeHeadline)}
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+            {t(DICT.bundleLanding.guaranteeBody)}
+          </p>
+          <a
+            href="#upsells"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
+          >
+            {ctaLabel} →
+          </a>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -306,10 +623,12 @@ function Inclusions({
   bundle,
   currency,
   locale,
+  showProductVisual = false,
 }: {
   bundle: Bundle;
   currency: Currency;
   locale: Locale;
+  showProductVisual?: boolean;
 }) {
   const t = createT(locale);
   // Resolve every line into a render-friendly shape upfront so the JSX
@@ -387,6 +706,18 @@ function Inclusions({
       <p className="mt-2 max-w-2xl text-sm text-neutral-600 dark:text-neutral-400">
         {t(DICT.bundleDetail.inclusionsSub)}
       </p>
+
+      {showProductVisual && (
+        <div className="mt-6">
+          <MarketingImage
+            src={MARKETING_IMAGES.whatsIncludedIcons.src}
+            alt={MARKETING_IMAGES.whatsIncludedIcons.alt}
+            width={MARKETING_IMAGES.whatsIncludedIcons.width}
+            height={MARKETING_IMAGES.whatsIncludedIcons.height}
+            className="mx-auto max-w-2xl"
+          />
+        </div>
+      )}
 
       <ul className="mt-6 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-800 dark:border-neutral-800 dark:bg-neutral-900">
         {rows.map((r, i) => (

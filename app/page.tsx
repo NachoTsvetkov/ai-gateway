@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SalesAssistant } from "components/ai/sales-assistant";
+import { MarketingImage } from "components/marketing/marketing-image";
 import { formatPrice, formatPriceK, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import {
@@ -11,6 +12,7 @@ import { type Bundle, getLocalizedBundles } from "lib/bundles-data";
 import { detectLocale } from "lib/i18n/locale.server";
 import { type Locale, createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { MARKETING_IMAGES } from "lib/marketing-images";
 
 // SEO metadata for the homepage. Kept in EUR-English — search engines
 // crawl from various IPs and the SERP description should be stable.
@@ -255,8 +257,10 @@ export default async function HomePage() {
         {/* Bottom-left violet glow — softer secondary tint. */}
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-violet-500/10 via-transparent to-transparent dark:from-violet-600/15" />
 
-        <div className="relative mx-auto max-w-5xl px-6 py-20 text-center sm:py-28 lg:py-32">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300">
+        <div className="relative mx-auto max-w-6xl px-6 py-14 sm:py-20 lg:py-24">
+          <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-12">
+            <div className="text-center lg:text-left">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-100 px-4 py-1.5 text-sm text-green-800 dark:border-green-500/30 dark:bg-green-500/10 dark:text-green-300 lg:mb-8">
             <span className="h-2 w-2 animate-pulse rounded-full bg-green-500 dark:bg-green-400" />
             {t(DICT.status.availableForProjects)}
           </div>
@@ -295,9 +299,9 @@ export default async function HomePage() {
             {t(DICT.home.heroSubAfter)}
           </p>
 
-          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
             <Link
-              href="#bundles"
+              href="/bundles/startup"
               className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all hover:bg-blue-500"
             >
               {t(DICT.cta.seeMoneyBundles)}
@@ -315,18 +319,15 @@ export default async function HomePage() {
                 />
               </svg>
             </Link>
-            <a
-              href={CALENDLY_URL}
-              data-pixel-lead
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/free-ai-audits/win-free-website"
               className="inline-flex items-center gap-2 rounded-full border border-neutral-300 px-7 py-3.5 text-sm font-semibold text-neutral-700 transition-all hover:border-neutral-500 hover:text-neutral-900 dark:border-neutral-600 dark:text-neutral-200 dark:hover:border-neutral-400 dark:hover:text-white"
             >
-              {t(DICT.cta.book15MinTalk)}
-            </a>
+              {t(DICT.cta.enterGiveaway)}
+            </Link>
           </div>
 
-          <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-200 bg-white/70 p-5 text-left backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/40">
+          <div className="mx-auto mt-9 max-w-md rounded-2xl border border-neutral-200 bg-white/70 p-5 text-left backdrop-blur-sm dark:border-neutral-700/50 dark:bg-neutral-900/40 lg:mx-0">
             <p className="text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400">
               {t(DICT.home.heroPreviewKicker)}
             </p>
@@ -356,9 +357,140 @@ export default async function HomePage() {
             </ul>
           </div>
 
-          <p className="mt-8 text-xs text-neutral-600 sm:text-sm dark:text-neutral-400">
+          <p className="mt-8 text-xs text-neutral-600 sm:text-sm dark:text-neutral-400 lg:text-left">
             {t(DICT.home.heroFooter)}
           </p>
+            </div>
+
+            <div className="mx-auto max-w-lg lg:max-w-none">
+              <MarketingImage
+                src={MARKETING_IMAGES.heroGrowth.src}
+                alt={MARKETING_IMAGES.heroGrowth.alt}
+                width={MARKETING_IMAGES.heroGrowth.width}
+                height={MARKETING_IMAGES.heroGrowth.height}
+                priority
+                className="h-auto w-full rounded-2xl shadow-xl shadow-blue-600/10 ring-1 ring-neutral-200/80 dark:ring-neutral-700/50"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BEFORE / AFTER ------------------------------------------------ */}
+      <section
+        aria-labelledby="before-after-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900/50"
+      >
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+              {t(DICT.home.beforeAfterKicker)}
+            </p>
+            <h2
+              id="before-after-heading"
+              className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+            >
+              {t(DICT.home.beforeAfterHeadline)}
+            </h2>
+          </div>
+          <div className="mt-10">
+            <MarketingImage
+              src={MARKETING_IMAGES.beforeAfter.src}
+              alt={MARKETING_IMAGES.beforeAfter.alt}
+              width={MARKETING_IMAGES.beforeAfter.width}
+              height={MARKETING_IMAGES.beforeAfter.height}
+              className="h-auto w-full rounded-2xl shadow-lg ring-1 ring-neutral-200 dark:ring-neutral-700"
+            />
+          </div>
+          <div className="mt-10 grid gap-8 sm:grid-cols-2">
+            <div>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                {t(DICT.home.beforeAfterRealityTitle)}
+              </h3>
+              <ul className="mt-4 space-y-2 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                <li>{t(DICT.home.beforeAfterReality1)}</li>
+                <li>{t(DICT.home.beforeAfterReality2)}</li>
+                <li>{t(DICT.home.beforeAfterReality3)}</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+                {t(DICT.home.beforeAfterSmartTitle)}
+              </h3>
+              <p className="mt-4 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                {t(DICT.home.beforeAfterSmart)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* BENEFITS ----------------------------------------------------- */}
+      <section
+        aria-labelledby="benefits-heading"
+        className="border-t border-neutral-200 bg-white py-16 dark:border-neutral-800 dark:bg-neutral-950"
+      >
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+            {t(DICT.home.benefitsKicker)}
+          </p>
+          <h2
+            id="benefits-heading"
+            className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white sm:text-4xl"
+          >
+            {t(DICT.home.benefitsHeadline)}
+          </h2>
+          <div className="mt-10">
+            <MarketingImage
+              src={MARKETING_IMAGES.benefitsCards.src}
+              alt={MARKETING_IMAGES.benefitsCards.alt}
+              width={MARKETING_IMAGES.benefitsCards.width}
+              height={MARKETING_IMAGES.benefitsCards.height}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* TRUST / RESULTS VISUAL --------------------------------------- */}
+      <section
+        aria-labelledby="trust-visual-heading"
+        className="border-t border-neutral-200 bg-neutral-50 py-16 dark:border-neutral-800 dark:bg-neutral-900/50"
+      >
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                {t(DICT.home.trustResultsKicker)}
+              </p>
+              <h2
+                id="trust-visual-heading"
+                className="mt-3 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white"
+              >
+                {t(DICT.home.trustResultsHeadline)}
+              </h2>
+              <ul className="mt-6 space-y-3 text-base text-neutral-700 dark:text-neutral-300">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult1)}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult2)}
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 text-blue-600 dark:text-blue-400">✓</span>
+                  {t(DICT.home.trustResult3)}
+                </li>
+              </ul>
+            </div>
+            <MarketingImage
+              src={MARKETING_IMAGES.relaxedResults.src}
+              alt={MARKETING_IMAGES.relaxedResults.alt}
+              width={MARKETING_IMAGES.relaxedResults.width}
+              height={MARKETING_IMAGES.relaxedResults.height}
+              className="mx-auto max-w-md rounded-2xl shadow-lg ring-1 ring-neutral-200 dark:ring-neutral-700"
+            />
+          </div>
         </div>
       </section>
 
@@ -503,6 +635,9 @@ export default async function HomePage() {
                 {t(DICT.home.bundlesIntroMid)}
               </span>
               {t(DICT.home.bundlesIntroEnd)}
+            </p>
+            <p className="mt-3 text-sm font-medium text-blue-700 dark:text-blue-400">
+              {t(DICT.home.bundlesRecommendation)}
             </p>
           </div>
 
