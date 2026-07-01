@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { formatPrice, type Currency } from "lib/currency";
 import type { Buyable } from "lib/buyable";
+import { CONVERSION_KIT_CHECKOUT_PATH } from "lib/digital-products-data";
 import { track } from "lib/pixel/client";
+import { DigitalProductLegalNotice } from "components/checkout/legal-notice";
 
 type Props = {
   buyable: Buyable;
@@ -17,7 +19,7 @@ export function DigitalProductBuy({
   currency,
   className = "",
 }: Props) {
-  const checkoutHref = `/checkout?${buyable.searchParams.toString()}`;
+  const checkoutHref = CONVERSION_KIT_CHECKOUT_PATH;
   const price = formatPrice(buyable.oneTimeEur, currency);
 
   return (
@@ -47,7 +49,7 @@ export function DigitalProductBuy({
               currency,
             });
           }}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 sm:w-auto sm:text-lg"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 active:bg-blue-700 sm:w-auto sm:py-4 sm:text-lg"
         >
           {buyable.cta.checkout}
         </Link>
@@ -55,6 +57,7 @@ export function DigitalProductBuy({
       <p className="mt-4 text-center text-xs text-neutral-500 dark:text-neutral-500 sm:text-left">
         {buyable.cta.helper}
       </p>
+      <DigitalProductLegalNotice className="mt-3 text-center sm:text-left" />
     </div>
   );
 }

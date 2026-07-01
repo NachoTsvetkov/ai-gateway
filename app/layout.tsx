@@ -2,10 +2,10 @@ import { CartProvider } from "components/cart/cart-context";
 import { Navbar, type NavbarLabels } from "components/layout/navbar";
 import { NavbarGate } from "components/layout/navbar/navbar-gate";
 import { AnalyticsRoot } from "components/analytics/analytics-root";
-import { FreeGuideExitOffer } from "components/marketing/free-guide-exit-offer";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
 import { ReactNode } from "react";
+import type { Viewport } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { baseUrl } from "lib/utils";
@@ -33,7 +33,17 @@ const HIDE_NAVBAR_ON: ReadonlyArray<string> = [
   "/projects/boutique-fashion-brand",
   "/product",
   "/search",
+  // Paid Meta LP + checkout — single-CTA funnel, no site nav exits.
+  "/shopify-conversion-kit",
+  "/checkout",
+  "/conversion-kit-terms",
 ];
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata = {
   metadataBase: new URL(baseUrl),
@@ -137,12 +147,6 @@ export default async function RootLayout({
               privacyPolicyHref: "/privacy-policy",
               privacyPolicyLabel: DICT.consent.privacyPolicy[locale],
             }}
-          />
-          <FreeGuideExitOffer
-            title={DICT.giveaway.exitOfferTitle[locale]}
-            body={DICT.giveaway.exitOfferBody[locale]}
-            ctaLabel={DICT.giveaway.exitOfferCta[locale]}
-            giveawayLabel={DICT.giveaway.exitOfferGiveaway[locale]}
           />
         </CartProvider>
       </body>

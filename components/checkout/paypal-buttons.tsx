@@ -54,6 +54,7 @@ type Props = {
     bundle?: string;
     service?: string;
     tier?: string;
+    product?: string;
     upsells?: string;
   };
   /** Live values from the form. Wrapped in a getter so each PayPal

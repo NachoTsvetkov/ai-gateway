@@ -4,6 +4,9 @@
 
 export type DigitalProductId = "shopify-conversion-kit";
 
+/** Dedicated PayPal checkout route (not generic /checkout). */
+export const CONVERSION_KIT_CHECKOUT_PATH = "/shopify-conversion-kit/checkout";
+
 export type DigitalProduct = {
   id: DigitalProductId;
   name: string;

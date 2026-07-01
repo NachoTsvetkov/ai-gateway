@@ -3,7 +3,7 @@
 **Product:** Shopify Conversion Leak Fix Kit  
 **Price:** $37 USD  
 **Landing page:** `https://[YOUR-DOMAIN]/shopify-conversion-kit`  
-**Checkout:** `?product=shopify-conversion-kit` (via LP CTA)
+**Checkout:** `/shopify-conversion-kit/checkout` (PayPal)
 
 ---
 

@@ -25,6 +25,7 @@ type CreateOrderBody = {
     bundle?: string;
     service?: string;
     tier?: string;
+    product?: string;
     upsells?: string;
   };
   customer: CheckoutCustomer;

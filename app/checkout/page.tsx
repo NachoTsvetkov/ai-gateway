@@ -14,6 +14,7 @@
 // landing screen instead of a 404.
 
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   type Buyable,
   resolveBuyableFromSearchParams,
@@ -29,6 +30,7 @@ import { detectLocale } from "lib/i18n/locale.server";
 import { type Locale, createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
 import { CheckoutForm } from "components/checkout/checkout-form";
+import { CONVERSION_KIT_CHECKOUT_PATH } from "lib/digital-products-data";
 
 // Locale-aware metadata: a static `metadata` export always renders in
 // English even when the visitor's cookie says BG, leaking
@@ -63,9 +65,13 @@ export default async function CheckoutPage({
   searchParams: Promise<SearchParams>;
 }) {
   const sp = await searchParams;
-  // Resolve currency + locale in parallel — neither depends on the
-  // other and both reads are cheap, but stacking them serially adds
-  // ~50ms to TTFB on warm SSR.
+
+  // Digital kit uses its own PayPal checkout — not the bundle picker.
+  if (sp.product === "shopify-conversion-kit") {
+    redirect(CONVERSION_KIT_CHECKOUT_PATH);
+  }
+
+  // Resolve currency + locale in parallel
   const [currency, locale] = await Promise.all([
     detectCurrency(),
     detectLocale(),

@@ -46,6 +46,7 @@ import {
   type CheckoutCustomerInput,
   type PayPalButtonsKind,
 } from "./paypal-buttons";
+import { DigitalProductLegalNotice } from "./legal-notice";
 
 const NACHO_EMAIL = "nacho.tsvetkov@gmail.com";
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
@@ -111,6 +112,7 @@ export function CheckoutForm({
 
   const hasRetainer =
     buyable.retainerEur !== undefined && buyable.retainerEur > 0;
+  const isDigitalProduct = buyable.kind === "digital_product";
   const paypalKind: PayPalButtonsKind = hasRetainer ? "subscription" : "order";
   const paypalEnabled = !!paypalClientId;
 
@@ -141,36 +143,56 @@ export function CheckoutForm({
 
   const getCustomer = useCallback((): CheckoutCustomerInput => {
     const c = formRef.current;
+    const email = c.email.trim();
+    const storeUrl = c.business.trim();
+    if (isDigitalProduct) {
+      const localPart = email.split("@")[0] ?? "buyer";
+      return {
+        name: localPart,
+        business: storeUrl,
+        email,
+        phone: undefined,
+        notes: undefined,
+      };
+    }
     return {
       name: c.name.trim(),
       business: c.business.trim(),
-      email: c.email.trim(),
+      email,
       phone: c.phone.trim() || undefined,
       notes: c.notes.trim() || undefined,
     };
-  }, []);
+  }, [isDigitalProduct]);
 
   const isFormValid = useCallback(() => {
     const c = formRef.current;
-    const ok =
-      c.name.trim().length > 0 &&
-      c.business.trim().length > 0 &&
-      isLikelyEmail(c.email);
+    const ok = isDigitalProduct
+      ? c.business.trim().length > 0 && isLikelyEmail(c.email)
+      : c.name.trim().length > 0 &&
+        c.business.trim().length > 0 &&
+        isLikelyEmail(c.email);
     if (!ok) setShowFormInvalid(true);
     else setShowFormInvalid(false);
     return ok;
-  }, []);
+  }, [isDigitalProduct]);
 
   // Build the buyable's URL search params object once — the API uses
   // these to rebuild the buyable server-side without trusting client
   // totals. We drop the keys' types here because URLSearchParams
   // entries are strings.
   const searchParams = useMemo(() => {
-    const out: { bundle?: string; service?: string; tier?: string; upsells?: string } = {};
+    const out: {
+      bundle?: string;
+      service?: string;
+      tier?: string;
+      product?: string;
+      upsells?: string;
+    } = {};
     for (const [k, v] of buyable.searchParams) {
       if (k === "bundle") out.bundle = v;
       else if (k === "service") out.service = v;
       else if (k === "tier") out.tier = v;
+      else if (k === "product") out.product = v;
     }
     if (upsells.length > 0) out.upsells = upsells.map((u) => u.id).join(",");
     return out;
@@ -374,7 +396,50 @@ export function CheckoutForm({
     locale === "bg" ? "Детайли за плащане" : "Checkout details";
 
   // Buyer-detail fields shared by both paths.
-  const buyerFields = (
+  const digitalBuyerFields = (
+    <>
+      <label className="block">
+        <span className={labelClass}>Email for download receipt</span>
+        <input
+          type="email"
+          name="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (showFormInvalid) setShowFormInvalid(false);
+          }}
+          className={fieldClass}
+          placeholder="you@yourstore.com"
+        />
+        <span className="mt-1.5 block text-xs text-neutral-500 dark:text-neutral-500">
+          Instant download link appears on the next page after payment.
+        </span>
+      </label>
+
+      <label className="block">
+        <span className={labelClass}>Shopify store URL</span>
+        <input
+          type="url"
+          name="business"
+          required
+          autoComplete="url"
+          value={business}
+          onChange={(e) => {
+            setBusiness(e.target.value);
+            if (showFormInvalid) setShowFormInvalid(false);
+          }}
+          className={fieldClass}
+          placeholder="yourstore.com or myshopify.com/admin"
+        />
+      </label>
+    </>
+  );
+
+  const buyerFields = isDigitalProduct ? (
+    digitalBuyerFields
+  ) : (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
@@ -518,31 +583,37 @@ export function CheckoutForm({
           </p>
         )}
 
-        <div className="border-t border-neutral-200 pt-4 text-center dark:border-neutral-800">
-          <p className="text-xs text-neutral-500 dark:text-neutral-500">
-            {t(DICT.checkout.paypalOrFallback)}{" "}
-            <a
-              href={mailtoHref}
-              className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
-            >
-              {t(DICT.checkout.paypalOrFallbackLink)}
-            </a>
-          </p>
-        </div>
+        {isDigitalProduct ? (
+          <DigitalProductLegalNotice className="text-center" />
+        ) : (
+          <>
+            <div className="border-t border-neutral-200 pt-4 text-center dark:border-neutral-800">
+              <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                {t(DICT.checkout.paypalOrFallback)}{" "}
+                <a
+                  href={mailtoHref}
+                  className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
+                >
+                  {t(DICT.checkout.paypalOrFallbackLink)}
+                </a>
+              </p>
+            </div>
 
-        <p className="text-center text-xs text-neutral-500 dark:text-neutral-500">
-          {t(DICT.checkout.formBookFirstPrefix)}
-          <a
-            href={CALENDLY_URL}
-            data-pixel-lead
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
-          >
-            {t(DICT.checkout.formBookFirstLink)}
-          </a>
-          {t(DICT.checkout.formBookFirstSuffix)}
-        </p>
+            <p className="text-center text-xs text-neutral-500 dark:text-neutral-500">
+              {t(DICT.checkout.formBookFirstPrefix)}
+              <a
+                href={CALENDLY_URL}
+                data-pixel-lead
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
+              >
+                {t(DICT.checkout.formBookFirstLink)}
+              </a>
+              {t(DICT.checkout.formBookFirstSuffix)}
+            </p>
+          </>
+        )}
       </div>
     );
   }
@@ -585,19 +656,23 @@ export function CheckoutForm({
           : t(DICT.checkout.formMailtoNote)}
       </p>
 
-      <p className="text-center text-xs text-neutral-500 dark:text-neutral-500">
-        {t(DICT.checkout.formBookFirstPrefix)}
-        <a
-          href={CALENDLY_URL}
-          data-pixel-lead
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
-        >
-          {t(DICT.checkout.formBookFirstLink)}
-        </a>
-        {t(DICT.checkout.formBookFirstSuffix)}
-      </p>
+      {isDigitalProduct ? (
+        <DigitalProductLegalNotice className="text-center" />
+      ) : (
+        <p className="text-center text-xs text-neutral-500 dark:text-neutral-500">
+          {t(DICT.checkout.formBookFirstPrefix)}
+          <a
+            href={CALENDLY_URL}
+            data-pixel-lead
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-blue-600 underline underline-offset-2 hover:text-blue-500 dark:text-blue-400"
+          >
+            {t(DICT.checkout.formBookFirstLink)}
+          </a>
+          {t(DICT.checkout.formBookFirstSuffix)}
+        </p>
+      )}
     </form>
   );
 }
