@@ -17,7 +17,7 @@ export const OrderSchema = z.object({
     notes: z.string().optional(),
   }),
   buyable: z.object({
-    kind: z.enum(['bundle', 'service']),
+    kind: z.enum(['bundle', 'service', 'digital_product']),
     id: z.string().min(1),
     tier: z.number().int().nonnegative().optional(),
     name: z.string().min(1),

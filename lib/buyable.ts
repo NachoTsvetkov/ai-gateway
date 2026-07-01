@@ -25,6 +25,12 @@ import {
   getLocalizedUpsells,
 } from "./bundles-data";
 import {
+  type DigitalProduct,
+  type DigitalProductId,
+  DIGITAL_PRODUCTS,
+  getDigitalProduct,
+} from "./digital-products-data";
+import {
   type Service,
   type ServiceId,
   type ServicePrice,
@@ -37,7 +43,7 @@ import {
 // Buyable type
 // ----------------------------------------------------------------------
 
-export type BuyableKind = "bundle" | "service";
+export type BuyableKind = "bundle" | "service" | "digital_product";
 
 /**
  * A normalized buyable. After construction, downstream UI never has to
@@ -91,7 +97,30 @@ export type Buyable = {
   /** Same string the checkout form sends to the payment provider as
    *  `client_reference_id`. Stable across refreshes. */
   reference: string;
+  /** Optional Stripe Payment Link for one-click hosted checkout. */
+  stripePaymentLink?: string;
 };
+
+// ----------------------------------------------------------------------
+// Digital product → Buyable
+// ----------------------------------------------------------------------
+
+export function buyableFromDigitalProduct(product: DigitalProduct): Buyable {
+  const sp = new URLSearchParams();
+  sp.set("product", product.id);
+  return {
+    kind: "digital_product",
+    id: product.id,
+    name: product.name,
+    tagline: product.tagline,
+    oneTimeEur: product.oneTimeEur,
+    cta: product.cta,
+    detailsUrl: `/shopify-conversion-kit`,
+    searchParams: sp,
+    reference: `digital:${product.id}`,
+    stripePaymentLink: product.stripePaymentLink,
+  };
+}
 
 // ----------------------------------------------------------------------
 // Bundle → Buyable
@@ -262,9 +291,12 @@ function getServiceCta(
 
 const BUNDLE_IDS: ReadonlySet<string> = new Set(BUNDLES.map((b) => b.id));
 const SERVICE_IDS: ReadonlySet<string> = new Set(services.map((s) => s.id));
+const DIGITAL_PRODUCT_IDS: ReadonlySet<string> = new Set(
+  DIGITAL_PRODUCTS.map((p) => p.id),
+);
 
 export function resolveBuyableFromSearchParams(
-  sp: { bundle?: string; service?: string; tier?: string },
+  sp: { bundle?: string; service?: string; tier?: string; product?: string },
   locale: Locale = "en",
 ): Buyable | undefined {
   if (sp.bundle && BUNDLE_IDS.has(sp.bundle)) {
@@ -276,6 +308,11 @@ export function resolveBuyableFromSearchParams(
     const tier = parseTier(sp.tier);
     const svc = getLocalizedServiceById(sp.service as ServiceId, locale);
     return buyableFromService(svc, tier, locale);
+  }
+  if (sp.product && DIGITAL_PRODUCT_IDS.has(sp.product)) {
+    return buyableFromDigitalProduct(
+      getDigitalProduct(sp.product as DigitalProductId),
+    );
   }
   return undefined;
 }
@@ -314,6 +351,7 @@ export function getApplicableUpsells(
   locale: Locale = "en",
 ): ReadonlyArray<Upsell> {
   const localized = getLocalizedUpsellsForLocale(locale);
+  if (buyable.kind === "digital_product") return [];
   if (buyable.kind === "bundle") return localized;
   const sid = buyable.id as ServiceId;
   return localized.filter((u) => {

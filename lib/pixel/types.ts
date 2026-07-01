@@ -49,7 +49,13 @@ export type PixelCustomData = {
   /** "service" / "bundle" map cleanly to our funnel; "product" is
    *  here for symmetry with the demo Curated. shop if we ever decide
    *  to track it (currently excluded). */
-  content_type?: "product" | "service" | "bundle" | "page" | "audit";
+  content_type?:
+    | "product"
+    | "service"
+    | "bundle"
+    | "digital_product"
+    | "page"
+    | "audit";
   content_category?: string;
   /** Survey funnel: step just completed (2–4) on `SurveyStep`. */
   step?: number;

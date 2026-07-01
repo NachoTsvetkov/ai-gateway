@@ -1,36 +1,11 @@
-// /checkout/success — landing page after PayPal returns the buyer.
-//
-// PayPal hits this URL in two scenarios:
-//   1. After our SDK-driven `onApprove` handler (Smart Buttons popup
-//      flow). We redirect here client-side with ?type=order|subscription
-//      &id=<paypal id>&ref=<buyable reference>.
-//   2. After the buyer approves via PayPal's hosted approval. This is
-//      the path PayPal uses on LIVE-on-localhost or whenever the SDK
-//      falls back from postMessage to a top-level redirect. The
-//      redirect lands here in a new tab with one of these param sets:
-//        - Orders        : ?token=<orderId>&PayerID=<…>
-//        - Subscriptions : ?subscription_id=I-…&ba_token=BA-…
-//      We accept all of them and treat the presence of `subscription_id`
-//      as a strong signal we're rendering a subscription confirmation.
-//
-// To make the redirect-based flow render correctly without a round-trip
-// to PayPal's read API, we also include `?type=…&ref=…` in the
-// return_url itself when we create the order/subscription server-side
-// — PayPal preserves existing query params and appends its own.
-//
-// The page is intentionally informational, not transactional: the
-// money is already captured server-side by the SDK flow before the
-// redirect. We simply confirm + show the reference + offer a kickoff
-// booking link.
-
 import Link from "next/link";
 import { detectLocale } from "lib/i18n/locale.server";
 import { createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import { getDigitalProductByReference } from "lib/digital-products-data";
 
-// Locale-aware so the <title> + <meta description> match the
-// body copy (cookie wins over country here, same as the rest of the
-// page). Static metadata exports leak English into BG renders.
+const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
+
 export async function generateMetadata() {
   const locale = await detectLocale();
   return locale === "bg"
@@ -44,17 +19,12 @@ export async function generateMetadata() {
       };
 }
 
-const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
-
 type SearchParams = {
-  // Set explicitly by our SDK-driven onApprove redirect.
   type?: string;
   id?: string;
   ref?: string;
-  // PayPal hosted-approval — Orders v2.
   token?: string;
   PayerID?: string;
-  // PayPal hosted-approval — Subscriptions v1.
   subscription_id?: string;
   ba_token?: string;
 };
@@ -68,19 +38,12 @@ export default async function CheckoutSuccessPage({
   const locale = await detectLocale();
   const t = createT(locale);
 
-  // The presence of `subscription_id` is dispositive: PayPal only
-  // adds it on the subscription redirect path. Fall back to the
-  // explicit `type` param (set by our SDK onApprove redirect) so
-  // both flows resolve to the same UI without a round-trip.
   const isSubscription =
     typeof sp.subscription_id === "string" || sp.type === "subscription";
 
-  // Resolve a single PayPal-side identifier to display, in priority
-  // order: our explicit id > subscription_id > order token. We don't
-  // surface ba_token / PayerID — they're internal to PayPal's flow
-  // and not useful to the buyer.
   const paypalId = sp.id ?? sp.subscription_id ?? sp.token ?? null;
   const reference = sp.ref ?? null;
+  const digitalProduct = getDigitalProductByReference(reference);
 
   return (
     <main className="bg-neutral-50 dark:bg-neutral-950">
@@ -102,13 +65,60 @@ export default async function CheckoutSuccessPage({
         </div>
 
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
-          {isSubscription
-            ? t(DICT.checkout.successSubscriptionTitle)
-            : t(DICT.checkout.successOrderTitle)}
+          {digitalProduct
+            ? "Your kit is ready"
+            : isSubscription
+              ? t(DICT.checkout.successSubscriptionTitle)
+              : t(DICT.checkout.successOrderTitle)}
         </h1>
         <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
-          {t(DICT.checkout.successBody)}
+          {digitalProduct
+            ? "Payment confirmed. Download everything below — bookmark this page."
+            : t(DICT.checkout.successBody)}
         </p>
+
+        {digitalProduct && (
+          <section
+            aria-labelledby="downloads-heading"
+            className="mx-auto mt-8 max-w-md rounded-xl border border-blue-200 bg-blue-50 p-6 text-left dark:border-blue-500/30 dark:bg-blue-950/20"
+          >
+            <h2
+              id="downloads-heading"
+              className="text-lg font-bold text-neutral-900 dark:text-white"
+            >
+              Download your kit
+            </h2>
+            <ul className="mt-4 space-y-3">
+              {digitalProduct.downloads.map((file) => (
+                <li key={file.href}>
+                  <a
+                    href={file.href}
+                    download
+                    className="block rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-blue-400 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-blue-500/50"
+                  >
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                      {file.label} ↓
+                    </span>
+                    {file.description && (
+                      <span className="mt-0.5 block text-xs text-neutral-600 dark:text-neutral-400">
+                        {file.description}
+                      </span>
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs text-neutral-600 dark:text-neutral-400">
+              Need help? Email{" "}
+              <a
+                href="mailto:nacho.tsvetkov@gmail.com"
+                className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+              >
+                nacho.tsvetkov@gmail.com
+              </a>
+            </p>
+          </section>
+        )}
 
         {(paypalId || reference) && (
           <dl className="mx-auto mt-8 grid max-w-sm gap-3 rounded-xl border border-neutral-200 bg-white p-5 text-left text-sm dark:border-neutral-800 dark:bg-neutral-900">
@@ -138,20 +148,22 @@ export default async function CheckoutSuccessPage({
         )}
 
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <a
-            href={CALENDLY_URL}
-            data-pixel-lead
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500"
-          >
-            {t(DICT.checkout.successBookCallLink)}
-          </a>
+          {!digitalProduct && (
+            <a
+              href={CALENDLY_URL}
+              data-pixel-lead
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500"
+            >
+              {t(DICT.checkout.successBookCallLink)}
+            </a>
+          )}
           <Link
-            href="/"
+            href={digitalProduct ? "/shopify-conversion-kit" : "/"}
             className="text-sm font-semibold text-neutral-700 underline-offset-2 hover:underline dark:text-neutral-300"
           >
-            {t(DICT.checkout.successHomeLink)}
+            {digitalProduct ? "Back to product page" : t(DICT.checkout.successHomeLink)}
           </Link>
         </div>
       </div>

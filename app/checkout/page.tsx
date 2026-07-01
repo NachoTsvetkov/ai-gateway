@@ -53,6 +53,7 @@ type SearchParams = {
   bundle?: string;
   service?: string;
   tier?: string;
+  product?: string;
   upsells?: string;
 };
 
@@ -97,7 +98,7 @@ export default async function CheckoutPage({
     buyable.kind === "bundle"
       ? getBundle(buyable.id as Parameters<typeof getBundle>[0])
           .stripePaymentLink
-      : undefined;
+      : buyable.stripePaymentLink;
 
   return (
     <main className="bg-neutral-50 dark:bg-neutral-950">
@@ -192,7 +193,9 @@ function OrderSummary({
             >
               {buyable.kind === "bundle"
                 ? t(DICT.cta.viewBundleIncludes)
-                : t(DICT.cta.viewServiceDetails)}
+                : buyable.kind === "digital_product"
+                  ? "View product details"
+                  : t(DICT.cta.viewServiceDetails)}
             </Link>
           </div>
           <p className="flex-none whitespace-nowrap font-mono text-sm font-semibold text-neutral-900 dark:text-white">
