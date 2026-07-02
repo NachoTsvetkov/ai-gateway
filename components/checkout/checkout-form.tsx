@@ -79,6 +79,10 @@ type Props = {
   paypalClientId?: string;
   /** Sandbox vs live — keeps the SDK on the matching environment. */
   paypalEnv?: "sandbox" | "live";
+  /** Server-evaluated: simulate purchase without PayPal (local dev only). */
+  devCheckoutEnabled?: boolean;
+  /** Server-evaluated: show link to preview library login (local dev only). */
+  showLibraryPreviewLink?: boolean;
 };
 
 export function CheckoutForm({
@@ -90,6 +94,8 @@ export function CheckoutForm({
   locale = DEFAULT_LOCALE,
   paypalClientId,
   paypalEnv = "sandbox",
+  devCheckoutEnabled = false,
+  showLibraryPreviewLink = false,
 }: Props) {
   const t = createT(locale);
   const [email, setEmail] = useState("");
@@ -626,10 +632,6 @@ export function CheckoutForm({
   // Digital product without PayPal — don't fall through to mailto
   // ----------------------------------------------------------------
 
-  const devCheckoutEnabled =
-    process.env.NODE_ENV === "development" &&
-    process.env.NEXT_PUBLIC_DIGITAL_PRODUCT_DEV_CHECKOUT === "1";
-
   function handleStripeDigitalCheckout() {
     if (!isFormValid() || !paymentLink) return;
     const url = new URL(paymentLink);
@@ -678,7 +680,7 @@ export function CheckoutForm({
           </button>
         ) : null}
 
-        {process.env.NODE_ENV === "development" && (
+        {showLibraryPreviewLink && (
           <p className="text-center text-xs text-neutral-600 dark:text-neutral-400">
             Or{" "}
             <a

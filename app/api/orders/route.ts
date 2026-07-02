@@ -21,6 +21,16 @@ export async function POST(request: NextRequest) {
     // Re-validate at the API boundary (untrusted input from browser on PayPal success)
     const parsed = OrderSchema.parse(body) as OrderData;
 
+    if (
+      process.env.NODE_ENV === "production" &&
+      parsed.paypal?.id?.startsWith("DEV-")
+    ) {
+      return NextResponse.json(
+        { error: { code: "FORBIDDEN", message: "Invalid payment proof" } },
+        { status: 403 },
+      );
+    }
+
     const { test } = QuerySchema.parse(Object.fromEntries(request.nextUrl.searchParams));
     const useTest = parseUseTestCollection(test, false);
 

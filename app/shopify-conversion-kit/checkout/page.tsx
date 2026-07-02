@@ -5,6 +5,10 @@ import { DigitalProductLegalNotice } from "components/checkout/legal-notice";
 import { buyableFromDigitalProduct } from "lib/buyable";
 import { formatPrice, type Currency } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import {
+  isDigitalProductDevCheckoutEnabled,
+  isDigitalProductLibraryPreviewEnabled,
+} from "lib/digital-product-dev.server";
 import { getDigitalProduct } from "lib/digital-products-data";
 
 export const metadata = {
@@ -16,6 +20,8 @@ export default async function ConversionKitCheckoutPage() {
   const currency = await detectCurrency();
   const product = getDigitalProduct("shopify-conversion-kit");
   const buyable = buyableFromDigitalProduct(product);
+  const devCheckoutEnabled = isDigitalProductDevCheckoutEnabled();
+  const showLibraryPreviewLink = isDigitalProductLibraryPreviewEnabled();
 
   return (
     <div className="bg-neutral-50 dark:bg-neutral-950">
@@ -79,6 +85,8 @@ export default async function ConversionKitCheckoutPage() {
             paypalEnv={
               process.env.PAYPAL_ENV === "live" ? "live" : "sandbox"
             }
+            devCheckoutEnabled={devCheckoutEnabled}
+            showLibraryPreviewLink={showLibraryPreviewLink}
           />
         </div>
 

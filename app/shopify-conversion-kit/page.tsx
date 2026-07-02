@@ -6,6 +6,7 @@ import { StickyMobileBuyBar } from "components/checkout/sticky-mobile-buy-bar";
 import { buyableFromDigitalProduct } from "lib/buyable";
 import { formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
+import { isDigitalProductLibraryPreviewEnabled } from "lib/digital-product-dev.server";
 import { getDigitalProduct } from "lib/digital-products-data";
 import { LIBRARY_BASE_PATH, LIBRARY_LOGIN_PATH } from "lib/digital-product-access";
 
@@ -164,9 +165,7 @@ export default async function ShopifyConversionKitPage({
   const product = getDigitalProduct("shopify-conversion-kit");
   const buyable = buyableFromDigitalProduct(product);
   const price = formatPrice(product.oneTimeEur, currency);
-  const showLibraryPreview =
-    process.env.NODE_ENV === "development" &&
-    process.env.DIGITAL_PRODUCT_LIBRARY_PREVIEW === "1";
+  const showLibraryPreview = isDigitalProductLibraryPreviewEnabled();
 
   return (
     <div className="bg-white pb-24 sm:pb-0 dark:bg-neutral-950">

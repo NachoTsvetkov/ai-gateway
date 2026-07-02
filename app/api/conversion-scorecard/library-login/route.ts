@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { isDigitalProductLibraryPreviewEnabled } from "lib/digital-product-dev.server";
 import {
   ACCESS_COOKIE_NAME,
   createLibraryEmailAccessToken,
@@ -42,11 +43,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (
-    !hasAccess &&
-    process.env.NODE_ENV !== "production" &&
-    process.env.DIGITAL_PRODUCT_LIBRARY_PREVIEW === "1"
-  ) {
+  if (!hasAccess && isDigitalProductLibraryPreviewEnabled()) {
     hasAccess = true;
   }
 
