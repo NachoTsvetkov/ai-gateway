@@ -40,7 +40,7 @@ const LEAKS = [
   },
   {
     title: "They don't trust the Buy button",
-    body: "New visitors need proof. No reviews or safe-pay signs near Buy? They wait.",
+    body: "New shoppers want proof before they buy. If reviews and safe checkout signs are missing by the Buy button, they leave.",
     fix: "Add star reviews, return policy, and safe checkout text right under the Buy button.",
   },
   {
@@ -278,10 +278,10 @@ export default async function ShopifyConversionKitPage({
             Ads get clicks. People still don&apos;t buy.
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
-            Most stores lose sales at the same five spots: hard checkout on
-            phones, shipping surprises, slow pages, no trust near Buy, and ads
-            that don&apos;t match the page. Spending more on ads without fixing
-            these just wastes money.
+            Most stores lose sales in the same five places: checkout is hard on
+            phones, shipping cost shocks people, pages load too slow, shoppers
+            see no proof by the Buy button, and the ad does not match the page.
+            More ad spend will not help until you fix those problems first.
           </p>
         </div>
       </section>
