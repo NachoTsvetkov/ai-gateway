@@ -1,0 +1,29 @@
+# Project-scoped Grok configuration for ai-gateway / my-shopify-ai
+# This file is loaded in addition to (and can override) ~/.grok/config.toml
+# See https://github.com/xai-org/grok for full schema.
+
+[plugins]
+# Project plugins are auto-discovered from .grok/plugins/ (the submodules below).
+# Add entries here only if you need to disable or force specific ones.
+# enabled = ["..."]
+# disabled = ["..."]
+
+# MCP servers provided by the installed plugins (vercel, chrome-devtools, superpowers, sentry declare them).
+# The plugin .mcp.json files are loaded automatically when the plugin is trusted.
+# [mcp_servers.vercel]
+# url = "https://mcp.vercel.com"
+# enabled = true
+#
+# [mcp_servers.sentry]
+# url = "https://mcp.sentry.dev/mcp"
+# enabled = true
+#
+# [mcp_servers.chrome-devtools]
+# command = "npx"
+# args = ["-y", "@modelcontextprotocol/server-chrome-devtools"]  # or whatever the exact stdio command; plugin handles discovery
+
+[permission]
+# Project-specific permission policy overrides (if any). Default is usually fine.
+# See docs on permissions-and-safety.
+
+# Marketplace is inherited from user config (xAI Official).
