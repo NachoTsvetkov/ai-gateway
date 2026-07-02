@@ -12,7 +12,7 @@ export default function ScorecardPage() {
     <ScorecardLibraryShell
       currentPath={`${LIBRARY_BASE_PATH}/scorecard`}
       title="15-minute leak scorecard"
-      subtitle="Rate Broken, Partial, or Working on your phone. Target 24+ out of 30."
+      subtitle="Rate Broken, Partial, or Working on your phone. Fix what is not Working first."
       showTrackerDownload={false}
     >
       <InteractiveScorecard />

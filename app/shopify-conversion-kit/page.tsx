@@ -51,7 +51,7 @@ const LEAKS = [
 ] as const;
 
 const INCLUDED = [
-  "Phone checklist — tap 0, 1, or 2. It saves your answers.",
+  "Phone scorecard — tap Broken, Partial, or Working. It saves your place.",
   "Simple guide: is it your ads or your checkout?",
   "5 fix guides — what to do first, step by step",
   "Ready-to-copy text for trust, shipping, and ads",
@@ -69,7 +69,7 @@ const FAQ = [
   },
   {
     q: "How do I get it after I pay?",
-    a: "You get a private web page. Open it on your phone. Tap through the checklist. Copy text with one tap.",
+    a: "You get a private web page. Open it on your phone. Go one step at a time. Your picks save as you go.",
   },
   {
     q: "How fast will I see more sales?",
@@ -82,10 +82,10 @@ const FAQ = [
 ] as const;
 
 const AUDIT_PREVIEW = [
-  { check: "Shop Pay or Apple Pay works", score: "0–2" },
-  { check: "Shipping cost shown early", score: "0–2" },
-  { check: "Reviews near the Buy button", score: "0–2" },
-  { check: "Checkout takes under 1 minute", score: "0–2" },
+  { check: "Shop Pay or Apple Pay works", score: "Partial" },
+  { check: "Shipping cost shown early", score: "Broken" },
+  { check: "Reviews near the Buy button", score: "Working" },
+  { check: "Checkout takes under 1 minute", score: "Partial" },
 ] as const;
 
 function ScorecardPreview() {
@@ -125,7 +125,7 @@ function ScorecardPreview() {
                 Check
               </th>
               <th className="px-4 py-2 text-right font-semibold text-neutral-900 dark:text-white">
-                Score
+                Your pick
               </th>
             </tr>
           </thead>
@@ -148,7 +148,7 @@ function ScorecardPreview() {
       </div>
 
       <p className="border-t border-neutral-200 bg-emerald-50 px-4 py-2.5 text-xs leading-relaxed text-emerald-900 dark:border-neutral-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-        30 checks · tap 0, 1, or 2 · saves on your phone
+        27 checks · tap Broken, Partial, or Working · saves on your phone
       </p>
     </div>
   );
@@ -235,7 +235,7 @@ export default async function ShopifyConversionKitPage({
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Tap 0, 1, or 2 on your phone — it saves
+              Tap Broken, Partial, or Working — it saves your place
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
@@ -300,7 +300,7 @@ export default async function ShopifyConversionKitPage({
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
             Built by someone who builds Shopify stores for a living. Most stores
-            with ads score under 18 out of 30 on the phone checklist.
+            with ads find several Broken or Partial scores on the phone checklist.
           </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
@@ -321,7 +321,10 @@ export default async function ShopifyConversionKitPage({
                   Not a boring PDF
                 </p>
                 <p className="mt-2 font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
-                  0–2<span className="text-base font-semibold"> checklist</span>
+                  Broken · Partial · Working
+                </p>
+                <p className="mt-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+                  scorecard
                 </p>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
                   Works on your phone · copy text · small ad test plan
@@ -346,7 +349,8 @@ export default async function ShopifyConversionKitPage({
             5 problems this checklist helps you fix
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            Score each 0, 1, or 2. Fix anything that scores 0 or 1 this week.
+            Pick Broken, Partial, or Working for each check. Fix anything that
+            is not Working this week.
           </p>
           <ol className="mt-8 space-y-4 sm:space-y-6">
             {LEAKS.map((leak, i) => (
