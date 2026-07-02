@@ -11,92 +11,92 @@ import { getDigitalProduct } from "lib/digital-products-data";
 import { LIBRARY_BASE_PATH, LIBRARY_LOGIN_PATH } from "lib/digital-product-access";
 
 export const metadata = {
-  title: "Shopify Paid-Traffic Leak Scorecard — Stop Bleeding Meta Ad Spend",
+  title: "Shop Fix Scorecard — Find Why Your Ads Don't Turn Into Sales",
   description:
-    "15-minute mobile scorecard for Shopify stores losing sales at checkout. Interactive scoring, fix playbooks, copy blocks, and $300 Meta test plan — $37, instant access.",
+    "Simple phone checklist for Shopify stores. See what's wrong in 15 minutes. Fix the big problems first. $37, instant access.",
   openGraph: {
     type: "website",
-    title: "Shopify Paid-Traffic Leak Scorecard",
+    title: "Shop Fix Scorecard",
     description:
-      "Find why paid traffic isn't buying — score your mobile checkout in 15 minutes and fix the highest-impact leaks first.",
+      "People click your ads but don't buy? This checklist shows why — on your phone, in 15 minutes.",
   },
 };
 
 const LEAKS = [
   {
-    title: "Mobile checkout friction",
-    body: "Extra fields, forced account creation, and tiny tap targets kill mobile buyers who were ready to pay.",
-    fix: "Enable Shop Pay / Apple Pay, collapse optional fields, and test checkout thumb-reach on a real phone.",
+    title: "Checkout is hard on phones",
+    body: "Too many boxes to fill. Hard to tap buttons. People give up.",
+    fix: "Turn on Shop Pay or Apple Pay. Hide extra fields. Try checkout on your own phone.",
   },
   {
-    title: "Surprise shipping at checkout",
-    body: "Traffic looks fine until the last step — then shipping or fees spike and carts abandon.",
-    fix: "Show shipping thresholds on the PDP, add a cart drawer estimate, and test free-shipping bars above the fold.",
+    title: "Shipping cost is a surprise",
+    body: "They like the product. Then shipping looks too high at the end. They leave.",
+    fix: "Show shipping early. Tell them how much for free shipping. Put it on the product page.",
   },
   {
-    title: "Slow mobile product pages",
-    body: "Every extra second on 4G costs conversions. Heavy themes and unoptimized hero images are common culprits.",
-    fix: "Compress hero images, defer non-critical apps, and aim for sub-3s LCP on your top 5 SKUs.",
+    title: "Your pages load slow on phones",
+    body: "Slow pages make people leave before they even read.",
+    fix: "Make pictures smaller. Remove apps you don't need. Test your top products on a phone.",
   },
   {
-    title: "Weak trust on the buy button",
-    body: "Paid traffic lands cold. If reviews, returns policy, and payment badges aren't visible near the CTA, hesitation wins.",
-    fix: "Add review snippets, delivery ETA, and secure-checkout copy directly under the Add to Cart button.",
+    title: "They don't trust the Buy button",
+    body: "New visitors need proof. No reviews or safe-pay signs near Buy? They wait.",
+    fix: "Add star reviews, return policy, and safe checkout text right under the Buy button.",
   },
   {
-    title: "No post-click message match",
-    body: "Your ad promises one outcome; the landing page sells something else. Bounce + zero conversion.",
-    fix: "Mirror ad headline on the landing hero, repeat the same offer, and remove nav clutter on paid landing pages.",
+    title: "Your ad and your page don't match",
+    body: "The ad says one thing. The page says another. People bounce.",
+    fix: "Use the same headline on the ad and the page. Keep the same offer.",
   },
 ] as const;
 
 const INCLUDED = [
-  "Interactive leak scorecard — tap 0–2 on your phone, auto-saves your score",
-  "Tracking or checkout? — 5-minute decision tree before you blame the ads",
-  "5 leak playbooks with Shopify-specific fix steps (priority order)",
-  "Copy-paste trust, shipping, and ad-match blocks (one-tap copy)",
-  "Weekly conversion tracker CSV + $300 Meta smoke test kill rules",
+  "Phone checklist — tap 0, 1, or 2. It saves your answers.",
+  "Simple guide: is it your ads or your checkout?",
+  "5 fix guides — what to do first, step by step",
+  "Ready-to-copy text for trust, shipping, and ads",
+  "Weekly tracker sheet + small $300 ad test plan",
 ] as const;
 
 const FAQ = [
   {
-    q: "Is this for beginners or experienced store owners?",
-    a: "Both. If you're already running Meta or Google ads and getting traffic but weak conversion rate, this scorecard is built for you. No agency required.",
+    q: "Is this for new store owners?",
+    a: "Yes. If you run Facebook or Google ads and get clicks but few sales, this is for you. You don't need an agency.",
   },
   {
     q: "Do I need Shopify Plus?",
-    a: "No. Everything applies to standard Shopify and Shopify Basic. Some fixes use built-in settings; others use free theme edits or apps you may already have.",
+    a: "No. Works on regular Shopify. Many fixes use settings you already have.",
   },
   {
-    q: "How do I access it after purchase?",
-    a: "You get a private web library — works on mobile. Score the checklist in your browser, copy blocks with one tap, and bookmark the page. No markdown files to wrestle with.",
+    q: "How do I get it after I pay?",
+    a: "You get a private web page. Open it on your phone. Tap through the checklist. Copy text with one tap.",
   },
   {
-    q: "How fast will I see results?",
-    a: "Many fixes ship in under an hour. Track baseline metrics before you start — the included tracker shows whether checkout completion improves within 7–14 days.",
+    q: "How fast will I see more sales?",
+    a: "Some fixes take under an hour. Use the tracker. Give it 1–2 weeks to see checkout get better.",
   },
   {
-    q: "Refunds?",
-    a: "If the scorecard doesn't surface at least 3 actionable leaks on your store, email nacho.tsvetkov@gmail.com within 7 days for a full refund. See terms for details.",
+    q: "Can I get a refund?",
+    a: "Yes. Run the checklist. If you don't find at least 3 things to fix, email nacho.tsvetkov@gmail.com within 7 days. Full refund.",
   },
 ] as const;
 
 const AUDIT_PREVIEW = [
-  { check: "Shop Pay or Apple Pay available", score: "0–2" },
-  { check: "Shipping cost shown before payment", score: "0–2" },
-  { check: "Reviews visible near Add to Cart", score: "0–2" },
-  { check: "Checkout completes in under 60 seconds", score: "0–2" },
+  { check: "Shop Pay or Apple Pay works", score: "0–2" },
+  { check: "Shipping cost shown early", score: "0–2" },
+  { check: "Reviews near the Buy button", score: "0–2" },
+  { check: "Checkout takes under 1 minute", score: "0–2" },
 ] as const;
 
 function ScorecardPreview() {
   return (
     <div
       className="overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
-      aria-label="Preview of the interactive leak scorecard"
+      aria-label="Preview of the phone checklist"
     >
       <div className="border-b border-neutral-200 bg-emerald-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-emerald-950/40">
         <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-          Leak scorecard — live preview
+          Sample checklist
         </p>
       </div>
 
@@ -148,7 +148,7 @@ function ScorecardPreview() {
       </div>
 
       <p className="border-t border-neutral-200 bg-emerald-50 px-4 py-2.5 text-xs leading-relaxed text-emerald-900 dark:border-neutral-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-        30 checks · tap 0, 1, or 2 · scores save on your phone
+        30 checks · tap 0, 1, or 2 · saves on your phone
       </p>
     </div>
   );
@@ -185,7 +185,7 @@ export default async function ShopifyConversionKitPage({
           role="status"
           className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
         >
-          The scorecard library requires purchase. Get instant access below.
+          The scorecard library requires purchase. Buy below to get in.
         </div>
       )}
 
@@ -208,59 +208,58 @@ export default async function ShopifyConversionKitPage({
       >
         <div className="mx-auto max-w-3xl px-4 py-14 sm:px-6 sm:py-24">
           <p className="text-sm font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
-            For Shopify stores running paid traffic
+            For Shopify stores with ads
           </p>
           <h1
             id="kit-hero-heading"
             className="mt-3 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl dark:text-white"
           >
-            Paying for traffic that doesn&apos;t buy?
+            People click your ads but don&apos;t buy?
           </h1>
           <p className="mt-4 font-mono text-2xl font-extrabold text-emerald-700 sm:text-3xl dark:text-emerald-400">
             {price}{" "}
             <span className="text-base font-semibold text-neutral-600 dark:text-neutral-400">
-              · one-time · instant access
+              · pay once · use right away
             </span>
           </p>
           <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
-            The{" "}
+            This{" "}
             <strong className="font-semibold text-neutral-900 dark:text-white">
-              Paid-Traffic Leak Scorecard
+              Shop Fix Scorecard
             </strong>{" "}
-            shows where mobile checkout leaks — score 30 checks in 15 minutes on
-            your phone, then fix the highest-impact leaks first. Not a 300-point
-            PDF.
+            shows what&apos;s wrong. Use your phone. Takes about 15 minutes.
+            Fix the worst problems first. Not a long PDF.
           </p>
           <ul className="mt-6 space-y-2.5 text-base text-neutral-700 dark:text-neutral-300">
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Interactive 0–2 scorecard — saves on your phone
+              Tap 0, 1, or 2 on your phone — it saves
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Tracking or checkout? decision tree + fix playbooks
+              Simple guide: bad ads or bad checkout?
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              7-day refund if you don&apos;t find 3+ actionable leaks
+              7-day refund if you don&apos;t find 3+ fixes
             </li>
           </ul>
           <div className="mt-8 sm:mt-10">
             <DigitalProductBuy buyable={buyable} currency={currency} />
           </div>
           <p className="mt-5 text-center text-sm text-neutral-600 dark:text-neutral-400">
-            Already purchased?{" "}
+            Already bought?{" "}
             <Link
               href={LIBRARY_LOGIN_PATH}
               className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"
             >
-              Enter your email to open the library
+              Enter your email to open it
             </Link>
           </p>
         </div>
@@ -276,14 +275,13 @@ export default async function ShopifyConversionKitPage({
             id="problem-heading"
             className="text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white"
           >
-            Ads get clicks. Checkout doesn&apos;t convert.
+            Ads get clicks. People still don&apos;t buy.
           </h2>
           <p className="mt-3 text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
-            Most Shopify stores running Meta traffic lose buyers at the same five
-            leaks — surprise shipping, mobile checkout friction, weak trust near
-            the buy button, slow PDPs, and ad copy that doesn&apos;t match the
-            landing page. More ad spend without fixing these just scales the
-            leak.
+            Most stores lose sales at the same five spots: hard checkout on
+            phones, shipping surprises, slow pages, no trust near Buy, and ads
+            that don&apos;t match the page. Spending more on ads without fixing
+            these just wastes money.
           </p>
         </div>
       </section>
@@ -298,36 +296,35 @@ export default async function ShopifyConversionKitPage({
             id="proof-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
-            What you&apos;ll find in the first 15 minutes
+            What you find in 15 minutes
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            Built by a senior engineer who ships Shopify integrations — not
-            generic marketing theory. Most stores running paid traffic score
-            under 18/30 on the mobile checkout scorecard.
+            Built by someone who builds Shopify stores for a living. Most stores
+            with ads score under 18 out of 30 on the phone checklist.
           </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
             <div className="space-y-4">
               <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Typical findings
+                  Common problems
                 </p>
                 <ul className="mt-3 space-y-2 text-sm leading-relaxed text-neutral-700 sm:text-base dark:text-neutral-300">
-                  <li>→ No Shop Pay on mobile (checkout friction)</li>
-                  <li>→ Shipping surprise at the last step</li>
-                  <li>→ Zero trust copy under the buy button</li>
-                  <li>→ Ad headline doesn&apos;t match the product page</li>
+                  <li>→ No Shop Pay on phones</li>
+                  <li>→ Shipping cost shows up too late</li>
+                  <li>→ No reviews near the Buy button</li>
+                  <li>→ Ad words don&apos;t match the product page</li>
                 </ul>
               </div>
               <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Not a checklist PDF
+                  Not a boring PDF
                 </p>
                 <p className="mt-2 font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
-                  0–2<span className="text-base font-semibold"> scorecard</span>
+                  0–2<span className="text-base font-semibold"> checklist</span>
                 </p>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                  Interactive library · copy blocks · Meta kill rules
+                  Works on your phone · copy text · small ad test plan
                 </p>
               </div>
             </div>
@@ -346,11 +343,10 @@ export default async function ShopifyConversionKitPage({
             id="leaks-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
-            The 5 leaks this scorecard helps you fix
+            5 problems this checklist helps you fix
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            Score each 0–2 in the library. Anything scoring 0–1 gets a fix this
-            week.
+            Score each 0, 1, or 2. Fix anything that scores 0 or 1 this week.
           </p>
           <ol className="mt-8 space-y-4 sm:space-y-6">
             {LEAKS.map((leak, i) => (
@@ -359,7 +355,7 @@ export default async function ShopifyConversionKitPage({
                 className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900/50"
               >
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Leak {i + 1}
+                  Problem {i + 1}
                 </p>
                 <h3 className="mt-1 text-lg font-semibold leading-snug text-neutral-900 dark:text-white">
                   {leak.title}
@@ -387,7 +383,7 @@ export default async function ShopifyConversionKitPage({
             id="included-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
-            What you get (instant access)
+            What you get
           </h2>
           <ul className="mt-6 space-y-3">
             {INCLUDED.map((item) => (
@@ -421,12 +417,12 @@ export default async function ShopifyConversionKitPage({
             id="guarantee-heading"
             className="text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white"
           >
-            7-day leak guarantee
+            7-day money-back promise
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
-            Run the scorecard on your store. If it doesn&apos;t surface at least{" "}
-            <strong>3 actionable leaks</strong>, email within 7 days for a full
-            refund — no forms, no call required.
+            Run the checklist on your store. If you don&apos;t find at least{" "}
+            <strong>3 things to fix</strong>, email within 7 days for all your
+            money back. No phone call needed.
           </p>
           <div className="mt-8">
             <DigitalProductBuy buyable={buyable} currency={currency} />
@@ -441,7 +437,7 @@ export default async function ShopifyConversionKitPage({
             id="faq-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
-            FAQ
+            Questions
           </h2>
           <dl className="mt-8 space-y-6">
             {FAQ.map((item) => (
@@ -486,7 +482,7 @@ export default async function ShopifyConversionKitPage({
           </p>
           <DigitalProductLegalNotice className="mx-auto mt-2 max-w-md text-center text-xs leading-relaxed" />
           <p className="mt-4 text-neutral-600 dark:text-neutral-400">
-            Already purchased?{" "}
+            Already bought?{" "}
             <Link
               href={LIBRARY_LOGIN_PATH}
               className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"

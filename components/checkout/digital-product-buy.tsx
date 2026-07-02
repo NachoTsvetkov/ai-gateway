@@ -29,13 +29,13 @@ export function DigitalProductBuy({
       <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
-            One-time purchase
+            Pay once
           </p>
           <p className="mt-1 font-mono text-3xl font-extrabold text-neutral-900 dark:text-white">
             {price}
           </p>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Instant access · No subscription
+            Use right away · No monthly fee
           </p>
         </div>
         <Link

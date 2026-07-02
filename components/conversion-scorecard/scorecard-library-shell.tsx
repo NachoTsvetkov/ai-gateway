@@ -34,7 +34,7 @@ export function ScorecardLibraryShell({
         <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
-              Paid-traffic leak scorecard
+              Shop Fix Scorecard
             </p>
             {title && (
               <h1 className="mt-1 text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white">

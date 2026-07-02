@@ -12,8 +12,8 @@ import {
 import { getDigitalProduct } from "lib/digital-products-data";
 
 export const metadata = {
-  title: "Checkout — Shopify Paid-Traffic Leak Scorecard",
-  description: "Pay securely with PayPal. Instant library access after purchase.",
+  title: "Checkout — Shop Fix Scorecard",
+  description: "Pay with PayPal. Open your checklist right after you pay.",
 };
 
 export default async function ConversionKitCheckoutPage() {
@@ -116,7 +116,7 @@ function OrderCard({
             {name}
           </p>
           <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-            Instant access · One-time payment
+            Use right away · Pay once
           </p>
         </div>
         <p className="font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">

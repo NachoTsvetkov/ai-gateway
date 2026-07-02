@@ -61,13 +61,13 @@ const CONVERSION_KIT_LIBRARY: DigitalProduct["librarySections"] = [
 export const DIGITAL_PRODUCTS: ReadonlyArray<DigitalProduct> = [
   {
     id: "shopify-conversion-kit",
-    name: "Shopify Paid-Traffic Leak Scorecard",
+    name: "Shop Fix Scorecard",
     tagline:
-      "15-minute mobile scorecard + prioritized fixes for stores bleeding Meta ad spend at checkout.",
+      "Simple phone checklist. See what's wrong in 15 minutes. Fix the big problems first.",
     oneTimeEur: 34,
     cta: {
-      primary: "Get the scorecard — find my leaks",
-      helper: "Instant access after checkout · PayPal secure",
+      primary: "Get the checklist — find what's wrong",
+      helper: "Pay once · open right after checkout · PayPal safe",
       checkout: "Get access — $37",
     },
     stripePaymentLink: process.env.NEXT_PUBLIC_STRIPE_CONVERSION_KIT_LINK,
