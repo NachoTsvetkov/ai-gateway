@@ -33,27 +33,27 @@ export type DigitalProduct = {
 const CONVERSION_KIT_LIBRARY: DigitalProduct["librarySections"] = [
   {
     slug: "",
-    label: "Start here",
+    label: "Start Here",
     description: "Your 30-minute workflow",
   },
   {
     slug: "scorecard",
-    label: "Leak scorecard",
+    label: "Leak Scorecard",
     description: "Score, diagnose tracking vs checkout, get fixes",
   },
   {
     slug: "fixes",
-    label: "5 leak playbooks",
+    label: "5 Leak Playbooks",
     description: "Priority-ordered Shopify fixes",
   },
   {
     slug: "copy",
-    label: "Copy-paste blocks",
+    label: "Copy-Paste Blocks",
     description: "One-tap copy for your theme",
   },
   {
     slug: "meta-test",
-    label: "$300 Meta test plan",
+    label: "$300 Meta Test Plan",
     description: "Kill rules and scale signals",
   },
 ];

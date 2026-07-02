@@ -13,12 +13,12 @@ import { LIBRARY_BASE_PATH, LIBRARY_LOGIN_PATH } from "lib/digital-product-acces
 export const metadata = {
   title: "Shop Fix Scorecard — Find Why Your Ads Don't Turn Into Sales",
   description:
-    "Simple phone checklist for Shopify stores. See what's wrong in 15 minutes. Fix the big problems first. $37, instant access.",
+    "27-point survey for Shopify stores. Find where sales leak in 15 minutes. Fix the big problems first. $37, instant access.",
   openGraph: {
     type: "website",
     title: "Shop Fix Scorecard",
     description:
-      "People click your ads but don't buy? This checklist shows why — on your phone, in 15 minutes.",
+      "People click your ads but don't buy? This 27-point survey finds where sales leak — in about 15 minutes.",
   },
 };
 
@@ -50,8 +50,11 @@ const LEAKS = [
   },
 ] as const;
 
+const LEAK_SCORECARD_SUMMARY =
+  "The Leak Scorecard is a 27-point survey. It finds where sales leak on your store. Takes about 15 minutes.";
+
 const INCLUDED = [
-  "Phone scorecard — tap Broken, Partial, or Working. It saves your place.",
+  "Leak Scorecard — 27-point survey to find where sales leak (~15 min)",
   "Simple guide: is it your ads or your checkout?",
   "5 fix guides — what to do first, step by step",
   "Ready-to-copy text for trust, shipping, and ads",
@@ -69,7 +72,7 @@ const FAQ = [
   },
   {
     q: "How do I get it after I pay?",
-    a: "You get a private web page. Open it on your phone. Go one step at a time. Your picks save as you go.",
+    a: "You get a private web page. Log in with your checkout email. Open the Leak Scorecard and answer 27 simple questions about your store.",
   },
   {
     q: "How fast will I see more sales?",
@@ -82,73 +85,34 @@ const FAQ = [
 ] as const;
 
 const AUDIT_PREVIEW = [
-  { check: "Shop Pay or Apple Pay works", score: "Partial" },
-  { check: "Shipping cost shown early", score: "Broken" },
-  { check: "Reviews near the Buy button", score: "Working" },
-  { check: "Checkout takes under 1 minute", score: "Partial" },
+  "Shop Pay or Apple Pay works",
+  "Shipping cost shown early",
+  "Reviews near the Buy button",
+  "Checkout takes under 1 minute",
 ] as const;
 
 function ScorecardPreview() {
   return (
     <div
       className="overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
-      aria-label="Preview of the phone checklist"
+      aria-label="Preview of the Leak Scorecard survey"
     >
       <div className="border-b border-neutral-200 bg-emerald-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-emerald-950/40">
         <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-          Sample checklist
+          Leak Scorecard
         </p>
       </div>
 
-      {/* Card stack — easier to read on narrow phones */}
-      <ul className="divide-y divide-neutral-100 sm:hidden dark:divide-neutral-800">
-        {AUDIT_PREVIEW.map((row) => (
-          <li
-            key={row.check}
-            className="flex items-start justify-between gap-3 px-4 py-3"
-          >
-            <span className="text-sm text-neutral-700 dark:text-neutral-300">
-              {row.check}
-            </span>
-            <span className="shrink-0 font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-              {row.score}
-            </span>
+      <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
+        {AUDIT_PREVIEW.map((check) => (
+          <li key={check} className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
+            {check}
           </li>
         ))}
       </ul>
 
-      <div className="hidden overflow-x-auto sm:block">
-        <table className="w-full min-w-[320px] text-left text-sm">
-          <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950/50">
-              <th className="px-4 py-2 font-semibold text-neutral-900 dark:text-white">
-                Check
-              </th>
-              <th className="px-4 py-2 text-right font-semibold text-neutral-900 dark:text-white">
-                Your pick
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {AUDIT_PREVIEW.map((row) => (
-              <tr
-                key={row.check}
-                className="border-b border-neutral-100 last:border-0 dark:border-neutral-800"
-              >
-                <td className="px-4 py-2.5 text-neutral-700 dark:text-neutral-300">
-                  {row.check}
-                </td>
-                <td className="px-4 py-2.5 text-right font-mono text-xs text-emerald-700 dark:text-emerald-400">
-                  {row.score}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
       <p className="border-t border-neutral-200 bg-emerald-50 px-4 py-2.5 text-xs leading-relaxed text-emerald-900 dark:border-neutral-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-        27 checks · tap Broken, Partial, or Working · saves on your phone
+        27-point survey · find where sales leak · about 15 minutes
       </p>
     </div>
   );
@@ -235,7 +199,8 @@ export default async function ShopifyConversionKitPage({
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Tap Broken, Partial, or Working — it saves your place
+              Leak Scorecard — 27-point survey to find where sales leak (~15
+              min)
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
@@ -299,8 +264,8 @@ export default async function ShopifyConversionKitPage({
             What you find in 15 minutes
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            Built by someone who builds Shopify stores for a living. Most stores
-            with ads find several Broken or Partial scores on the phone checklist.
+            Built by someone who builds Shopify stores for a living.{" "}
+            {LEAK_SCORECARD_SUMMARY}
           </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
@@ -320,14 +285,11 @@ export default async function ShopifyConversionKitPage({
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                   Not a boring PDF
                 </p>
-                <p className="mt-2 font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
-                  Broken · Partial · Working
-                </p>
-                <p className="mt-1 text-sm font-semibold text-neutral-600 dark:text-neutral-400">
-                  scorecard
+                <p className="mt-2 text-2xl font-extrabold text-neutral-900 dark:text-white">
+                  Leak Scorecard
                 </p>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                  Works on your phone · copy text · small ad test plan
+                  27-point survey · fix guides · copy blocks · ad test plan
                 </p>
               </div>
             </div>
@@ -349,8 +311,8 @@ export default async function ShopifyConversionKitPage({
             5 problems this checklist helps you fix
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            Pick Broken, Partial, or Working for each check. Fix anything that
-            is not Working this week.
+            Walk through the Leak Scorecard. Fix the worst spots first this
+            week.
           </p>
           <ol className="mt-8 space-y-4 sm:space-y-6">
             {LEAKS.map((leak, i) => (

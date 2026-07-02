@@ -3,7 +3,7 @@ import { InteractiveScorecard } from "components/conversion-scorecard/interactiv
 import { LIBRARY_BASE_PATH } from "lib/digital-product-access";
 
 export const metadata = {
-  title: "Leak scorecard",
+  title: "Leak Scorecard",
   robots: { index: false, follow: false },
 };
 
@@ -11,8 +11,8 @@ export default function ScorecardPage() {
   return (
     <ScorecardLibraryShell
       currentPath={`${LIBRARY_BASE_PATH}/scorecard`}
-      title="15-minute leak scorecard"
-      subtitle="Rate Broken, Partial, or Working on your phone. Fix what is not Working first."
+      title="Leak Scorecard"
+      subtitle="27-point survey to find where sales leak. About 15 minutes."
       showTrackerDownload={false}
     >
       <InteractiveScorecard />

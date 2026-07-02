@@ -3,7 +3,7 @@ import { META_TEST_PLAN } from "lib/conversion-scorecard/content";
 import { LIBRARY_BASE_PATH } from "lib/digital-product-access";
 
 export const metadata = {
-  title: "$300 Meta test plan",
+  title: "$300 Meta Test Plan",
   robots: { index: false, follow: false },
 };
 

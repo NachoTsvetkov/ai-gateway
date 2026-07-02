@@ -3,7 +3,7 @@ import { LEAK_FIXES } from "lib/conversion-scorecard/content";
 import { LIBRARY_BASE_PATH } from "lib/digital-product-access";
 
 export const metadata = {
-  title: "5 leak playbooks",
+  title: "5 Leak Playbooks",
   robots: { index: false, follow: false },
 };
 
@@ -11,7 +11,7 @@ export default function FixesPage() {
   return (
     <ScorecardLibraryShell
       currentPath={`${LIBRARY_BASE_PATH}/fixes`}
-      title="5 leak playbooks"
+      title="5 Leak Playbooks"
       subtitle="Fix one leak per session. Re-run the scorecard after each."
     >
       <div className="space-y-6">

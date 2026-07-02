@@ -4,7 +4,7 @@ import { COPY_BLOCKS } from "lib/conversion-scorecard/content";
 import { LIBRARY_BASE_PATH } from "lib/digital-product-access";
 
 export const metadata = {
-  title: "Copy-paste blocks",
+  title: "Copy-Paste Blocks",
   robots: { index: false, follow: false },
 };
 
@@ -12,7 +12,7 @@ export default function CopyBlocksPage() {
   return (
     <ScorecardLibraryShell
       currentPath={`${LIBRARY_BASE_PATH}/copy`}
-      title="Copy-paste blocks"
+      title="Copy-Paste Blocks"
       subtitle="Replace [BRACKETS]. Tap Copy — paste into theme sections or cart liquid."
     >
       <div className="space-y-6">

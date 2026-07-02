@@ -8,7 +8,7 @@ import {
 } from "lib/conversion-scorecard/content";
 
 export const metadata = {
-  title: "Your scorecard — start here",
+  title: "Your Scorecard — Start Here",
   robots: { index: false, follow: false },
 };
 
@@ -18,7 +18,7 @@ export default function ScorecardLibraryHubPage() {
   return (
     <ScorecardLibraryShell
       currentPath={LIBRARY_BASE_PATH}
-      title="Start here"
+      title="Start Here"
       subtitle="30 minutes to baseline, score, and pick your first fix."
     >
       <ol className="space-y-4">

@@ -447,27 +447,27 @@ export const META_TEST_PLAN = {
 export const LIBRARY_SECTIONS = [
   {
     slug: "scorecard",
-    title: "Leak scorecard",
+    title: "Leak Scorecard",
     description:
-      "Score your store, diagnose tracking vs checkout, and get prioritized fixes.",
+      "A 27-point survey that finds where sales leak on your store.",
     step: "1",
     highlight: true,
   },
   {
     slug: "fixes",
-    title: "5 leak playbooks",
+    title: "5 Leak Playbooks",
     description: "Step-by-step Shopify fixes in priority order.",
     step: "2",
   },
   {
     slug: "copy",
-    title: "Copy-paste blocks",
+    title: "Copy-Paste Blocks",
     description: "Theme-ready trust, shipping, and ad-match copy.",
     step: "3",
   },
   {
     slug: "meta-test",
-    title: "$300 Meta test plan",
+    title: "$300 Meta Test Plan",
     description: "Kill rules, budgets, and when to scale.",
     step: "4",
   },

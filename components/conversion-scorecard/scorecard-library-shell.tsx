@@ -7,7 +7,7 @@ import {
 } from "lib/digital-product-access";
 import { LIBRARY_SECTIONS } from "lib/conversion-scorecard/content";
 const NAV = [
-  { href: LIBRARY_BASE_PATH, label: "Start here", exact: true },
+  { href: LIBRARY_BASE_PATH, label: "Start Here", exact: true },
   ...LIBRARY_SECTIONS.map((s) => ({
     href: `${LIBRARY_BASE_PATH}/${s.slug}`,
     label: s.title,
