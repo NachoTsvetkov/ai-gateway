@@ -5,10 +5,11 @@ import {
   LibraryKycGate,
   type LibraryKycStatus,
 } from "components/conversion-scorecard/library-kyc-gate";
+import { hasConversionKitKyc } from "lib/conversion-scorecard/kyc";
 import {
-  hasConversionKitKyc,
-  resolveLibrarySessionEmail,
-} from "lib/conversion-scorecard/kyc";
+  resolveLibrarySessionEmailServer,
+  useConversionKitTestCollection,
+} from "lib/conversion-scorecard/kyc.server";
 import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import {
   ACCESS_COOKIE_NAME,
@@ -23,10 +24,10 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 async function getInitialKycStatus(token: string): Promise<LibraryKycStatus> {
-  const useTestCollection = process.env.NODE_ENV !== "production";
+  const useTestCollection = useConversionKitTestCollection();
 
   try {
-    const email = await resolveLibrarySessionEmail(token, useTestCollection);
+    const email = await resolveLibrarySessionEmailServer(token, useTestCollection);
 
     if (!email) {
       return { complete: false, email: null, emailRequired: true };
@@ -40,9 +41,10 @@ async function getInitialKycStatus(token: string): Promise<LibraryKycStatus> {
     return { complete, email, emailRequired: false };
   } catch (error) {
     console.error("[library-kyc] initial status check failed", error);
-    const email = await resolveLibrarySessionEmail(token, useTestCollection).catch(
-      () => null,
-    );
+    const email = await resolveLibrarySessionEmailServer(
+      token,
+      useTestCollection,
+    ).catch(() => null);
     return { complete: false, email, emailRequired: !email };
   }
 }

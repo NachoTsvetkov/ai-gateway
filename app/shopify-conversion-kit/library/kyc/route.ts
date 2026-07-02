@@ -1,15 +1,16 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import {
-  ACCESS_COOKIE_NAME,
-} from "lib/digital-product-access";
+import { ACCESS_COOKIE_NAME } from "lib/digital-product-access";
 import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import {
   ConversionKitKycSchema,
   hasConversionKitKyc,
-  resolveLibrarySessionEmail,
-  saveConversionKitKyc,
 } from "lib/conversion-scorecard/kyc";
+import {
+  resolveLibrarySessionEmailServer,
+  saveConversionKitKycServer,
+  useConversionKitTestCollection,
+} from "lib/conversion-scorecard/kyc.server";
 
 async function getAuthorizedSession() {
   const cookieStore = await cookies();
@@ -19,8 +20,8 @@ async function getAuthorizedSession() {
     return null;
   }
 
-  const useTestCollection = process.env.NODE_ENV !== "production";
-  const email = await resolveLibrarySessionEmail(token, useTestCollection);
+  const useTestCollection = useConversionKitTestCollection();
+  const email = await resolveLibrarySessionEmailServer(token, useTestCollection);
 
   return { token, email, useTestCollection };
 }
@@ -95,7 +96,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await saveConversionKitKyc(
+    await saveConversionKitKycServer(
       { ...parsed.data, email },
       useTestCollection,
     );

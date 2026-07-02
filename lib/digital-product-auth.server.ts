@@ -141,25 +141,34 @@ async function verifyPurchaseTokenEntitlement(
 export async function verifyLibraryTokenEntitlement(
   token: string,
 ): Promise<boolean> {
-  if (!verifyLibraryAccessToken(token)) return false;
+  try {
+    if (!verifyLibraryAccessToken(token)) return false;
 
-  const payload = parseSignedAccessPayload(token);
-  if (!payload) return false;
+    if (!isProductionDeploy() && isDigitalProductLibraryPreviewEnabled()) {
+      return true;
+    }
 
-  if (payload.startsWith("email|")) {
-    const parts = payload.split("|");
-    const productId = parts[1];
-    const email = parts[2];
-    if (productId !== "shopify-conversion-kit" || !email) return false;
-    return hasPaidDigitalProductAccess(email, "shopify-conversion-kit");
+    const payload = parseSignedAccessPayload(token);
+    if (!payload) return false;
+
+    if (payload.startsWith("email|")) {
+      const parts = payload.split("|");
+      const productId = parts[1];
+      const email = parts[2];
+      if (productId !== "shopify-conversion-kit" || !email) return false;
+      return hasPaidDigitalProductAccess(email, "shopify-conversion-kit");
+    }
+
+    const pipe = payload.indexOf("|");
+    if (pipe <= 0) return false;
+
+    const productId = payload.slice(0, pipe) as DigitalProductId;
+    const paypalId = payload.slice(pipe + 1);
+    if (productId !== "shopify-conversion-kit" || !paypalId) return false;
+
+    return verifyPurchaseTokenEntitlement(productId, paypalId);
+  } catch (error) {
+    console.error("[digital-product-auth] token entitlement check failed", error);
+    return false;
   }
-
-  const pipe = payload.indexOf("|");
-  if (pipe <= 0) return false;
-
-  const productId = payload.slice(0, pipe) as DigitalProductId;
-  const paypalId = payload.slice(pipe + 1);
-  if (productId !== "shopify-conversion-kit" || !paypalId) return false;
-
-  return verifyPurchaseTokenEntitlement(productId, paypalId);
 }

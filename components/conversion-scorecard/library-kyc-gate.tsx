@@ -96,7 +96,9 @@ export function LibraryKycGate({
 
     async function loadStatus() {
       try {
-        const response = await fetch(LIBRARY_KYC_PATH);
+        const response = await fetch(LIBRARY_KYC_PATH, {
+          credentials: "same-origin",
+        });
         if (response.status === 401) {
           if (!cancelled) {
             setError("Your session expired. Refresh the page or sign in again.");
@@ -171,6 +173,7 @@ export function LibraryKycGate({
     try {
       const response = await fetch(LIBRARY_KYC_PATH, {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.trim(),
@@ -187,6 +190,16 @@ export function LibraryKycGate({
         if (payload?.issues) {
           const firstIssue = Object.values(payload.issues).flat()[0];
           setError(firstIssue ?? "Please complete every field.");
+          return;
+        }
+
+        if (response.status === 401) {
+          setError("Your session expired. Refresh the page or sign in again.");
+          return;
+        }
+
+        if (payload?.error === "email_mismatch") {
+          setError("That email does not match your purchase. Use the same email from checkout.");
           return;
         }
 
