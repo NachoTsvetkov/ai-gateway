@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   ACCESS_COOKIE_NAME,
-  verifyLibraryAccessToken,
 } from "lib/digital-product-access";
+import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import {
   ConversionKitKycSchema,
   hasConversionKitKyc,
@@ -15,7 +15,7 @@ async function getAuthorizedSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
 
-  if (!token || !verifyLibraryAccessToken(token)) {
+  if (!token || !(await verifyLibraryTokenEntitlement(token))) {
     return null;
   }
 

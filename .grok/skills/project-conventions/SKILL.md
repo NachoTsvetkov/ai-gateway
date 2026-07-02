@@ -25,6 +25,8 @@ The outer marketing site (home, /services, /bundles, /projects listing, main AI 
 
 ## Marketing Copy & "AI" Word Rules
 
+**Reading level (required):** Customer-facing copy — landing pages, bundles, services, ads, emails, checkout, and product UI — must default to **3rd grade reading level** (short sentences, common words, one idea per line). Read aloud; rewrite anything a kid would not get. Only use higher reading levels when the user explicitly asks (e.g. technical blog, legal).
+
 From the sales-assistant prompt and home page copy:
 - In customer-facing headlines and high-level positioning: prefer "smart automation", "autonomous virtual employees", "voice agents", "money generator" language.
 - The word "AI" is acceptable in technical contexts, skill names, tech stack chips, and inside the agents themselves.

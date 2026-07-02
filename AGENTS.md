@@ -13,6 +13,7 @@ This document (plus the local skills) contains the key conventions, invariants, 
 
 ## Marketing Copy & Language
 
+- **Reading level:** Customer-facing copy defaults to **3rd grade** — short sentences, common words, no unexplained jargon. Applies to landing pages, bundles, services, checkout, emails, and product UI. Higher level only when explicitly requested.
 - In headlines, bundle descriptions, and high-level customer-facing text: prefer "smart automation", "autonomous virtual employees", "voice agents", "money generator" language over raw "AI".
 - "AI" is fine (and expected) in tech stack lists, agent internals, code comments, and skill triggers.
 - The business sells **websites + progressive layers of automation** that run 24/7 for small businesses.

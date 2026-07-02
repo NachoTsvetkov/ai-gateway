@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { LibraryLoginForm } from "components/conversion-scorecard/library-login-form";
+import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import {
   ACCESS_COOKIE_NAME,
   LIBRARY_BASE_PATH,
-  verifyLibraryAccessToken,
 } from "lib/digital-product-access";
 
 export const metadata = {
@@ -31,7 +31,7 @@ export default async function LibraryLoginPage({
 
   const cookieStore = await cookies();
   const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
-  if (token && verifyLibraryAccessToken(token)) {
+  if (token && (await verifyLibraryTokenEntitlement(token))) {
     redirect(redirectTo);
   }
 

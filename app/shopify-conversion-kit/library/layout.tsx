@@ -9,11 +9,11 @@ import {
   hasConversionKitKyc,
   resolveLibrarySessionEmail,
 } from "lib/conversion-scorecard/kyc";
+import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import {
   ACCESS_COOKIE_NAME,
   LIBRARY_BASE_PATH,
   LIBRARY_LOGIN_PATH,
-  verifyLibraryAccessToken,
 } from "lib/digital-product-access";
 
 export const metadata = {
@@ -54,7 +54,9 @@ export default async function ScorecardLibraryLayout({
 }) {
   const cookieStore = await cookies();
   const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
-  const hasAccess = Boolean(token && verifyLibraryAccessToken(token));
+  const hasAccess = Boolean(
+    token && (await verifyLibraryTokenEntitlement(token)),
+  );
 
   if (!hasAccess) {
     const headersList = await headers();

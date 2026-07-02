@@ -66,7 +66,13 @@ export type OrderStatus = 'created' | 'paid' | 'failed' | 'cancelled';
 export async function saveOrder(data: OrderData, useTestCollection = false): Promise<string> {
   const parsed = OrderSchema.parse(data);
 
-  const writeData: any = { ...parsed };
+  const writeData: any = {
+    ...parsed,
+    customer: {
+      ...parsed.customer,
+      email: normalizeOrderEmail(parsed.customer.email),
+    },
+  };
 
   // Only default created_at for the initial "intent" write (from server create routes on button click).
   // Client re-sends on success carry status:'paid' but no created_at — we must NOT inject a timestamp
@@ -210,22 +216,29 @@ export async function hasPaidDigitalProductOrder(
   const emailsToTry = [...new Set([normalized, trimmed].filter(Boolean))];
 
   for (const candidate of emailsToTry) {
-    const q = query(
-      collection(db, collectionName),
-      where('customer.email', '==', candidate),
-      limit(25),
-    );
-    const snapshot = await getDocs(q);
-    const match = snapshot.docs.some((orderDoc) => {
-      const data = orderDoc.data();
-      const orderEmail = normalizeOrderEmail(String(data.customer?.email ?? ''));
-      return (
-        orderEmail === normalized &&
-        data.buyable?.id === productId &&
-        data.status === 'paid'
+    try {
+      const q = query(
+        collection(db, collectionName),
+        where("customer.email", "==", candidate),
+        limit(25),
       );
-    });
-    if (match) return true;
+      const snapshot = await getDocs(q);
+      const match = snapshot.docs.some((orderDoc) => {
+        const data = orderDoc.data();
+        const orderEmail = normalizeOrderEmail(
+          String(data.customer?.email ?? ""),
+        );
+        return (
+          orderEmail === normalized &&
+          data.buyable?.id === productId &&
+          data.status === "paid"
+        );
+      });
+      if (match) return true;
+    } catch (error) {
+      console.error("[orders] hasPaidDigitalProductOrder query failed", error);
+      return false;
+    }
   }
 
   return false;

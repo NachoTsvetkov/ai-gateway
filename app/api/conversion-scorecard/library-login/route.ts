@@ -1,13 +1,15 @@
+import {
+  hasPaidDigitalProductAccess,
+  isDigitalProductLibraryPreviewEnabled,
+} from "lib/digital-product-auth.server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { isDigitalProductLibraryPreviewEnabled } from "lib/digital-product-dev.server";
 import {
   ACCESS_COOKIE_NAME,
   createLibraryEmailAccessToken,
   libraryAccessCookieOptions,
   normalizeLibraryEmail,
 } from "lib/digital-product-access";
-import { hasPaidDigitalProductOrder } from "lib/orders";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -27,21 +29,11 @@ export async function POST(request: Request) {
   }
 
   const email = normalizeLibraryEmail(parsed.data.email);
-  const useTestCollection = process.env.NODE_ENV !== "production";
 
-  let hasAccess = await hasPaidDigitalProductOrder(
+  let hasAccess = await hasPaidDigitalProductAccess(
     email,
     "shopify-conversion-kit",
-    useTestCollection,
   );
-
-  if (!hasAccess && useTestCollection) {
-    hasAccess = await hasPaidDigitalProductOrder(
-      email,
-      "shopify-conversion-kit",
-      false,
-    );
-  }
 
   if (!hasAccess && isDigitalProductLibraryPreviewEnabled()) {
     hasAccess = true;
@@ -51,8 +43,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "not_found" }, { status: 401 });
   }
 
-  const token = createLibraryEmailAccessToken("shopify-conversion-kit", email);
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(ACCESS_COOKIE_NAME, token, libraryAccessCookieOptions());
-  return response;
+  try {
+    const token = createLibraryEmailAccessToken("shopify-conversion-kit", email);
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(ACCESS_COOKIE_NAME, token, libraryAccessCookieOptions());
+    return response;
+  } catch (error) {
+    console.error("[library-login] token issue failed", error);
+    return NextResponse.json({ error: "misconfigured" }, { status: 503 });
+  }
 }

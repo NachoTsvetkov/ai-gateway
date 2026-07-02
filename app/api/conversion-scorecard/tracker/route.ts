@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import {
-  ACCESS_COOKIE_NAME,
-  verifyDigitalProductAccessToken,
-} from "lib/digital-product-access";
+import { ACCESS_COOKIE_NAME } from "lib/digital-product-access";
+import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import { TRACKER_CSV } from "lib/conversion-scorecard/content";
 
 export async function GET(request: NextRequest) {
@@ -13,7 +11,7 @@ export async function GET(request: NextRequest) {
     cookieStore.get(ACCESS_COOKIE_NAME)?.value ??
     request.nextUrl.searchParams.get("access");
 
-  if (!token || !verifyDigitalProductAccessToken(token)) {
+  if (!token || !(await verifyLibraryTokenEntitlement(token))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

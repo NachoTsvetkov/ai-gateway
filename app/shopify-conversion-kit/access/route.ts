@@ -6,13 +6,18 @@ import {
   libraryAccessCookieOptions,
   verifyDigitalProductAccessToken,
 } from "lib/digital-product-access";
+import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 
 /** Validates purchase token, sets access cookie, redirects to library hub. */
 export async function GET(request: NextRequest) {
   const access = request.nextUrl.searchParams.get("access");
   const dest = request.nextUrl.searchParams.get("dest");
 
-  if (!access || !verifyDigitalProductAccessToken(access)) {
+  if (
+    !access ||
+    !verifyDigitalProductAccessToken(access) ||
+    !(await verifyLibraryTokenEntitlement(access))
+  ) {
     const locked = new URL("/shopify-conversion-kit", request.url);
     locked.searchParams.set("locked", "1");
     return NextResponse.redirect(locked);

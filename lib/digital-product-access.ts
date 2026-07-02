@@ -9,11 +9,20 @@ export const LIBRARY_LOGOUT_PATH = "/shopify-conversion-kit/logout";
 export const LIBRARY_GRANT_PATH = "/shopify-conversion-kit/access";
 
 function accessSecret(): string {
-  return (
-    process.env.DIGITAL_PRODUCT_ACCESS_SECRET ??
-    process.env.PAYPAL_SECRET ??
-    "dev-only-conversion-scorecard-secret"
-  );
+  const secret =
+    process.env.DIGITAL_PRODUCT_ACCESS_SECRET?.trim() ||
+    process.env.PAYPAL_SECRET?.trim();
+  const isProd =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production";
+
+  if (!secret && isProd) {
+    throw new Error(
+      "DIGITAL_PRODUCT_ACCESS_SECRET (or PAYPAL_SECRET) is required in production",
+    );
+  }
+
+  return secret ?? "dev-only-conversion-scorecard-secret";
 }
 
 function signPayload(payload: string): string {
