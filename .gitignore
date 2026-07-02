@@ -42,3 +42,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# local dev port file (desktop monitor / dev scripts)
+.devport.txt
+
+# Report monitor outputs — never commit customer data (see reports/README.md)
+/reports/*
+!/reports/README.md

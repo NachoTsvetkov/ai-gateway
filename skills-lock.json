@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "tailwind-responsive-ui": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.experimental/tailwind-responsive-ui/SKILL.md",
+      "computedHash": "a815c2f4e1e73816b544d3d83b31d190343663bc751eb4bd010319c8f1f9f8fb"
+    }
+  }
+}
