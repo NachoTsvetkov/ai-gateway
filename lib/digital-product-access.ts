@@ -154,8 +154,21 @@ export function clearLegacyLibraryAccessCookies(
       ...libraryAccessCookieOptions(),
       path: legacyPath,
       maxAge: 0,
+      expires: new Date(0),
     });
   }
+}
+
+/** Clear root + legacy-path access cookies (logout, session reset). */
+export function clearAllLibraryAccessCookies(
+  response: { cookies: { set: (name: string, value: string, options: object) => void } },
+) {
+  response.cookies.set(ACCESS_COOKIE_NAME, "", {
+    ...libraryAccessCookieOptions(),
+    maxAge: 0,
+    expires: new Date(0),
+  });
+  clearLegacyLibraryAccessCookies(response);
 }
 
 export function setLibraryAccessCookie(

@@ -47,17 +47,17 @@ export function ScorecardLibraryShell({
               </p>
             )}
           </div>
-          {showTrackerDownload ? (
-            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+          <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+            {showTrackerDownload ? (
               <TrackerDownloadButton className="inline-flex min-h-11 items-center justify-center rounded-lg border border-neutral-300 bg-white px-4 text-sm font-semibold text-neutral-800 transition-colors hover:border-emerald-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100" />
-              <Link
-                href={LIBRARY_LOGOUT_PATH}
-                className="text-xs font-medium text-neutral-500 underline-offset-2 hover:text-neutral-700 hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
-              >
-                Sign out
-              </Link>
-            </div>
-          ) : null}
+            ) : null}
+            <a
+              href={LIBRARY_LOGOUT_PATH}
+              className="text-xs font-medium text-neutral-500 underline-offset-2 hover:text-neutral-700 hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+            >
+              Sign out
+            </a>
+          </div>
         </div>
       </header>
 

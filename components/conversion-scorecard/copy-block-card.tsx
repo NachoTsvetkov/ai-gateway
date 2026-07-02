@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CopyBlock } from "lib/conversion-scorecard/content";
+import { AutoLinkedText } from "components/conversion-scorecard/auto-linked-text";
 
 export function CopyBlockCard({ block }: { block: CopyBlock }) {
   const [copied, setCopied] = useState(false);
@@ -36,7 +37,7 @@ export function CopyBlockCard({ block }: { block: CopyBlock }) {
         </button>
       </div>
       <pre className="overflow-x-auto whitespace-pre-wrap p-4 font-sans text-sm leading-relaxed text-neutral-800 sm:p-5 dark:text-neutral-200">
-        {block.body}
+        <AutoLinkedText text={block.body} />
       </pre>
     </article>
   );

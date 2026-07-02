@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ViewContentTracker } from "components/analytics/view-content-tracker";
+import { AutoLinkedText } from "components/conversion-scorecard/auto-linked-text";
 import { DigitalProductBuy } from "components/checkout/digital-product-buy";
 import { DigitalProductLegalNotice } from "components/checkout/legal-notice";
 import { StickyMobileBuyBar } from "components/checkout/sticky-mobile-buy-bar";
@@ -84,36 +86,56 @@ const FAQ = [
   },
 ] as const;
 
-const AUDIT_PREVIEW = [
-  "Shop Pay or Apple Pay works",
-  "Shipping cost shown early",
-  "Reviews near the Buy button",
-  "Checkout takes under 1 minute",
+const LIBRARY_SCREENSHOTS = [
+  {
+    src: "/shopify-conversion-kit/library-start-here.png",
+    title: "Start Here",
+    caption: "A simple path — baseline, score, then your first fix.",
+    width: 918,
+    height: 741,
+  },
+  {
+    src: "/shopify-conversion-kit/leak-scorecard-results.png",
+    title: "Leak Scorecard",
+    caption: "27-point survey. See your score and what to fix first.",
+    width: 1016,
+    height: 930,
+  },
+  {
+    src: "/shopify-conversion-kit/leak-playbooks.png",
+    title: "5 Leak Playbooks",
+    caption: "Step-by-step fixes for each leak on your store.",
+    width: 1024,
+    height: 814,
+  },
 ] as const;
 
-function ScorecardPreview() {
+function LibraryScreenshotGallery() {
   return (
-    <div
-      className="overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
-      aria-label="Preview of the Leak Scorecard survey"
-    >
-      <div className="border-b border-neutral-200 bg-emerald-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-emerald-950/40">
-        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-          Leak Scorecard
-        </p>
-      </div>
-
-      <ul className="divide-y divide-neutral-100 dark:divide-neutral-800">
-        {AUDIT_PREVIEW.map((check) => (
-          <li key={check} className="px-4 py-3 text-sm text-neutral-700 dark:text-neutral-300">
-            {check}
-          </li>
-        ))}
-      </ul>
-
-      <p className="border-t border-neutral-200 bg-emerald-50 px-4 py-2.5 text-xs leading-relaxed text-emerald-900 dark:border-neutral-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-        27-point survey · find where sales leak · about 15 minutes
-      </p>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+      {LIBRARY_SCREENSHOTS.map((shot) => (
+        <figure
+          key={shot.src}
+          className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-md dark:border-neutral-700 dark:bg-neutral-900"
+        >
+          <figcaption className="border-b border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-950/50">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+              {shot.title}
+            </p>
+            <p className="mt-0.5 text-xs leading-snug text-neutral-600 dark:text-neutral-400">
+              {shot.caption}
+            </p>
+          </figcaption>
+          <Image
+            src={shot.src}
+            alt={`${shot.title} screen in the Shop Fix Scorecard library`}
+            width={shot.width}
+            height={shot.height}
+            className="h-auto w-full"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        </figure>
+      ))}
     </div>
   );
 }
@@ -224,7 +246,7 @@ export default async function ShopifyConversionKitPage({
               href={LIBRARY_LOGIN_PATH}
               className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"
             >
-              Enter your email to open it
+              Log in
             </Link>
           </p>
         </div>
@@ -256,44 +278,56 @@ export default async function ShopifyConversionKitPage({
         aria-labelledby="proof-heading"
         className="border-b border-neutral-200 bg-neutral-50 py-12 sm:py-16 dark:border-neutral-800 dark:bg-neutral-900/30"
       >
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <h2
             id="proof-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
             What you find in 15 minutes
           </h2>
-          <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
+          <p className="mt-2 max-w-3xl text-base text-neutral-600 dark:text-neutral-400">
             Built by someone who builds Shopify stores for a living.{" "}
             {LEAK_SCORECARD_SUMMARY}
           </p>
 
-          <div className="mt-8 grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
-            <div className="space-y-4">
-              <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
-                <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Common problems
-                </p>
-                <ul className="mt-3 space-y-2 text-sm leading-relaxed text-neutral-700 sm:text-base dark:text-neutral-300">
-                  <li>→ No Shop Pay on phones</li>
-                  <li>→ Shipping cost shows up too late</li>
-                  <li>→ No reviews near the Buy button</li>
-                  <li>→ Ad words don&apos;t match the product page</li>
-                </ul>
-              </div>
-              <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
-                <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Not a boring PDF
-                </p>
-                <p className="mt-2 text-2xl font-extrabold text-neutral-900 dark:text-white">
-                  Leak Scorecard
-                </p>
-                <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                  27-point survey · fix guides · copy blocks · ad test plan
-                </p>
-              </div>
+          <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
+              <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                Common problems
+              </p>
+              <ul className="mt-3 space-y-2 text-sm leading-relaxed text-neutral-700 sm:text-base dark:text-neutral-300">
+                <li>
+                  → No fast checkout like <AutoLinkedText text="Shop Pay" /> on phones
+                </li>
+                <li>→ Shipping cost shows up too late</li>
+                <li>→ No reviews near the Buy button</li>
+                <li>→ Ad words don&apos;t match the product page</li>
+              </ul>
             </div>
-            <ScorecardPreview />
+            <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
+              <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                Not a boring PDF
+              </p>
+              <p className="mt-2 text-2xl font-extrabold text-neutral-900 dark:text-white">
+                Leak Scorecard
+              </p>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                27-point survey · fix guides · copy blocks · ad test plan
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-12">
+            <h3 className="text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white">
+              See inside the library
+            </h3>
+            <p className="mt-2 max-w-2xl text-base text-neutral-600 dark:text-neutral-400">
+              Private web app on your phone. Pay once, log in, and work through
+              it step by step.
+            </p>
+            <div className="mt-8">
+              <LibraryScreenshotGallery />
+            </div>
           </div>
         </div>
       </section>
@@ -331,7 +365,7 @@ export default async function ShopifyConversionKitPage({
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-neutral-800 sm:text-base dark:text-neutral-200">
                   <span className="font-semibold">Fix: </span>
-                  {leak.fix}
+                  <AutoLinkedText text={leak.fix} />
                 </p>
               </li>
             ))}

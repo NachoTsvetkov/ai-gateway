@@ -28,6 +28,7 @@ import {
 import { track } from "lib/pixel/client";
 import { TrackerDownloadButton } from "components/conversion-scorecard/tracker-download-button";
 import { ScorecardNextStepLink } from "components/conversion-scorecard/scorecard-next-step-link";
+import { AutoLinkedText } from "components/conversion-scorecard/auto-linked-text";
 
 const STORAGE_KEY = SCORECARD_STORAGE_KEY;
 const SECTION_COUNT = SCORECARD_SECTIONS.length;
@@ -450,7 +451,7 @@ export function InteractiveScorecard() {
                     <span className="mr-2 font-mono text-xs text-neutral-400">
                       {index + 1}.
                     </span>
-                    {item.check}
+                    <AutoLinkedText text={item.check} />
                   </p>
                   <div
                     className="mt-3 flex gap-2"
@@ -506,7 +507,7 @@ export function InteractiveScorecard() {
                       <span className="mr-2 font-mono text-xs text-neutral-400">
                         {index + 1}.
                       </span>
-                      {q.question}
+                      <AutoLinkedText text={q.question} />
                     </p>
                     <div
                       className="mt-3 flex flex-col gap-2 sm:flex-row"
@@ -625,7 +626,7 @@ export function InteractiveScorecard() {
                 <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-neutral-800 dark:text-neutral-200">
                   {lowItems.map((item) => (
                     <li key={item.check}>
-                      {item.check}{" "}
+                      <AutoLinkedText text={item.check} />{" "}
                       <span className="font-semibold text-amber-800 dark:text-amber-300">
                         ({scoreOptionLabel(item.score)})
                       </span>
@@ -680,7 +681,7 @@ export function InteractiveScorecard() {
                         className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                       >
                         <p className="text-sm text-neutral-800 dark:text-neutral-200">
-                          {item.check}
+                          <AutoLinkedText text={item.check} />
                         </p>
                         {score !== undefined ? (
                           <span

@@ -1,4 +1,5 @@
 import { ScorecardLibraryShell } from "components/conversion-scorecard/scorecard-library-shell";
+import { AutoLinkedText } from "components/conversion-scorecard/auto-linked-text";
 import { LEAK_FIXES } from "lib/conversion-scorecard/content";
 import { LIBRARY_BASE_PATH } from "lib/digital-product-access";
 
@@ -40,7 +41,9 @@ export default function FixesPage() {
               </h3>
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-neutral-800 dark:text-neutral-200">
                 {leak.steps.map((step) => (
-                  <li key={step}>{step}</li>
+                  <li key={step}>
+                    <AutoLinkedText text={step} />
+                  </li>
                 ))}
               </ol>
               {leak.optional && (

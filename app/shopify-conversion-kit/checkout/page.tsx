@@ -10,6 +10,7 @@ import {
   isDigitalProductLibraryPreviewEnabled,
 } from "lib/digital-product-dev.server";
 import { getDigitalProduct } from "lib/digital-products-data";
+import { LIBRARY_LOGIN_PATH } from "lib/digital-product-access";
 
 export const metadata = {
   title: "Checkout — Shop Fix Scorecard",
@@ -91,6 +92,16 @@ export default async function ConversionKitCheckoutPage() {
         </div>
 
         <DigitalProductLegalNotice className="mt-6 text-center" />
+
+        <p className="mt-6 text-center text-sm text-neutral-600 dark:text-neutral-400">
+          Already have it?{" "}
+          <Link
+            href={LIBRARY_LOGIN_PATH}
+            className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"
+          >
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   );

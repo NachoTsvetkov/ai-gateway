@@ -27,6 +27,7 @@ import {
   type TierOption,
 } from "components/checkout/checkout-island";
 import { ViewContentTracker } from "components/analytics/view-content-tracker";
+import { AutoLinkedText } from "components/conversion-scorecard/auto-linked-text";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -346,7 +347,9 @@ export default async function ServiceDetailPage({
                   >
                     !
                   </span>
-                  <span>{point}</span>
+                  <span>
+                    <AutoLinkedText text={point} />
+                  </span>
                 </li>
               ))}
             </ul>
