@@ -63,9 +63,9 @@ export function StickyMobileBuyBar({
               currency,
             });
           }}
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 active:bg-blue-700"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-600/30 active:bg-emerald-700"
         >
-          Get kit
+          Get access
         </Link>
       </div>
     </div>

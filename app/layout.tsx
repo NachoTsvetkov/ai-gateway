@@ -1,11 +1,11 @@
 import { CartProvider } from "components/cart/cart-context";
 import { Navbar, type NavbarLabels } from "components/layout/navbar";
-import { NavbarGate } from "components/layout/navbar/navbar-gate";
 import { AnalyticsRoot } from "components/analytics/analytics-root";
 import { GeistSans } from "geist/font/sans";
 import { getCart } from "lib/shopify";
 import { ReactNode } from "react";
 import type { Viewport } from "next";
+import { headers } from "next/headers";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { baseUrl } from "lib/utils";
@@ -33,7 +33,7 @@ const HIDE_NAVBAR_ON: ReadonlyArray<string> = [
   "/projects/boutique-fashion-brand",
   "/product",
   "/search",
-  // Paid Meta LP + checkout — single-CTA funnel, no site nav exits.
+  // Paid Meta LP + checkout + gated library — single-CTA funnel, no site nav exits.
   "/shopify-conversion-kit",
   "/checkout",
   "/conversion-kit-terms",
@@ -82,10 +82,13 @@ export default async function RootLayout({
   //     paint is correct (no flash of wrong theme)
   //   - thread the active theme into the navbar so the pill renders
   //     with the correct active side highlighted on first paint
-  const [{ locale, country }, theme] = await Promise.all([
+  const [{ locale, country }, theme, headersList] = await Promise.all([
     detectLocaleAndCountry(),
     detectTheme(),
+    headers(),
   ]);
+  const pathname = headersList.get("x-pathname") ?? "";
+  const hideNavbar = HIDE_NAVBAR_ON.some((prefix) => pathname.startsWith(prefix));
   const showLanguageToggle = country === BG_COUNTRY;
   const currency = getCurrency(country);
 
@@ -118,14 +121,14 @@ export default async function RootLayout({
     <html lang={locale} className={htmlClassName} data-currency={currency}>
       <body suppressHydrationWarning className="bg-neutral-50 text-black selection:bg-blue-200 dark:bg-neutral-900 dark:text-white dark:selection:bg-pink-500 dark:selection:text-white">
         <CartProvider cartPromise={cart}>
-          <NavbarGate hideOnPrefix={HIDE_NAVBAR_ON}>
+          {!hideNavbar ? (
             <Navbar
               labels={labels}
               locale={locale}
               theme={theme}
               showLanguageToggle={showLanguageToggle}
             />
-          </NavbarGate>
+          ) : null}
           <main>
             {children}
             <Toaster closeButton />

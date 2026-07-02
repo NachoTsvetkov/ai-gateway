@@ -199,6 +199,31 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Post-purchase KYC from conversion kit library (first login)
+    match /conversion_kit_kyc/{docId} {
+      allow create: if
+        request.resource.data.email is string &&
+        request.resource.data.business_type is string &&
+        request.resource.data.desired_results is string &&
+        request.resource.data.pain is string &&
+        request.resource.data.tried_so_far is string &&
+        request.resource.data.budget is string;
+      allow update: if
+        request.resource.data.email is string &&
+        request.resource.data.business_type is string &&
+        request.resource.data.desired_results is string &&
+        request.resource.data.pain is string &&
+        request.resource.data.tried_so_far is string &&
+        request.resource.data.budget is string;
+      allow read: if true;
+      allow delete: if false;
+    }
+
+    match /conversion_kit_kyc_test/{docId} {
+      allow create, read, update: if true;
+      allow delete: if false;
+    }
+
     // ============================================
     // DEFAULT DENY
     // ============================================

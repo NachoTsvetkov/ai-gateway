@@ -167,7 +167,7 @@ export function CheckoutForm({
   const isFormValid = useCallback(() => {
     const c = formRef.current;
     const ok = isDigitalProduct
-      ? c.business.trim().length > 0 && isLikelyEmail(c.email)
+      ? isLikelyStoreUrl(c.business) && isLikelyEmail(c.email)
       : c.name.trim().length > 0 &&
         c.business.trim().length > 0 &&
         isLikelyEmail(c.email);
@@ -399,7 +399,7 @@ export function CheckoutForm({
   const digitalBuyerFields = (
     <>
       <label className="block">
-        <span className={labelClass}>Email for download receipt</span>
+        <span className={labelClass}>Email for your receipt</span>
         <input
           type="email"
           name="email"
@@ -414,16 +414,17 @@ export function CheckoutForm({
           placeholder="you@yourstore.com"
         />
         <span className="mt-1.5 block text-xs text-neutral-500 dark:text-neutral-500">
-          Instant download link appears on the next page after payment.
+          Your private library link appears on the next page after payment.
         </span>
       </label>
 
       <label className="block">
         <span className={labelClass}>Shopify store URL</span>
         <input
-          type="url"
+          type="text"
           name="business"
           required
+          inputMode="url"
           autoComplete="url"
           value={business}
           onChange={(e) => {
@@ -431,8 +432,11 @@ export function CheckoutForm({
             if (showFormInvalid) setShowFormInvalid(false);
           }}
           className={fieldClass}
-          placeholder="yourstore.com or myshopify.com/admin"
+          placeholder="yourstore.com or your-store.myshopify.com"
         />
+        <span className="mt-1.5 block text-xs text-neutral-500 dark:text-neutral-500">
+          Domain only is fine — https:// is optional.
+        </span>
       </label>
     </>
   );
@@ -619,6 +623,80 @@ export function CheckoutForm({
   }
 
   // ----------------------------------------------------------------
+  // Digital product without PayPal — don't fall through to mailto
+  // ----------------------------------------------------------------
+
+  const devCheckoutEnabled =
+    process.env.NODE_ENV === "development" &&
+    process.env.NEXT_PUBLIC_DIGITAL_PRODUCT_DEV_CHECKOUT === "1";
+
+  function handleStripeDigitalCheckout() {
+    if (!isFormValid() || !paymentLink) return;
+    const url = new URL(paymentLink);
+    if (email) url.searchParams.set("prefilled_email", email);
+    url.searchParams.set("client_reference_id", buyable.reference);
+    window.location.href = url.toString();
+  }
+
+  function handleDevDigitalCheckout() {
+    if (!isFormValid()) return;
+    handlePayPalSuccess({
+      kind: "order",
+      id: `DEV-${Date.now()}`,
+    });
+  }
+
+  if (isDigitalProduct && !paypalEnabled) {
+    return (
+      <div
+        className="space-y-5 rounded-2xl border border-neutral-200 bg-white p-6 sm:p-8 dark:border-neutral-800 dark:bg-neutral-900"
+        aria-label={ariaFormLabel}
+      >
+        {buyerFields}
+        {formInvalidNotice}
+
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-100">
+          PayPal is not configured (<code className="text-xs">NEXT_PUBLIC_PAYPAL_CLIENT_ID</code> is
+          empty). Payment cannot complete until sandbox or live credentials are set.
+        </div>
+
+        {paymentLink ? (
+          <button
+            type="button"
+            onClick={handleStripeDigitalCheckout}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500"
+          >
+            Continue to Stripe checkout — {total}
+          </button>
+        ) : devCheckoutEnabled ? (
+          <button
+            type="button"
+            onClick={handleDevDigitalCheckout}
+            className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500"
+          >
+            Dev: complete test purchase → open library
+          </button>
+        ) : null}
+
+        {process.env.NODE_ENV === "development" && (
+          <p className="text-center text-xs text-neutral-600 dark:text-neutral-400">
+            Or{" "}
+            <a
+              href="/shopify-conversion-kit/library"
+              className="font-semibold text-emerald-700 underline underline-offset-2 dark:text-emerald-400"
+            >
+              preview the library
+            </a>{" "}
+            (requires <code className="text-xs">DIGITAL_PRODUCT_LIBRARY_PREVIEW=1</code>)
+          </p>
+        )}
+
+        <DigitalProductLegalNotice className="text-center" />
+      </div>
+    );
+  }
+
+  // ----------------------------------------------------------------
   // Legacy: Stripe payment-link OR mailto-only layout
   // ----------------------------------------------------------------
 
@@ -683,4 +761,11 @@ function isLikelyEmail(s: string): boolean {
   // Permissive — block obvious typos but don't try to be a full
   // RFC-5322 validator.
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+}
+
+function isLikelyStoreUrl(s: string): boolean {
+  const trimmed = s.trim();
+  if (trimmed.length < 4) return false;
+  const host = trimmed.replace(/^https?:\/\//i, "").split("/")[0] ?? "";
+  return /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$/i.test(host) || host.includes("myshopify.com");
 }

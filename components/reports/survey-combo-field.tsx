@@ -2,8 +2,8 @@
 
 import { useId, useMemo, useRef, useState } from 'react';
 
-const inputClassName =
-  'w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-neutral-900 placeholder:text-neutral-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 dark:focus:border-blue-400 dark:focus:ring-blue-400';
+const inputClassNameBase =
+  "w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-1 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500 sm:text-sm";
 
 type Props = {
   value: string;
@@ -17,6 +17,8 @@ type Props = {
   chipCount?: number;
   multiline?: boolean;
   rows?: number;
+  /** Accent for focus ring and selected chips (library KYC uses emerald). */
+  variant?: "blue" | "emerald";
 };
 
 function filterSuggestions(suggestions: readonly string[], query: string): string[] {
@@ -25,6 +27,32 @@ function filterSuggestions(suggestions: readonly string[], query: string): strin
   return suggestions.filter((s) => s.toLowerCase().includes(q));
 }
 
+const inputVariants = {
+  blue:
+    "focus:border-blue-500 focus:ring-blue-500 dark:focus:border-blue-400 dark:focus:ring-blue-400",
+  emerald:
+    "focus:border-emerald-500 focus:ring-emerald-500 dark:focus:border-emerald-400 dark:focus:ring-emerald-400",
+} as const;
+
+const chipVariants = {
+  blue: {
+    selected:
+      "border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500",
+    idle:
+      "border-neutral-300 bg-neutral-50 text-neutral-700 hover:border-blue-400 hover:text-blue-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-blue-400 dark:hover:text-blue-300",
+    dropdownHover:
+      "hover:bg-blue-50 dark:hover:bg-neutral-800",
+  },
+  emerald: {
+    selected:
+      "border-emerald-600 bg-emerald-600 text-white dark:border-emerald-500 dark:bg-emerald-500",
+    idle:
+      "border-neutral-300 bg-neutral-50 text-neutral-700 hover:border-emerald-400 hover:text-emerald-800 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-emerald-400 dark:hover:text-emerald-300",
+    dropdownHover:
+      "hover:bg-emerald-50 dark:hover:bg-neutral-800",
+  },
+} as const;
+
 export function SurveyComboField({
   value,
   onChange,
@@ -32,14 +60,18 @@ export function SurveyComboField({
   name,
   suggestions,
   placeholder,
-  helperText = 'Pick a suggestion or type your own.',
+  helperText = "Pick a suggestion or type your own.",
   chipCount = 10,
   multiline = false,
   rows = 3,
+  variant = "blue",
 }: Props) {
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const inputAccent = inputVariants[variant];
+  const chipAccent = chipVariants[variant];
+  const inputClassName = `${inputClassNameBase} ${inputAccent}`;
 
   const chips = suggestions.slice(0, chipCount);
   const filtered = useMemo(
@@ -71,7 +103,7 @@ export function SurveyComboField({
         <li key={suggestion}>
           <button
             type="button"
-            className="w-full px-4 py-2 text-left text-sm text-neutral-800 hover:bg-blue-50 dark:text-neutral-100 dark:hover:bg-neutral-800"
+            className={`w-full px-4 py-2.5 text-left text-sm text-neutral-800 dark:text-neutral-100 ${chipAccent.dropdownHover}`}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => selectSuggestion(suggestion)}
           >
@@ -138,10 +170,8 @@ export function SurveyComboField({
                 key={chip}
                 type="button"
                 onClick={() => selectSuggestion(chip)}
-                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                  selected
-                    ? 'border-blue-600 bg-blue-600 text-white dark:border-blue-500 dark:bg-blue-500'
-                    : 'border-neutral-300 bg-neutral-50 text-neutral-700 hover:border-blue-400 hover:text-blue-700 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:border-blue-400 dark:hover:text-blue-300'
+                className={`min-h-10 rounded-full border px-3 py-2 text-xs font-medium transition-colors sm:min-h-0 sm:py-1 ${
+                  selected ? chipAccent.selected : chipAccent.idle
                 }`}
               >
                 {chip}

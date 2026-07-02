@@ -64,3 +64,7 @@ export const TEST_ACTIONS_COLLECTION = "actions_test";
 /** Outbound emails sent to clients (reports, marketing, proposals — not contact records). */
 export const SENT_EMAILS_COLLECTION = "sent_emails";
 export const TEST_SENT_EMAILS_COLLECTION = "sent_emails_test";
+
+/** Post-purchase KYC captured on first library login (conversion kit buyers). */
+export const CONVERSION_KIT_KYC_COLLECTION = "conversion_kit_kyc";
+export const TEST_CONVERSION_KIT_KYC_COLLECTION = "conversion_kit_kyc_test";

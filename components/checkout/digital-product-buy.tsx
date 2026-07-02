@@ -28,14 +28,14 @@ export function DigitalProductBuy({
     >
       <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
             One-time purchase
           </p>
           <p className="mt-1 font-mono text-3xl font-extrabold text-neutral-900 dark:text-white">
             {price}
           </p>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-            Instant download · No subscription
+            Instant access · No subscription
           </p>
         </div>
         <Link
@@ -49,7 +49,7 @@ export function DigitalProductBuy({
               currency,
             });
           }}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-blue-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-600/30 transition-all hover:-translate-y-0.5 hover:bg-blue-500 active:bg-blue-700 sm:w-auto sm:py-4 sm:text-lg"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all hover:-translate-y-0.5 hover:bg-emerald-500 active:bg-emerald-700 sm:w-auto sm:py-4 sm:text-lg"
         >
           {buyable.cta.checkout}
         </Link>

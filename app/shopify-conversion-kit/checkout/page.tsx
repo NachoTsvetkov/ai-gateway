@@ -8,8 +8,8 @@ import { detectCurrency } from "lib/currency.server";
 import { getDigitalProduct } from "lib/digital-products-data";
 
 export const metadata = {
-  title: "Checkout — Shopify Conversion Leak Fix Kit",
-  description: "Pay securely with PayPal. Instant download after purchase.",
+  title: "Checkout — Shopify Paid-Traffic Leak Scorecard",
+  description: "Pay securely with PayPal. Instant library access after purchase.",
 };
 
 export default async function ConversionKitCheckoutPage() {
@@ -18,7 +18,7 @@ export default async function ConversionKitCheckoutPage() {
   const buyable = buyableFromDigitalProduct(product);
 
   return (
-    <main className="bg-neutral-50 dark:bg-neutral-950">
+    <div className="bg-neutral-50 dark:bg-neutral-950">
       <ViewContentTracker
         contentId={product.id}
         contentName={`${product.name} — Checkout`}
@@ -46,7 +46,7 @@ export default async function ConversionKitCheckoutPage() {
               clipRule="evenodd"
             />
           </svg>
-          Back to kit
+          Back to scorecard
         </Link>
 
         <header className="mt-6">
@@ -84,7 +84,7 @@ export default async function ConversionKitCheckoutPage() {
 
         <DigitalProductLegalNotice className="mt-6 text-center" />
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -108,7 +108,7 @@ function OrderCard({
             {name}
           </p>
           <p className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400">
-            Instant download · One-time payment
+            Instant access · One-time payment
           </p>
         </div>
         <p className="font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">

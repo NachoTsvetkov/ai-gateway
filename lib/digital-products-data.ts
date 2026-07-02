@@ -2,6 +2,8 @@
 // bundles/services. Kept separate from bundles-data because these are
 // impulse-priced, self-serve downloads — not scoped engagements.
 
+import { LIBRARY_BASE_PATH } from "./digital-product-access";
+
 export type DigitalProductId = "shopify-conversion-kit";
 
 /** Dedicated PayPal checkout route (not generic /checkout). */
@@ -20,54 +22,70 @@ export type DigitalProduct = {
   };
   /** Optional Stripe Payment Link — surfaced on checkout as fallback. */
   stripePaymentLink?: string;
-  /** Files delivered on the success page (paths under /public). */
-  downloads: ReadonlyArray<{
+  /** Gated library sections (access via checkout success token). */
+  librarySections: ReadonlyArray<{
+    slug: string;
     label: string;
-    href: string;
     description?: string;
   }>;
 };
 
-const CONVERSION_KIT_DOWNLOADS: DigitalProduct["downloads"] = [
+const CONVERSION_KIT_LIBRARY: DigitalProduct["librarySections"] = [
   {
-    label: "Kit overview (start here)",
-    href: "/guides/shopify-conversion-leak-fix-kit/README.md",
-    description: "What's inside + how to run the 15-minute audit",
+    slug: "",
+    label: "Start here",
+    description: "Your 30-minute workflow",
   },
   {
-    label: "15-minute mobile checkout audit",
-    href: "/guides/shopify-conversion-leak-fix-kit/01-15-minute-audit.md",
+    slug: "scorecard",
+    label: "Leak scorecard",
+    description: "Score, diagnose tracking vs checkout, get fixes",
   },
   {
-    label: "5 conversion leaks playbook",
-    href: "/guides/shopify-conversion-leak-fix-kit/02-five-leaks-playbook.md",
+    slug: "fixes",
+    label: "5 leak playbooks",
+    description: "Priority-ordered Shopify fixes",
   },
   {
-    label: "Copy-paste fix blocks",
-    href: "/guides/shopify-conversion-leak-fix-kit/03-copy-paste-blocks.md",
+    slug: "copy",
+    label: "Copy-paste blocks",
+    description: "One-tap copy for your theme",
   },
   {
-    label: "Weekly conversion tracker (CSV)",
-    href: "/guides/shopify-conversion-leak-fix-kit/04-conversion-tracker.csv",
+    slug: "meta-test",
+    label: "$300 Meta test plan",
+    description: "Kill rules and scale signals",
   },
 ];
 
 export const DIGITAL_PRODUCTS: ReadonlyArray<DigitalProduct> = [
   {
     id: "shopify-conversion-kit",
-    name: "Shopify Conversion Leak Fix Kit",
+    name: "Shopify Paid-Traffic Leak Scorecard",
     tagline:
-      "15-minute self-audit + prioritized fixes for stores bleeding paid traffic at mobile checkout.",
+      "15-minute mobile scorecard + prioritized fixes for stores bleeding Meta ad spend at checkout.",
     oneTimeEur: 34,
     cta: {
-      primary: "Get the kit — fix my leaks",
-      helper: "Instant download after checkout · PayPal secure",
-      checkout: "Get the kit — $37",
+      primary: "Get the scorecard — find my leaks",
+      helper: "Instant access after checkout · PayPal secure",
+      checkout: "Get access — $37",
     },
     stripePaymentLink: process.env.NEXT_PUBLIC_STRIPE_CONVERSION_KIT_LINK,
-    downloads: CONVERSION_KIT_DOWNLOADS,
+    librarySections: CONVERSION_KIT_LIBRARY,
   },
 ];
+
+/** Post-purchase library entry (append ?access= token from success page). */
+export function getDigitalProductLibraryPath(
+  productId: DigitalProductId,
+  sectionSlug = "",
+): string {
+  const base = sectionSlug
+    ? `${LIBRARY_BASE_PATH}/${sectionSlug}`
+    : LIBRARY_BASE_PATH;
+  void productId;
+  return base;
+}
 
 const BY_ID = new Map(DIGITAL_PRODUCTS.map((p) => [p.id, p]));
 
@@ -84,3 +102,4 @@ export function getDigitalProductByReference(
   const id = ref.slice("digital:".length) as DigitalProductId;
   return BY_ID.get(id);
 }
+

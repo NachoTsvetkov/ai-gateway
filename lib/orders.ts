@@ -1,4 +1,4 @@
-import { collection, getDocs, query, limit, setDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, limit, setDoc, doc, where } from 'firebase/firestore';
 import { db, ORDERS_COLLECTION, TEST_ORDERS_COLLECTION } from './firebase';
 import { logActivity, upsertContact } from './journey';
 import { createOrderSubmitActions } from './journey-actions';
@@ -191,4 +191,42 @@ export async function getRecentOrders(useTestCollection = false, maxResults = 5)
     return (b.id || '').localeCompare(a.id || '');
   });
   return docs.slice(0, maxResults);
+}
+
+function normalizeOrderEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/** True when a paid order exists for this digital product and email. */
+export async function hasPaidDigitalProductOrder(
+  email: string,
+  productId: string,
+  useTestCollection = false,
+): Promise<boolean> {
+  const normalized = normalizeOrderEmail(email);
+  const trimmed = email.trim();
+  const collectionName = useTestCollection ? TEST_ORDERS_COLLECTION : ORDERS_COLLECTION;
+
+  const emailsToTry = [...new Set([normalized, trimmed].filter(Boolean))];
+
+  for (const candidate of emailsToTry) {
+    const q = query(
+      collection(db, collectionName),
+      where('customer.email', '==', candidate),
+      limit(25),
+    );
+    const snapshot = await getDocs(q);
+    const match = snapshot.docs.some((orderDoc) => {
+      const data = orderDoc.data();
+      const orderEmail = normalizeOrderEmail(String(data.customer?.email ?? ''));
+      return (
+        orderEmail === normalized &&
+        data.buyable?.id === productId &&
+        data.status === 'paid'
+      );
+    });
+    if (match) return true;
+  }
+
+  return false;
 }

@@ -1,9 +1,10 @@
 # Meta Ads — $300 Smoke Test Playbook
 
-**Product:** Shopify Conversion Leak Fix Kit  
+**Product:** Shopify Paid-Traffic Leak Scorecard  
 **Price:** $37 USD  
 **Landing page:** `https://[YOUR-DOMAIN]/shopify-conversion-kit`  
-**Checkout:** `/shopify-conversion-kit/checkout` (PayPal)
+**Checkout:** `/shopify-conversion-kit/checkout` (PayPal)  
+**Library:** `/shopify-conversion-kit/library` (gated — linked from success page)
 
 ---
 

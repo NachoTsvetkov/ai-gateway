@@ -107,7 +107,7 @@ export default async function CheckoutPage({
       : buyable.stripePaymentLink;
 
   return (
-    <main className="bg-neutral-50 dark:bg-neutral-950">
+    <div className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-5xl px-6 py-12 sm:py-16">
         <BackLink href={buyable.detailsUrl} label={t(DICT.cta.backLabel)} />
 
@@ -145,7 +145,7 @@ export default async function CheckoutPage({
           />
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -281,7 +281,7 @@ function PickBundleFallback({ locale }: { locale: Locale }) {
   const t = createT(locale);
   const bundles = getLocalizedBundles(locale);
   return (
-    <main className="bg-neutral-50 dark:bg-neutral-950">
+    <div className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-3xl px-6 py-20 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
           {t(DICT.checkout.fallbackHeadline)}
@@ -321,7 +321,7 @@ function PickBundleFallback({ locale }: { locale: Locale }) {
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 

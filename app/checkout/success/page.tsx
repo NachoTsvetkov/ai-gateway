@@ -1,8 +1,14 @@
 import Link from "next/link";
+import { LIBRARY_BASE_PATH, LIBRARY_LOGIN_PATH } from "lib/digital-product-access";
 import { detectLocale } from "lib/i18n/locale.server";
 import { createT } from "lib/i18n/locale";
 import { DICT } from "lib/i18n/dict";
+import {
+  createDigitalProductAccessToken,
+  libraryPath,
+} from "lib/digital-product-access";
 import { getDigitalProductByReference } from "lib/digital-products-data";
+import { scorecardContactStep } from "lib/conversion-scorecard/content";
 
 const CALENDLY_URL = "https://calendly.com/nacho-tsvetkov/30min";
 
@@ -45,8 +51,19 @@ export default async function CheckoutSuccessPage({
   const reference = sp.ref ?? null;
   const digitalProduct = getDigitalProductByReference(reference);
 
+  const accessToken =
+    digitalProduct && paypalId
+      ? createDigitalProductAccessToken(digitalProduct.id, paypalId)
+      : null;
+
+  const libraryUrl = accessToken
+    ? libraryPath("", accessToken)
+    : null;
+
+  const contactStep = scorecardContactStep();
+
   return (
-    <main className="bg-neutral-50 dark:bg-neutral-950">
+    <div className="bg-neutral-50 dark:bg-neutral-950">
       <div className="mx-auto max-w-2xl px-6 py-20 text-center sm:py-28">
         <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
           <svg
@@ -66,58 +83,93 @@ export default async function CheckoutSuccessPage({
 
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
           {digitalProduct
-            ? "Your kit is ready"
+            ? "Your scorecard is ready"
             : isSubscription
               ? t(DICT.checkout.successSubscriptionTitle)
               : t(DICT.checkout.successOrderTitle)}
         </h1>
         <p className="mt-4 text-base text-neutral-600 dark:text-neutral-400">
           {digitalProduct
-            ? "Payment confirmed. Download everything below — bookmark this page."
+            ? "Payment confirmed. Open your private library below — bookmark it on your phone."
             : t(DICT.checkout.successBody)}
         </p>
 
-        {digitalProduct && (
+        {digitalProduct && libraryUrl && (
           <section
-            aria-labelledby="downloads-heading"
-            className="mx-auto mt-8 max-w-md rounded-xl border border-blue-200 bg-blue-50 p-6 text-left dark:border-blue-500/30 dark:bg-blue-950/20"
+            aria-labelledby="library-heading"
+            className="mx-auto mt-8 max-w-md rounded-xl border border-emerald-200 bg-emerald-50 p-6 text-left dark:border-emerald-500/30 dark:bg-emerald-950/20"
           >
             <h2
-              id="downloads-heading"
+              id="library-heading"
               className="text-lg font-bold text-neutral-900 dark:text-white"
             >
-              Download your kit
+              Open your library
             </h2>
-            <ul className="mt-4 space-y-3">
-              {digitalProduct.downloads.map((file) => (
-                <li key={file.href}>
-                  <a
-                    href={file.href}
-                    download
-                    className="block rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-blue-400 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-blue-500/50"
-                  >
-                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                      {file.label} ↓
-                    </span>
-                    {file.description && (
-                      <span className="mt-0.5 block text-xs text-neutral-600 dark:text-neutral-400">
-                        {file.description}
-                      </span>
-                    )}
-                  </a>
-                </li>
-              ))}
+            <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+              Interactive scorecard, fix playbooks, copy blocks, and your $300
+              Meta test plan — works on mobile.
+            </p>
+            <Link
+              href={libraryUrl}
+              className="mt-5 flex min-h-12 items-center justify-center rounded-xl bg-emerald-600 px-5 text-center text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-colors hover:bg-emerald-500"
+            >
+              Open scorecard library →
+            </Link>
+            <ul className="mt-5 space-y-2 border-t border-emerald-200/80 pt-4 dark:border-emerald-800">
+              {digitalProduct.librarySections.map((section) => {
+                const href = libraryPath(
+                  section.slug || undefined,
+                  accessToken,
+                );
+                return (
+                  <li key={section.slug || "hub"}>
+                    <Link
+                      href={href}
+                      className="block rounded-lg px-2 py-2 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100/80 dark:text-emerald-300 dark:hover:bg-emerald-900/30"
+                    >
+                      {section.label} →
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
+            <a
+              href={contactStep.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 block rounded-lg border border-neutral-200 bg-white px-4 py-3 transition-colors hover:border-emerald-400 dark:border-emerald-800 dark:bg-neutral-900"
+            >
+              <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+                {contactStep.label} →
+              </p>
+              <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+                {contactStep.why}
+              </p>
+            </a>
             <p className="mt-4 text-xs text-neutral-600 dark:text-neutral-400">
-              Need help? Email{" "}
-              <a
-                href="mailto:nacho.tsvetkov@gmail.com"
-                className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
+              This link is tied to your purchase. Save it. On a new device,{" "}
+              <Link
+                href={LIBRARY_LOGIN_PATH}
+                className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"
               >
-                nacho.tsvetkov@gmail.com
-              </a>
+                open the library login
+              </Link>{" "}
+              and sign in with your checkout email.
             </p>
           </section>
+        )}
+
+        {digitalProduct && !libraryUrl && (
+          <p className="mx-auto mt-6 max-w-sm text-sm text-amber-800 dark:text-amber-300">
+            We couldn&apos;t generate your library link automatically. Email{" "}
+            <a
+              href="mailto:nacho.tsvetkov@gmail.com"
+              className="font-semibold underline"
+            >
+              nacho.tsvetkov@gmail.com
+            </a>{" "}
+            with your PayPal receipt.
+          </p>
         )}
 
         {(paypalId || reference) && (
@@ -163,10 +215,12 @@ export default async function CheckoutSuccessPage({
             href={digitalProduct ? "/shopify-conversion-kit" : "/"}
             className="text-sm font-semibold text-neutral-700 underline-offset-2 hover:underline dark:text-neutral-300"
           >
-            {digitalProduct ? "Back to product page" : t(DICT.checkout.successHomeLink)}
+            {digitalProduct
+              ? "Back to product page"
+              : t(DICT.checkout.successHomeLink)}
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// This proxy ensures that /api/* requests are always passed through to the API route handlers
-// and are not accidentally caught by the top-level dynamic [page] marketing page route.
-// Without this, in some dev setups or with experimental features, /api/orders etc. could 404 as "page not found".
+/**
+ * Ensures /api/* reaches route handlers (not the marketing [page] catch-all)
+ * and passes pathname to server layouts for consistent navbar decisions.
+ */
 export function proxy(request: NextRequest) {
-  if (request.nextUrl.pathname.startsWith("/api")) {
-    return NextResponse.next();
-  }
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", request.nextUrl.pathname);
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {
-  matcher: "/:path*",
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };

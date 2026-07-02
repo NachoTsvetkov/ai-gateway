@@ -4,18 +4,20 @@ import { DigitalProductBuy } from "components/checkout/digital-product-buy";
 import { DigitalProductLegalNotice } from "components/checkout/legal-notice";
 import { StickyMobileBuyBar } from "components/checkout/sticky-mobile-buy-bar";
 import { buyableFromDigitalProduct } from "lib/buyable";
+import { formatPrice } from "lib/currency";
 import { detectCurrency } from "lib/currency.server";
 import { getDigitalProduct } from "lib/digital-products-data";
+import { LIBRARY_BASE_PATH, LIBRARY_LOGIN_PATH } from "lib/digital-product-access";
 
 export const metadata = {
-  title: "Shopify Conversion Leak Fix Kit — Stop Bleeding Paid Traffic",
+  title: "Shopify Paid-Traffic Leak Scorecard — Stop Bleeding Meta Ad Spend",
   description:
-    "15-minute self-audit for Shopify stores losing sales at mobile checkout. Prioritized fixes, copy-paste blocks, and a weekly tracker — $37, instant download.",
+    "15-minute mobile scorecard for Shopify stores losing sales at checkout. Interactive scoring, fix playbooks, copy blocks, and $300 Meta test plan — $37, instant access.",
   openGraph: {
     type: "website",
-    title: "Shopify Conversion Leak Fix Kit",
+    title: "Shopify Paid-Traffic Leak Scorecard",
     description:
-      "Find where your Shopify store leaks conversions — and fix the highest-impact issues in one afternoon.",
+      "Find why paid traffic isn't buying — score your mobile checkout in 15 minutes and fix the highest-impact leaks first.",
   },
 };
 
@@ -48,21 +50,25 @@ const LEAKS = [
 ] as const;
 
 const INCLUDED = [
-  "15-minute mobile checkout audit checklist (score each leak 0–2)",
-  "5-leak playbook with Shopify-specific fix steps",
-  "Copy-paste trust, shipping, and urgency blocks for your theme",
-  "Weekly conversion tracker CSV (sessions → ATC → checkout → purchase)",
-  "Priority order: fix these first if you only have one afternoon",
+  "Interactive leak scorecard — tap 0–2 on your phone, auto-saves your score",
+  "Tracking or checkout? — 5-minute decision tree before you blame the ads",
+  "5 leak playbooks with Shopify-specific fix steps (priority order)",
+  "Copy-paste trust, shipping, and ad-match blocks (one-tap copy)",
+  "Weekly conversion tracker CSV + $300 Meta smoke test kill rules",
 ] as const;
 
 const FAQ = [
   {
     q: "Is this for beginners or experienced store owners?",
-    a: "Both. If you're already running Meta or Google ads and getting traffic but weak conversion rate, this kit is built for you. No agency required.",
+    a: "Both. If you're already running Meta or Google ads and getting traffic but weak conversion rate, this scorecard is built for you. No agency required.",
   },
   {
     q: "Do I need Shopify Plus?",
     a: "No. Everything applies to standard Shopify and Shopify Basic. Some fixes use built-in settings; others use free theme edits or apps you may already have.",
+  },
+  {
+    q: "How do I access it after purchase?",
+    a: "You get a private web library — works on mobile. Score the checklist in your browser, copy blocks with one tap, and bookmark the page. No markdown files to wrestle with.",
   },
   {
     q: "How fast will I see results?",
@@ -70,7 +76,7 @@ const FAQ = [
   },
   {
     q: "Refunds?",
-    a: "If the audit checklist doesn't surface at least 3 actionable leaks on your store, email nacho.tsvetkov@gmail.com within 7 days for a full refund. See conversion kit terms for details.",
+    a: "If the scorecard doesn't surface at least 3 actionable leaks on your store, email nacho.tsvetkov@gmail.com within 7 days for a full refund. See terms for details.",
   },
 ] as const;
 
@@ -81,15 +87,15 @@ const AUDIT_PREVIEW = [
   { check: "Checkout completes in under 60 seconds", score: "0–2" },
 ] as const;
 
-function KitAuditPreview() {
+function ScorecardPreview() {
   return (
     <div
       className="overflow-hidden rounded-xl border border-neutral-300 bg-white shadow-lg dark:border-neutral-700 dark:bg-neutral-900"
-      aria-label="Preview of the 15-minute audit checklist"
+      aria-label="Preview of the interactive leak scorecard"
     >
-      <div className="border-b border-neutral-200 bg-neutral-100 px-4 py-2.5 dark:border-neutral-800 dark:bg-neutral-800">
-        <p className="font-mono text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-          01-15-minute-audit.md — excerpt
+      <div className="border-b border-neutral-200 bg-emerald-50 px-4 py-2.5 dark:border-neutral-800 dark:bg-emerald-950/40">
+        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+          Leak scorecard — live preview
         </p>
       </div>
 
@@ -141,19 +147,29 @@ function KitAuditPreview() {
       </div>
 
       <p className="border-t border-neutral-200 bg-emerald-50 px-4 py-2.5 text-xs leading-relaxed text-emerald-900 dark:border-neutral-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-        Full checklist: 30 points · score in 15 minutes on your phone
+        30 checks · tap 0, 1, or 2 · scores save on your phone
       </p>
     </div>
   );
 }
 
-export default async function ShopifyConversionKitPage() {
+export default async function ShopifyConversionKitPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ locked?: string }>;
+}) {
+  const sp = await searchParams;
+  const locked = sp.locked === "1";
   const currency = await detectCurrency();
   const product = getDigitalProduct("shopify-conversion-kit");
   const buyable = buyableFromDigitalProduct(product);
+  const price = formatPrice(product.oneTimeEur, currency);
+  const showLibraryPreview =
+    process.env.NODE_ENV === "development" &&
+    process.env.DIGITAL_PRODUCT_LIBRARY_PREVIEW === "1";
 
   return (
-    <main className="bg-white pb-24 sm:pb-0 dark:bg-neutral-950">
+    <div className="bg-white pb-24 sm:pb-0 dark:bg-neutral-950">
       <ViewContentTracker
         contentId={product.id}
         contentName={product.name}
@@ -164,6 +180,27 @@ export default async function ShopifyConversionKitPage() {
       />
 
       <StickyMobileBuyBar buyable={buyable} currency={currency} />
+
+      {locked && (
+        <div
+          role="status"
+          className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-100"
+        >
+          The scorecard library requires purchase. Get instant access below.
+        </div>
+      )}
+
+      {showLibraryPreview && (
+        <div className="border-b border-blue-200 bg-blue-50 px-4 py-2 text-center text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
+          Dev preview:{" "}
+          <Link
+            href={LIBRARY_LOGIN_PATH}
+            className="font-semibold underline underline-offset-2"
+          >
+            Open library login
+          </Link>
+        </div>
+      )}
 
       {/* Hero */}
       <section
@@ -178,39 +215,77 @@ export default async function ShopifyConversionKitPage() {
             id="kit-hero-heading"
             className="mt-3 text-3xl font-bold leading-tight tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl dark:text-white"
           >
-            Why am I paying for traffic that doesn&apos;t buy?
+            Paying for traffic that doesn&apos;t buy?
           </h1>
+          <p className="mt-4 font-mono text-2xl font-extrabold text-emerald-700 sm:text-3xl dark:text-emerald-400">
+            {price}{" "}
+            <span className="text-base font-semibold text-neutral-600 dark:text-neutral-400">
+              · one-time · instant access
+            </span>
+          </p>
           <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-700 sm:text-lg dark:text-neutral-300">
             The{" "}
             <strong className="font-semibold text-neutral-900 dark:text-white">
-              Shopify Conversion Leak Fix Kit
+              Paid-Traffic Leak Scorecard
             </strong>{" "}
-            is a 15-minute self-audit plus prioritized fixes for the five leaks
-            that bleed mobile checkout — without hiring an agency.
+            shows where mobile checkout leaks — score 30 checks in 15 minutes on
+            your phone, then fix the highest-impact leaks first. Not a 300-point
+            PDF.
           </p>
           <ul className="mt-6 space-y-2.5 text-base text-neutral-700 dark:text-neutral-300">
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Run the audit on your phone in 15 minutes
+              Interactive 0–2 scorecard — saves on your phone
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Fix highest-impact leaks first (priority order included)
+              Tracking or checkout? decision tree + fix playbooks
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1 text-emerald-600" aria-hidden="true">
                 ✓
               </span>
-              Copy-paste blocks + weekly tracker to prove it worked
+              7-day refund if you don&apos;t find 3+ actionable leaks
             </li>
           </ul>
           <div className="mt-8 sm:mt-10">
             <DigitalProductBuy buyable={buyable} currency={currency} />
           </div>
+          <p className="mt-5 text-center text-sm text-neutral-600 dark:text-neutral-400">
+            Already purchased?{" "}
+            <Link
+              href={LIBRARY_LOGIN_PATH}
+              className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"
+            >
+              Enter your email to open the library
+            </Link>
+          </p>
+        </div>
+      </section>
+
+      {/* Problem */}
+      <section
+        aria-labelledby="problem-heading"
+        className="border-b border-neutral-200 py-10 sm:py-14 dark:border-neutral-800"
+      >
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <h2
+            id="problem-heading"
+            className="text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white"
+          >
+            Ads get clicks. Checkout doesn&apos;t convert.
+          </h2>
+          <p className="mt-3 text-base leading-relaxed text-neutral-600 dark:text-neutral-400">
+            Most Shopify stores running Meta traffic lose buyers at the same five
+            leaks — surprise shipping, mobile checkout friction, weak trust near
+            the buy button, slow PDPs, and ad copy that doesn&apos;t match the
+            landing page. More ad spend without fixing these just scales the
+            leak.
+          </p>
         </div>
       </section>
 
@@ -229,7 +304,7 @@ export default async function ShopifyConversionKitPage() {
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
             Built by a senior engineer who ships Shopify integrations — not
             generic marketing theory. Most stores running paid traffic score
-            under 18/30 on the mobile checkout audit.
+            under 18/30 on the mobile checkout scorecard.
           </p>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2 md:items-start md:gap-8">
@@ -247,17 +322,17 @@ export default async function ShopifyConversionKitPage() {
               </div>
               <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 dark:border-neutral-800 dark:bg-neutral-900">
                 <p className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
-                  Inside the kit
+                  Not a checklist PDF
                 </p>
                 <p className="mt-2 font-mono text-2xl font-extrabold text-neutral-900 dark:text-white">
-                  30<span className="text-base font-semibold">-point audit</span>
+                  0–2<span className="text-base font-semibold"> scorecard</span>
                 </p>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                  5 playbooks · copy-paste blocks · weekly CSV tracker
+                  Interactive library · copy blocks · Meta kill rules
                 </p>
               </div>
             </div>
-            <KitAuditPreview />
+            <ScorecardPreview />
           </div>
         </div>
       </section>
@@ -272,10 +347,10 @@ export default async function ShopifyConversionKitPage() {
             id="leaks-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
-            The 5 leaks this kit helps you fix
+            The 5 leaks this scorecard helps you fix
           </h2>
           <p className="mt-2 text-base text-neutral-600 dark:text-neutral-400">
-            Score each 0–2 in the audit. Anything scoring 0–1 gets a fix this
+            Score each 0–2 in the library. Anything scoring 0–1 gets a fix this
             week.
           </p>
           <ol className="mt-8 space-y-4 sm:space-y-6">
@@ -313,7 +388,7 @@ export default async function ShopifyConversionKitPage() {
             id="included-heading"
             className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl dark:text-white"
           >
-            What you get (instant download)
+            What you get (instant access)
           </h2>
           <ul className="mt-6 space-y-3">
             {INCLUDED.map((item) => (
@@ -332,6 +407,29 @@ export default async function ShopifyConversionKitPage() {
             ))}
           </ul>
           <div className="mt-8 sm:mt-10">
+            <DigitalProductBuy buyable={buyable} currency={currency} />
+          </div>
+        </div>
+      </section>
+
+      {/* Guarantee */}
+      <section
+        aria-labelledby="guarantee-heading"
+        className="border-b border-emerald-200 bg-emerald-50 py-10 sm:py-12 dark:border-emerald-900/40 dark:bg-emerald-950/25"
+      >
+        <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
+          <h2
+            id="guarantee-heading"
+            className="text-xl font-bold text-neutral-900 sm:text-2xl dark:text-white"
+          >
+            7-day leak guarantee
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-neutral-700 dark:text-neutral-300">
+            Run the scorecard on your store. If it doesn&apos;t surface at least{" "}
+            <strong>3 actionable leaks</strong>, email within 7 days for a full
+            refund — no forms, no call required.
+          </p>
+          <div className="mt-8">
             <DigitalProductBuy buyable={buyable} currency={currency} />
           </div>
         </div>
@@ -388,8 +486,17 @@ export default async function ShopifyConversionKitPage() {
             </Link>
           </p>
           <DigitalProductLegalNotice className="mx-auto mt-2 max-w-md text-center text-xs leading-relaxed" />
+          <p className="mt-4 text-neutral-600 dark:text-neutral-400">
+            Already purchased?{" "}
+            <Link
+              href={LIBRARY_LOGIN_PATH}
+              className="font-semibold text-emerald-700 underline underline-offset-2 hover:text-emerald-600 dark:text-emerald-400"
+            >
+              Log in with your checkout email
+            </Link>
+          </p>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }

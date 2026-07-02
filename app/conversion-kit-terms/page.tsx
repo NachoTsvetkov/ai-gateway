@@ -1,24 +1,24 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Conversion Kit Terms & Refund Policy",
+  title: "Scorecard Terms & Refund Policy",
   description:
-    "Terms of purchase, instant download delivery, and refund policy for the Shopify Conversion Leak Fix Kit.",
+    "Terms of purchase, instant library access, and refund policy for the Shopify Paid-Traffic Leak Scorecard.",
 };
 
 export default function ConversionKitTermsPage() {
   return (
-    <main className="bg-white dark:bg-neutral-950">
+    <div className="bg-white dark:bg-neutral-950">
       <div className="mx-auto max-w-2xl px-6 py-16 sm:py-20">
         <Link
           href="/shopify-conversion-kit"
           className="text-sm font-semibold text-blue-600 hover:underline dark:text-blue-400"
         >
-          ← Back to the kit
+          ← Back to scorecard
         </Link>
 
         <h1 className="mt-6 text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
-          Shopify Conversion Leak Fix Kit — Terms
+          Shopify Paid-Traffic Leak Scorecard — Terms
         </h1>
         <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
           Last updated: July 2026
@@ -27,17 +27,17 @@ export default function ConversionKitTermsPage() {
         <div className="prose prose-neutral mt-10 max-w-none dark:prose-invert prose-headings:font-bold prose-p:text-neutral-700 dark:prose-p:text-neutral-300">
           <h2>What you are buying</h2>
           <p>
-            A digital download bundle (checklists, playbooks, copy blocks, and a
-            CSV tracker) for auditing and improving Shopify store conversion.
-            This is an informational product — not a done-for-you service or
-            guaranteed revenue outcome.
+            Access to a private web library: interactive leak scorecard, fix
+            playbooks, copy-paste blocks, a weekly metrics tracker (CSV), and a
+            Meta ads smoke-test plan. This is an informational product — not a
+            done-for-you service or guaranteed revenue outcome.
           </p>
 
           <h2>Delivery</h2>
           <p>
-            Files are available for immediate download on the checkout success
-            page after payment. Save or bookmark that page. A copy of your
-            receipt is recorded via PayPal. If downloads fail, email{" "}
+            Your library link is on the checkout success page immediately after
+            payment. Bookmark it on your phone — access is tied to your
+            purchase. A receipt is recorded via PayPal. If access fails, email{" "}
             <a href="mailto:nacho.tsvetkov@gmail.com">nacho.tsvetkov@gmail.com</a>{" "}
             with your PayPal receipt within 48 hours.
           </p>
@@ -45,13 +45,13 @@ export default function ConversionKitTermsPage() {
           <h2>License</h2>
           <p>
             Personal use for one business. Do not resell, redistribute, or
-            republish the kit contents.
+            republish the scorecard contents.
           </p>
 
           <h2>Refund policy</h2>
           <p>
             Request a full refund within <strong>7 days</strong> of purchase if
-            the 15-minute audit checklist does not surface at least{" "}
+            the leak scorecard does not surface at least{" "}
             <strong>3 actionable leaks</strong> on your store. Email{" "}
             <a href="mailto:nacho.tsvetkov@gmail.com">nacho.tsvetkov@gmail.com</a>{" "}
             with your store URL and order reference. Refunds are processed via
@@ -67,8 +67,8 @@ export default function ConversionKitTermsPage() {
 
           <h2>Privacy</h2>
           <p>
-            Checkout collects your email and store URL to deliver the product
-            and provide support. See our{" "}
+            Checkout collects your email and store URL to deliver access and
+            provide support. See our{" "}
             <Link href="/privacy-policy">privacy policy</Link>.
           </p>
 
@@ -79,6 +79,6 @@ export default function ConversionKitTermsPage() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
