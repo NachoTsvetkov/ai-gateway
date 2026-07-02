@@ -2,15 +2,15 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ACCESS_COOKIE_NAME } from "lib/digital-product-access";
 import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
+import { ConversionKitKycSchema } from "lib/conversion-scorecard/kyc";
 import {
-  ConversionKitKycSchema,
-  hasConversionKitKyc,
-} from "lib/conversion-scorecard/kyc";
-import {
+  hasConversionKitKycServer,
   resolveLibrarySessionEmailServer,
   saveConversionKitKycServer,
   useConversionKitTestCollection,
 } from "lib/conversion-scorecard/kyc.server";
+
+export const dynamic = "force-dynamic";
 
 async function getAuthorizedSession() {
   const cookieStore = await cookies();
@@ -29,45 +29,56 @@ async function getAuthorizedSession() {
 export async function GET() {
   const session = await getAuthorizedSession();
   if (!session) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "unauthorized" },
+      { status: 401, headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 
   const { email, useTestCollection } = session;
 
   if (!email) {
-    return NextResponse.json({
-      complete: false,
-      email: null,
-      emailRequired: true,
-    });
+    return NextResponse.json(
+      {
+        complete: false,
+        email: null,
+        emailRequired: true,
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 
   try {
-    let complete = await hasConversionKitKyc(email, useTestCollection);
+    const complete = await hasConversionKitKycServer(email, useTestCollection);
 
-    if (!complete && useTestCollection) {
-      complete = await hasConversionKitKyc(email, false);
-    }
-
-    return NextResponse.json({
-      complete,
-      email,
-      emailRequired: false,
-    });
+    return NextResponse.json(
+      {
+        complete,
+        email,
+        emailRequired: false,
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   } catch (error) {
     console.error("[conversion-kit-kyc] GET failed", error);
-    return NextResponse.json({
-      complete: false,
-      email,
-      emailRequired: false,
-    });
+    return NextResponse.json(
+      {
+        complete: false,
+        email,
+        emailRequired: false,
+      },
+      { headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 }
 
 export async function POST(request: Request) {
   const session = await getAuthorizedSession();
   if (!session) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return NextResponse.json(
+      { error: "unauthorized" },
+      { status: 401, headers: { "Cache-Control": "private, no-store" } },
+    );
   }
 
   let json: unknown;

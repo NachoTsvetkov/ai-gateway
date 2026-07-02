@@ -5,8 +5,8 @@ import {
   LibraryKycGate,
   type LibraryKycStatus,
 } from "components/conversion-scorecard/library-kyc-gate";
-import { hasConversionKitKyc } from "lib/conversion-scorecard/kyc";
 import {
+  hasConversionKitKycServer,
   resolveLibrarySessionEmailServer,
   useConversionKitTestCollection,
 } from "lib/conversion-scorecard/kyc.server";
@@ -33,10 +33,7 @@ async function getInitialKycStatus(token: string): Promise<LibraryKycStatus> {
       return { complete: false, email: null, emailRequired: true };
     }
 
-    let complete = await hasConversionKitKyc(email, useTestCollection);
-    if (!complete && useTestCollection) {
-      complete = await hasConversionKitKyc(email, false);
-    }
+    const complete = await hasConversionKitKycServer(email, useTestCollection);
 
     return { complete, email, emailRequired: false };
   } catch (error) {

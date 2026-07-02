@@ -3,7 +3,7 @@ import type { DigitalProductId } from "./digital-products-data";
 
 export const ACCESS_COOKIE_NAME = "conversion_scorecard_access";
 export const LIBRARY_BASE_PATH = "/shopify-conversion-kit/library";
-export const LIBRARY_KYC_PATH = "/shopify-conversion-kit/library/kyc";
+export const LIBRARY_KYC_PATH = "/api/conversion-scorecard/kyc";
 export const LIBRARY_LOGIN_PATH = "/shopify-conversion-kit/login";
 export const LIBRARY_LOGOUT_PATH = "/shopify-conversion-kit/logout";
 export const LIBRARY_GRANT_PATH = "/shopify-conversion-kit/access";
@@ -108,7 +108,7 @@ export function libraryAccessCookieOptions() {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax" as const,
     maxAge: 60 * 60 * 24 * 365,
-    path: LIBRARY_BASE_PATH,
+    path: "/",
   };
 }
 

@@ -20,6 +20,7 @@ import {
   CONVERSION_KIT_KYC_SOURCE,
   type ConversionKitKycData,
   ConversionKitKycSchema,
+  hasConversionKitKyc,
   saveConversionKitKyc,
 } from "lib/conversion-scorecard/kyc";
 import {
@@ -106,6 +107,39 @@ function activitiesCollection(useTestCollection: boolean): string {
 
 function kycDocId(email: string): string {
   return normalizeLibraryEmail(email).replace(/[^a-z0-9._-]/g, "_");
+}
+
+/** Server-side KYC completion check — prefers Firebase Admin (bypasses client rules). */
+export async function hasConversionKitKycServer(
+  email: string,
+  useTestCollection = useConversionKitTestCollection(),
+): Promise<boolean> {
+  const docId = kycDocId(email);
+  const adminDb = getAdminFirestore();
+
+  if (adminDb) {
+    const primary = await adminDb
+      .collection(kycCollection(useTestCollection))
+      .doc(docId)
+      .get();
+    if (primary.exists) return true;
+
+    if (useTestCollection) {
+      const prod = await adminDb
+        .collection(kycCollection(false))
+        .doc(docId)
+        .get();
+      if (prod.exists) return true;
+    }
+
+    return false;
+  }
+
+  let complete = await hasConversionKitKyc(email, useTestCollection);
+  if (!complete && useTestCollection) {
+    complete = await hasConversionKitKyc(email, false);
+  }
+  return complete;
 }
 
 const STAGE_RANK: Record<string, number> = {

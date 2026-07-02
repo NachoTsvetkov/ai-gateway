@@ -26,6 +26,7 @@ export function LibraryLoginForm({
     try {
       const response = await fetch("/api/conversion-scorecard/library-login", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim() }),
       });

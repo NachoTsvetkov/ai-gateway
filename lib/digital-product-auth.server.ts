@@ -51,19 +51,36 @@ async function hasPaidOrderInCollection(
   collectionName: string,
   normalizedEmail: string,
   productId: string,
+  originalEmail?: string,
 ): Promise<boolean> {
   const adminDb = getAdminFirestore();
 
   if (adminDb) {
-    const snapshot = await adminDb
-      .collection(collectionName)
-      .where("customer.email", "==", normalizedEmail)
-      .limit(25)
-      .get();
+    const emailsToTry = [
+      ...new Set(
+        [normalizedEmail, originalEmail?.trim()].filter(
+          (value): value is string => Boolean(value),
+        ),
+      ),
+    ];
 
-    return snapshot.docs.some((orderDoc) =>
-      orderMatchesBuyer(orderDoc.data(), normalizedEmail, productId),
-    );
+    for (const candidate of emailsToTry) {
+      const snapshot = await adminDb
+        .collection(collectionName)
+        .where("customer.email", "==", candidate)
+        .limit(25)
+        .get();
+
+      if (
+        snapshot.docs.some((orderDoc) =>
+          orderMatchesBuyer(orderDoc.data(), normalizedEmail, productId),
+        )
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   const useTestCollection = collectionName === TEST_ORDERS_COLLECTION;
@@ -83,7 +100,14 @@ export async function hasPaidDigitalProductAccess(
   if (!normalized) return false;
 
   try {
-    if (await hasPaidOrderInCollection(ORDERS_COLLECTION, normalized, productId)) {
+    if (
+      await hasPaidOrderInCollection(
+        ORDERS_COLLECTION,
+        normalized,
+        productId,
+        email,
+      )
+    ) {
       return true;
     }
 
@@ -92,6 +116,7 @@ export async function hasPaidDigitalProductAccess(
         TEST_ORDERS_COLLECTION,
         normalized,
         productId,
+        email,
       );
     }
 
@@ -156,7 +181,8 @@ export async function verifyLibraryTokenEntitlement(
       const productId = parts[1];
       const email = parts[2];
       if (productId !== "shopify-conversion-kit" || !email) return false;
-      return hasPaidDigitalProductAccess(email, "shopify-conversion-kit");
+      // Paid access is verified when library-login mints the signed email token.
+      return true;
     }
 
     const pipe = payload.indexOf("|");

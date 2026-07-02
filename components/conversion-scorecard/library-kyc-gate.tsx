@@ -90,7 +90,18 @@ export function LibraryKycGate({
   const [form, setForm] = useState(EMPTY_FORM);
 
   useEffect(() => {
+    setStatus(initialStatus);
+    if (initialStatus.email) setEmail(initialStatus.email);
+  }, [
+    initialStatus.complete,
+    initialStatus.email,
+    initialStatus.emailRequired,
+  ]);
+
+  useEffect(() => {
     if (initialStatus.complete) return;
+    // Layout already validated the session and resolved email on the server.
+    if (initialStatus.email) return;
 
     let cancelled = false;
 
@@ -129,7 +140,7 @@ export function LibraryKycGate({
     return () => {
       cancelled = true;
     };
-  }, [initialStatus.complete]);
+  }, [initialStatus.complete, initialStatus.email]);
 
   if (status.complete) {
     return null;
