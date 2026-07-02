@@ -8,6 +8,12 @@ export const LIBRARY_LOGIN_PATH = "/shopify-conversion-kit/login";
 export const LIBRARY_LOGOUT_PATH = "/shopify-conversion-kit/logout";
 export const LIBRARY_GRANT_PATH = "/shopify-conversion-kit/access";
 
+/** Older deploys scoped the cookie to the library path only. */
+export const LEGACY_LIBRARY_ACCESS_COOKIE_PATHS = [
+  LIBRARY_BASE_PATH,
+  "/shopify-conversion-kit/library/",
+] as const;
+
 function accessSecret(): string {
   const secret =
     process.env.DIGITAL_PRODUCT_ACCESS_SECRET?.trim() ||
@@ -110,6 +116,54 @@ export function libraryAccessCookieOptions() {
     maxAge: 60 * 60 * 24 * 365,
     path: "/",
   };
+}
+
+type CookieStoreLike = {
+  get: (name: string) => { value: string } | undefined;
+  getAll?: () => Array<{ name: string; value: string }>;
+};
+
+/** Read access token — prefers any valid duplicate cookie over a stale first match. */
+export function readLibraryAccessToken(
+  cookieStore: CookieStoreLike,
+): string | undefined {
+  const direct = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
+  if (!cookieStore.getAll) return direct;
+
+  const candidates = cookieStore
+    .getAll()
+    .filter((entry) => entry.name === ACCESS_COOKIE_NAME)
+    .map((entry) => entry.value);
+
+  if (direct && !candidates.includes(direct)) {
+    candidates.unshift(direct);
+  }
+
+  for (const value of candidates) {
+    if (verifyLibraryAccessToken(value)) return value;
+  }
+
+  return direct;
+}
+
+export function clearLegacyLibraryAccessCookies(
+  response: { cookies: { set: (name: string, value: string, options: object) => void } },
+) {
+  for (const legacyPath of LEGACY_LIBRARY_ACCESS_COOKIE_PATHS) {
+    response.cookies.set(ACCESS_COOKIE_NAME, "", {
+      ...libraryAccessCookieOptions(),
+      path: legacyPath,
+      maxAge: 0,
+    });
+  }
+}
+
+export function setLibraryAccessCookie(
+  response: { cookies: { set: (name: string, value: string, options: object) => void } },
+  token: string,
+) {
+  clearLegacyLibraryAccessCookies(response);
+  response.cookies.set(ACCESS_COOKIE_NAME, token, libraryAccessCookieOptions());
 }
 
 export function libraryPath(

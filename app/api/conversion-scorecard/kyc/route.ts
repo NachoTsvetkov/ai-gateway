@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ACCESS_COOKIE_NAME } from "lib/digital-product-access";
+import { readLibraryAccessToken } from "lib/digital-product-access";
 import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
 import { ConversionKitKycSchema } from "lib/conversion-scorecard/kyc";
 import {
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 async function getAuthorizedSession() {
   const cookieStore = await cookies();
-  const token = cookieStore.get(ACCESS_COOKIE_NAME)?.value;
+  const token = readLibraryAccessToken(cookieStore);
 
   if (!token || !(await verifyLibraryTokenEntitlement(token))) {
     return null;

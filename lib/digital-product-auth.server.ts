@@ -162,9 +162,24 @@ async function verifyPurchaseTokenEntitlement(
   return false;
 }
 
+function isSignedLibraryPayload(payload: string): boolean {
+  if (payload.startsWith("email|")) {
+    const parts = payload.split("|");
+    return parts[1] === "shopify-conversion-kit" && Boolean(parts[2]);
+  }
+
+  const pipe = payload.indexOf("|");
+  if (pipe <= 0) return false;
+
+  const productId = payload.slice(0, pipe);
+  const paypalId = payload.slice(pipe + 1);
+  return productId === "shopify-conversion-kit" && Boolean(paypalId);
+}
+
 /** Validates cookie token signature AND live purchase entitlement. */
 export async function verifyLibraryTokenEntitlement(
   token: string,
+  options?: { requireLivePaidCheck?: boolean },
 ): Promise<boolean> {
   try {
     if (!verifyLibraryAccessToken(token)) return false;
@@ -174,24 +189,23 @@ export async function verifyLibraryTokenEntitlement(
     }
 
     const payload = parseSignedAccessPayload(token);
-    if (!payload) return false;
+    if (!payload || !isSignedLibraryPayload(payload)) return false;
 
-    if (payload.startsWith("email|")) {
-      const parts = payload.split("|");
-      const productId = parts[1];
-      const email = parts[2];
-      if (productId !== "shopify-conversion-kit" || !email) return false;
-      // Paid access is verified when library-login mints the signed email token.
+    if (!options?.requireLivePaidCheck) {
+      // Cookie sessions — paid access was verified when the token was minted.
       return true;
     }
 
-    const pipe = payload.indexOf("|");
-    if (pipe <= 0) return false;
+    if (payload.startsWith("email|")) {
+      const parts = payload.split("|");
+      const email = parts[2];
+      if (!email) return false;
+      return hasPaidDigitalProductAccess(email, "shopify-conversion-kit");
+    }
 
+    const pipe = payload.indexOf("|");
     const productId = payload.slice(0, pipe) as DigitalProductId;
     const paypalId = payload.slice(pipe + 1);
-    if (productId !== "shopify-conversion-kit" || !paypalId) return false;
-
     return verifyPurchaseTokenEntitlement(productId, paypalId);
   } catch (error) {
     console.error("[digital-product-auth] token entitlement check failed", error);

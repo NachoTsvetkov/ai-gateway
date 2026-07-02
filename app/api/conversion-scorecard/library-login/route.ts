@@ -5,10 +5,9 @@ import {
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  ACCESS_COOKIE_NAME,
   createLibraryEmailAccessToken,
-  libraryAccessCookieOptions,
   normalizeLibraryEmail,
+  setLibraryAccessCookie,
 } from "lib/digital-product-access";
 
 const bodySchema = z.object({
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
   try {
     const token = createLibraryEmailAccessToken("shopify-conversion-kit", email);
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(ACCESS_COOKIE_NAME, token, libraryAccessCookieOptions());
+    setLibraryAccessCookie(response, token);
     return response;
   } catch (error) {
     console.error("[library-login] token issue failed", error);

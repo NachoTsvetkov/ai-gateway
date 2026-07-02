@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import {
-  ACCESS_COOKIE_NAME,
   LIBRARY_BASE_PATH,
-  libraryAccessCookieOptions,
+  setLibraryAccessCookie,
   verifyDigitalProductAccessToken,
 } from "lib/digital-product-access";
 import { verifyLibraryTokenEntitlement } from "lib/digital-product-auth.server";
@@ -16,7 +15,7 @@ export async function GET(request: NextRequest) {
   if (
     !access ||
     !verifyDigitalProductAccessToken(access) ||
-    !(await verifyLibraryTokenEntitlement(access))
+    !(await verifyLibraryTokenEntitlement(access, { requireLivePaidCheck: true }))
   ) {
     const locked = new URL("/shopify-conversion-kit", request.url);
     locked.searchParams.set("locked", "1");
@@ -28,6 +27,6 @@ export async function GET(request: NextRequest) {
   const target = new URL(`${LIBRARY_BASE_PATH}${section}`, request.url);
 
   const res = NextResponse.redirect(target);
-  res.cookies.set(ACCESS_COOKIE_NAME, access, libraryAccessCookieOptions());
+  setLibraryAccessCookie(res, access);
   return res;
 }

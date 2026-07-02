@@ -16,6 +16,7 @@ import {
   CONVERSION_KIT_TRIED_SO_FAR_SUGGESTIONS,
 } from "lib/conversion-scorecard/kyc-field-options";
 import { LIBRARY_KYC_PATH } from "lib/digital-product-access";
+import { submitConversionKitKyc } from "lib/conversion-scorecard/kyc-actions";
 
 export type LibraryKycStatus = {
   complete: boolean;
@@ -182,34 +183,24 @@ export function LibraryKycGate({
     setSubmitting(true);
 
     try {
-      const response = await fetch(LIBRARY_KYC_PATH, {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.trim(),
-          ...form,
-        }),
+      const result = await submitConversionKitKyc({
+        email: email.trim(),
+        ...form,
       });
 
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as {
-          error?: string;
-          issues?: Record<string, string[]>;
-        } | null;
-
-        if (payload?.issues) {
-          const firstIssue = Object.values(payload.issues).flat()[0];
+      if (!result.ok) {
+        if (result.error === "validation" && result.issues) {
+          const firstIssue = Object.values(result.issues).flat()[0];
           setError(firstIssue ?? "Please complete every field.");
           return;
         }
 
-        if (response.status === 401) {
+        if (result.error === "unauthorized") {
           setError("Your session expired. Refresh the page or sign in again.");
           return;
         }
 
-        if (payload?.error === "email_mismatch") {
+        if (result.error === "email_mismatch") {
           setError("That email does not match your purchase. Use the same email from checkout.");
           return;
         }
