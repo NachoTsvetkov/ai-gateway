@@ -19,7 +19,9 @@
     "test:firebase": "npm run test:surveys && npm run test:orders",
     "test:generate-report": "tsx scripts/test-generate-report.ts",
     "test:fetch-report": "tsx scripts/test-fetch-report.ts",
-    "test:report-pdf": "tsx scripts/test-report-pdf.ts"
+    "test:report-pdf": "tsx scripts/test-report-pdf.ts",
+    "rag:index": "tsx scripts/build-rag-index.ts",
+    "rag:eval": "tsx scripts/eval-rag-embeddings.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.49",

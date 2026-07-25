@@ -18,6 +18,7 @@ export type ProjectId =
   | "ai-shopify-store"
   | "local-fitness-studio"
   | "boutique-fashion-brand"
+  | "rag-demo"
   | "multi-modal-visual-stylist"
   | "autonomous-agentic-commerce-bot"
   | "ai-store-analytics-insights"
@@ -39,6 +40,20 @@ export type Project = {
 // Display order = visit order on the listing. Highlighted / most
 // important projects first.
 export const PROJECTS: ReadonlyArray<Project> = [
+  {
+    id: "rag-demo",
+    title: "Production RAG Demo — SRE Knowledge Base",
+    description:
+      "Hybrid search (BM25 + dense), retrieval inspector, Naive vs Improved comparison, and an evaluation dashboard over a Software Engineering / DevOps corpus with source citations and honest failure cases.",
+    tech: [
+      "Hybrid RAG",
+      "BM25",
+      "Embeddings",
+      "Vercel AI SDK",
+      "Eval metrics",
+    ],
+    href: "/projects/rag-demo",
+  },
   {
     id: "ai-shopify-store",
     title: "AI-Powered Shopify Store",

@@ -32,6 +32,11 @@ export const PROJECTS_BG: Record<ProjectId, ProjectCopyOverride> = {
     description:
       "Луксозен бутик на български (крем + руж + serif) с AI личен стилист и имейли за възстановяване на изоставена количка, които звучат като писани от човек — никакъв спам.",
   },
+  "rag-demo": {
+    title: "Production RAG демо — SRE база знания",
+    description:
+      "Хибридно търсене (BM25 + dense), инспектор на retrieval, сравнение Naive vs Improved и evaluation табло върху Software Engineering / DevOps корпус с цитати към източници и честно показани failure cases.",
+  },
   "multi-modal-visual-stylist": {
     title: "Мулти-модален визуален стилист",
     description:

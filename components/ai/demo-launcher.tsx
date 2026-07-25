@@ -4,6 +4,16 @@ import Link from "next/link";
 
 const DEMOS = [
   {
+    label: "RAG Demo",
+    href: "/projects/rag-demo",
+    gradient: "from-cyan-500 to-teal-500",
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+        <path fillRule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3-1.5A1.5 1.5 0 0 0 3.75 6v.75h16.5V6A1.5 1.5 0 0 0 18.75 4.5H5.25ZM3.75 9v9c0 .828.672 1.5 1.5 1.5h13.5c.828 0 1.5-.672 1.5-1.5V9H3.75Zm3 3.75A.75.75 0 0 1 7.5 12h9a.75.75 0 0 1 0 1.5h-9a.75.75 0 0 1-.75-.75Zm0 3a.75.75 0 0 1 .75-.75h5.25a.75.75 0 0 1 0 1.5H7.5a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+      </svg>
+    ),
+  },
+  {
     label: "Visual Stylist",
     href: "/projects/multi-modal-visual-stylist",
     gradient: "from-pink-500 to-rose-500",
