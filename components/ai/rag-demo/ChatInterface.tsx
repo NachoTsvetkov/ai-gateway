@@ -27,6 +27,10 @@ export function ChatInterface({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const abortRef = useRef<AbortController | null>(null);
+  const [timing, setTiming] = useState<{
+    retrievalMs: number;
+    totalMs: number;
+  } | null>(null);
 
   function run(q: string) {
     const trimmed = q.trim();
@@ -39,6 +43,8 @@ export function ChatInterface({
       setError(null);
       setAnswer("");
       setMeta(null);
+      setTiming(null);
+      const t0 = performance.now();
       try {
         const res = await fetch("/api/rag-demo/query", {
           method: "POST",
@@ -66,6 +72,9 @@ export function ChatInterface({
             parsedMeta = null;
           }
         }
+        // Headers arrive after retrieval completes and before/during generation.
+        const retrievalMs =
+          parsedMeta?.latency?.totalMs ?? Math.round(performance.now() - t0);
         if (parsedMeta) {
           setMeta(parsedMeta);
           onMeta(parsedMeta, trimmed);
@@ -81,6 +90,10 @@ export function ChatInterface({
           full += decoder.decode(value, { stream: true });
           setAnswer(full);
         }
+        setTiming({
+          retrievalMs,
+          totalMs: Math.round(performance.now() - t0),
+        });
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
         setError((e as Error).message || "Query failed");
@@ -155,6 +168,16 @@ export function ChatInterface({
 
           {answer ? (
             <div className="space-y-3">
+              {timing ? (
+                <div className="flex flex-wrap gap-2 font-mono text-[10px] text-neutral-500">
+                  <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 dark:border-neutral-700 dark:bg-neutral-800/60">
+                    retrieval {timing.retrievalMs}ms
+                  </span>
+                  <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 dark:border-neutral-700 dark:bg-neutral-800/60">
+                    total {timing.totalMs}ms
+                  </span>
+                </div>
+              ) : null}
               <div className="prose prose-neutral dark:prose-invert prose-sm max-w-none whitespace-pre-wrap text-neutral-800 dark:text-neutral-200">
                 {answer}
               </div>

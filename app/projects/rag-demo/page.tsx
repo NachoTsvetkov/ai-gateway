@@ -1,4 +1,5 @@
 import { RagDemoApp } from "components/ai/rag-demo/RagDemoApp";
+import { ArchitectureNotesSection } from "components/ai/rag-demo/ArchitectureNotes";
 import Footer from "components/layout/footer";
 import { corpusStats } from "lib/rag/chunking";
 import Link from "next/link";
@@ -121,6 +122,8 @@ export default function RagDemoPage() {
           </div>
         </div>
       </section>
+
+      <ArchitectureNotesSection />
 
       <Footer />
     </>

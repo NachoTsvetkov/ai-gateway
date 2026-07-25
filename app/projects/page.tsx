@@ -96,20 +96,31 @@ export default async function ProjectsPage() {
               aria-label={`${project.title} ${t(
                 DICT.projects.cardOpensInNewTab,
               )}`}
-              className="group relative flex overflow-hidden rounded-2xl border border-neutral-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-lg dark:border-neutral-800 dark:bg-neutral-900 dark:hover:border-neutral-700"
+              className={`group relative flex overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg dark:bg-neutral-900 ${
+                project.id === "rag-demo"
+                  ? "border-cyan-300 hover:border-cyan-400 dark:border-cyan-800 dark:hover:border-cyan-600"
+                  : "border-neutral-200 hover:border-neutral-300 dark:border-neutral-800 dark:hover:border-neutral-700"
+              }`}
             >
               <div className="flex flex-1 flex-col p-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                    {t(DICT.projects.statusLive)}
-                  </span>
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                      {t(DICT.projects.statusLive)}
+                    </span>
+                    {project.id === "rag-demo" ? (
+                      <span className="inline-flex items-center rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-semibold text-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300">
+                        {t(DICT.projects.statusTechDemo)}
+                      </span>
+                    ) : null}
+                  </div>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 20 20"
                     fill="currentColor"
                     aria-hidden="true"
-                    className="h-5 w-5 text-neutral-400 transition-transform group-hover:scale-110 group-hover:text-neutral-700 dark:group-hover:text-neutral-300"
+                    className="h-5 w-5 shrink-0 text-neutral-400 transition-transform group-hover:scale-110 group-hover:text-neutral-700 dark:group-hover:text-neutral-300"
                   >
                     <path
                       fillRule="evenodd"

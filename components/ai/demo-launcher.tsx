@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const DEMOS = [
   {
-    label: "RAG Demo",
+    label: "Production RAG",
     href: "/projects/rag-demo",
     gradient: "from-cyan-500 to-teal-500",
     icon: (

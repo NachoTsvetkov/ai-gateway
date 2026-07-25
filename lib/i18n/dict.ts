@@ -277,10 +277,14 @@ export const DICT = {
       "Real Projects, Real Numbers",
       "Реални проекти, реални числа",
     ),
-    resultsSeeAll: s("See all 9 projects", "Виж всички 9 проекта"),
+    resultsSeeAll: s("See all projects", "Виж всички проекти"),
     resultsSeeAllNote: s(
-      "+ 6 more demos: voice shopping, visual styling, autonomous commerce, and more.",
-      "+ 6 други демо проекта: гласова поръчка, визуален стилист, автономна търговия и още.",
+      "Includes a production RAG demo (hybrid retrieval + evaluation) plus storefront and agent demos.",
+      "Включва production RAG демо (хибридно търсене + evaluation) плюс демота за магазини и агенти.",
+    ),
+    resultsRagLink: s(
+      "Technical demo: Production RAG over an SRE / DevOps knowledge base",
+      "Техническо демо: Production RAG върху SRE / DevOps база знания",
     ),
 
     processKicker: s("Process", "Процес"),
@@ -692,11 +696,12 @@ export const DICT = {
     ),
     pageTitle: s("Projects", "Проекти"),
     intro: s(
-      "Live demos and production work — each one with its own visual identity. Click any project to open it in a new tab.",
-      "Демо проекти и работа в production — всеки със своя визуална идентичност. Кликни на който и да е проект, за да го отвориш в нов таб.",
+      "Live demos and production work — each one with its own visual identity. Click any project to open it in a new tab. The top card is a technical RAG system demo (hybrid retrieval + evaluation), not a brand storefront.",
+      "Демо проекти и работа в production — всеки със своя визуална идентичност. Кликни на който и да е проект, за да го отвориш в нов таб. Първата карта е техническо RAG демо (хибридно търсене + evaluation), не бранд сайт.",
     ),
     backToHome: s("Back to Home", "Обратно към началото"),
     statusLive: s("Live", "На живо"),
+    statusTechDemo: s("Technical demo", "Техническо демо"),
     cardOpensInNewTab: s("(opens in a new tab)", "(отваря се в нов таб)"),
   },
 

@@ -42,15 +42,15 @@ export type Project = {
 export const PROJECTS: ReadonlyArray<Project> = [
   {
     id: "rag-demo",
-    title: "Production RAG Demo — SRE Knowledge Base",
+    title: "Production RAG Demo – SRE / DevOps Knowledge Base",
     description:
-      "Hybrid search (BM25 + dense), retrieval inspector, Naive vs Improved comparison, and an evaluation dashboard over a Software Engineering / DevOps corpus with source citations and honest failure cases.",
+      "Technical demo: hybrid retrieval (BM25 + dense), inspectable pipeline, Naive vs Improved comparison, evaluation metrics, and source-cited answers over an SRE / DevOps corpus.",
     tech: [
       "Hybrid RAG",
       "BM25",
       "Embeddings",
-      "Vercel AI SDK",
       "Eval metrics",
+      "Vercel AI SDK",
     ],
     href: "/projects/rag-demo",
   },

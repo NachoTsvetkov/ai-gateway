@@ -761,6 +761,27 @@ export default async function HomePage() {
               </article>
             ))}
           </div>
+
+          <div className="mt-10 space-y-3 text-center">
+            <Link
+              href="/projects"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-700 transition-colors hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              {t(DICT.home.resultsSeeAll)}
+              <span aria-hidden="true">→</span>
+            </Link>
+            <p className="text-xs text-neutral-500 dark:text-neutral-500">
+              {t(DICT.home.resultsSeeAllNote)}
+            </p>
+            <p>
+              <Link
+                href="/projects/rag-demo"
+                className="text-xs font-medium text-neutral-600 underline decoration-neutral-300 underline-offset-2 transition-colors hover:text-cyan-700 dark:text-neutral-400 dark:decoration-neutral-600 dark:hover:text-cyan-400"
+              >
+                {t(DICT.home.resultsRagLink)}
+              </Link>
+            </p>
+          </div>
         </div>
       </section>
 
