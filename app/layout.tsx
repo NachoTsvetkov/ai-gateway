@@ -37,6 +37,8 @@ const HIDE_NAVBAR_ON: ReadonlyArray<string> = [
   "/shopify-conversion-kit",
   "/checkout",
   "/conversion-kit-terms",
+  // Contact-free demos index: no marketing navbar, cart, analytics, or toasts.
+  "/demos",
 ];
 
 export const viewport: Viewport = {
@@ -70,6 +72,26 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
+  // Resolve the pathname first so the contact-free /demos index can
+  // skip cart, locale, theme, navbar, analytics, and toast chrome.
+  const headersListForPath = await headers();
+  const pathnameForChrome = headersListForPath.get("x-pathname") ?? "";
+  const isDemosPage =
+    pathnameForChrome === "/demos" || pathnameForChrome.startsWith("/demos/");
+
+  if (isDemosPage) {
+    return (
+      <html lang="en" className={`${GeistSans.variable} scroll-smooth`}>
+        <body
+          suppressHydrationWarning
+          className="bg-neutral-50 text-black"
+        >
+          <main>{children}</main>
+        </body>
+      </html>
+    );
+  }
+
   // Don't await the fetch, pass the Promise to the context provider
   const cart = getCart();
 
